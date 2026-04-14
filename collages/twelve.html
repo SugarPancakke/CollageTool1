@@ -22,7 +22,6 @@ body {
   align-items: center;
 }
 
-/* TOOL */
 .tool {
   background: #643545;
   padding: 15px;
@@ -32,7 +31,6 @@ body {
   box-sizing: border-box;
 }
 
-/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -41,14 +39,12 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s ease;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.33);
@@ -82,7 +78,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-
 const gap = 2.5 * mm;
 const whiteFrame = 3.5 * mm;
 
@@ -103,7 +98,7 @@ placeholder.onload = () => {
   draw();
 };
 
-/* SLOT BACKGROUND */
+/* SLOT BG */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
@@ -127,7 +122,7 @@ function loadImages(files) {
   }));
 }
 
-/* COVER IMAGE */
+/* COVER DRAW */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -139,7 +134,6 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-/* SAFE */
 function safe(img) {
   return img ? img : placeholder;
 }
@@ -154,26 +148,26 @@ async function generate() {
   images = [];
   bigImage = null;
 
-  let normalImages = [];
+  let normal = [];
 
   for (const item of loaded) {
     if (item.name.startsWith("T_showpic_suit_")) {
       bigImage = item.img;
     } else {
-      normalImages.push(item.img);
+      normal.push(item.img);
     }
   }
 
-  if (!bigImage && normalImages.length > 0) {
-    bigImage = normalImages.shift();
+  if (!bigImage && normal.length > 0) {
+    bigImage = normal.shift();
   }
 
-  images = normalImages;
+  images = normal;
 
   draw();
 }
 
-/* DRAW */
+/* DRAW GRID */
 function draw() {
   if (!placeholderReady) return;
 
@@ -192,39 +186,46 @@ function draw() {
   ctx.fillRect(innerX, innerY, innerW, innerH);
 
   const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
-  /* 4 rows total */
   const colW = (frameW - gap * 3) / 4;
   const rowH = (frameH - gap * 3) / 4;
 
+  const stepX = colW + gap;
   const stepY = rowH + gap;
-
-  const y1 = innerY + whiteFrame;       // NEW TOP ROW
-  const y2 = y1 + stepY;               // original row 1
-  const y3 = y2 + stepY;               // big row
-  const y4 = y3 + stepY;               // bottom row
 
   let i = 0;
 
-  /* ROW 1 - NEW TOP */
+  // =====================
+  // ROW 1
+  // =====================
   for (let c = 0; c < 4; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y1, colW, rowH);
+    drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
-  /* ROW 2 */
+  // =====================
+  // ROW 2
+  // =====================
   for (let c = 0; c < 4; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
+    drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
   }
 
-  /* ROW 3 LEFT (2 IMAGES) */
+  // =====================
+  // ROW 3 (left 2 slots)
+  // =====================
+  const y3 = frameY + stepY * 2;
+
   for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
+    drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
   }
 
-  /* BIG SLOT */
-  const bx = frameX + 2 * (colW + gap);
+  // =====================
+  // BIG IMAGE (2x2 slot)
+  // =====================
+  const bx = frameX + 2 * stepX;
   const by = y3;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
@@ -235,22 +236,17 @@ function draw() {
 
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  /* skip images used in big slot area */
+  // skip slots replaced by big image
   i += 2;
 
-  /* ROW 4 BOTTOM */
-  for (let c = 0; c < 4; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
+  // =====================
+  // ROW 4 (left 2 slots only)
+  // =====================
+  const y4 = frameY + stepY * 3;
+
+  for (let c = 0; c < 2; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
   }
-
-  /* TEXT */
-  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
-
-  ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Comic Sans MS";
-
-  const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
 /* DOWNLOAD */
