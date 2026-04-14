@@ -46,7 +46,7 @@ button:hover {
 /* CANVAS */
 canvas {
   margin-top: 15px;
-  border-radius: 6px;
+  border-radius: 0px; /* fully sharp */
   transform: scale(0.7);
   transform-origin: top center;
 }
@@ -118,20 +118,7 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// SOFT FRAME (radius 4)
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.closePath();
-}
-
-// GENERATE
+// GENERATE (slot 9 rule kept)
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -173,9 +160,9 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
+  // SHARP FRAME (NO ROUNDING)
   ctx.fillStyle = "white";
-  roundRect(ctx, innerX, innerY, innerW, innerH, 4);
-  ctx.fill();
+  ctx.fillRect(innerX, innerY, innerW, innerH);
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
@@ -187,10 +174,12 @@ function draw() {
 
   let i = 0;
 
+  // ROW 1
   for (let c = 0; c < 4; c++) {
     if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
   }
 
+  // ROW 2
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
@@ -198,10 +187,12 @@ function draw() {
     if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
   }
 
+  // ROW 3
   for (let c = 0; c < 2; c++) {
     if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
+  // BIG SLOT
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
