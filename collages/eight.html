@@ -45,13 +45,8 @@ canvas {
 <div class="container">
 
   <div class="tool">
-
-    <!-- ✅ RESTORED BACK BUTTON (original-style placement) -->
-    <button onclick="goBack()">← Back</button>
-
     <h2>8 Piece Collage</h2>
     <input type="file" id="upload" multiple accept="image/*">
-
     <button onclick="generate()">Generate</button>
     <button onclick="download()">Download PNG</button>
   </div>
@@ -75,10 +70,27 @@ const outerBottom = 14 * mm;
 let images = [];
 
 // =====================
-// BACK BUTTON LOGIC
+// BACK BUTTON (if present in your version)
 // =====================
 function goBack() {
   window.location.href = "../";
+}
+
+// =====================
+// ROUND RECT HELPER
+// =====================
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 // =====================
@@ -139,7 +151,10 @@ function draw() {
   const innerH = H - outerTop - outerBottom;
 
   ctx.fillStyle = "white";
-  ctx.fillRect(innerX, innerY, innerW, innerH);
+
+  // ✅ UPDATED: rounded frame instead of square
+  roundRect(ctx, innerX, innerY, innerW, innerH, 8);
+  ctx.fill();
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
@@ -151,22 +166,18 @@ function draw() {
 
   let i = 0;
 
-  // ROW 1
   for (let c = 0; c < 4; c++)
     if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
 
-  // ROW 2
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
   for (let c = 0; c < 2; c++)
     if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
 
-  // ROW 3
   for (let c = 0; c < 2; c++)
     if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
 
-  // BIG SLOT
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
@@ -174,7 +185,6 @@ function draw() {
 
   if (images[i]) drawCover(images[i], bx, by, bw, bh);
 
-  // WATERMARK
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
