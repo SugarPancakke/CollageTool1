@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Collage Tool</title>
+<title>8 Piece Collage</title>
 
 <style>
 body {
@@ -48,7 +48,7 @@ canvas {
 <div class="container">
 
   <div class="tool">
-    <h2>Collage Tool</h2>
+    <h2>8 Piece Collage</h2>
     <input type="file" id="upload" multiple accept="image/*">
     <button onclick="generate()">Generate</button>
     <button onclick="download()">Download PNG</button>
@@ -64,18 +64,15 @@ const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
 
-// SETTINGS
-const gap = 3.5 * mm;
-const whiteFrame = 4 * mm;
+const gap = 2.5 * mm;
+const whiteFrame = 3 * mm;
 
-// OUTER FRAME (UPDATED)
-const outerTop = 4 * mm;
-const outerSide = 4 * mm;
-const outerBottom = 14 * mm; // 🔥 1.4cm
+const outerTop = 3.75 * mm;
+const outerSide = 3.75 * mm;
+const outerBottom = 14 * mm;
 
 let images = [];
 
-// LOAD IMAGES
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -90,7 +87,6 @@ function loadImages(files) {
   }));
 }
 
-// NO STRETCH (CROP ONLY)
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -102,22 +98,6 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// ROUNDED RECT
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
-// GENERATE
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -126,25 +106,35 @@ async function generate() {
   draw();
 }
 
+function softFrame(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.closePath();
+}
+
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
 
-  // OUTER BACKGROUND
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
 
-  // INNER WHITE AREA (ROUNDED)
   const innerX = outerSide;
   const innerY = outerTop;
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
+  // white frame (slightly rounded)
   ctx.fillStyle = "white";
-  roundRect(ctx, innerX, innerY, innerW, innerH, 8);
+  softFrame(ctx, innerX, innerY, innerW, innerH, 2);
   ctx.fill();
 
-  // FRAME AREA
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
   const frameW = innerW - whiteFrame * 2;
@@ -155,74 +145,39 @@ function draw() {
 
   let i = 0;
 
-  // ROW 1
-  for (let c = 0; c < 4; c++) {
-    if (!images[i]) break;
+  for (let c = 0; c < 4; c++)
+    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
 
-    drawCover(images[i++],
-      frameX + c * (colW + gap),
-      frameY,
-      colW,
-      rowH
-    );
-  }
-
-  // ROW 2
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
-  for (let c = 0; c < 2; c++) {
-    if (!images[i]) break;
+  for (let c = 0; c < 2; c++)
+    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
 
-    drawCover(images[i++],
-      frameX + c * (colW + gap),
-      y2,
-      colW,
-      rowH
-    );
-  }
+  for (let c = 0; c < 2; c++)
+    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
 
-  // ROW 3
-  for (let c = 0; c < 2; c++) {
-    if (!images[i]) break;
+  const bx = frameX + 2 * (colW + gap);
+  const by = y2;
+  const bw = colW * 2 + gap;
+  const bh = rowH * 2 + gap;
 
-    drawCover(images[i++],
-      frameX + c * (colW + gap),
-      y3,
-      colW,
-      rowH
-    );
-  }
+  if (images[i]) drawCover(images[i], bx, by, bw, bh);
 
-  // BIG RIGHT IMAGE
-  if (images[i]) {
-    drawCover(images[i++],
-      frameX + 2 * (colW + gap),
-      y2,
-      colW * 2 + gap,
-      rowH * 2 + gap
-    );
-  }
-
-  // WATERMARK (CENTERED IN BOTTOM FRAME)
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
 
-  const textWidth = ctx.measureText(text).width;
-  const x = (W - textWidth) / 2;
-  const y = H - (outerBottom / 2) + 15;
-
-  ctx.fillText(text, x, y);
+  const tw = ctx.measureText(text).width;
+  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-// DOWNLOAD
 function download() {
-  const link = document.createElement("a");
-  link.download = "collage.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  const a = document.createElement("a");
+  a.download = "collage.png";
+  a.href = canvas.toDataURL("image/png");
+  a.click();
 }
 </script>
 
