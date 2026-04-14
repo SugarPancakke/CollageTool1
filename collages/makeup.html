@@ -121,11 +121,9 @@ function loadImages(files) {
 }
 
 /* =========================
-   ROUNDED IMAGE (CURVE 8)
+   ROUND PATH HELPER
 ========================= */
-function drawRoundedImage(img, x, y, w, h, r = 8) {
-  ctx.save();
-
+function roundRectPath(x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -137,7 +135,15 @@ function drawRoundedImage(img, x, y, w, h, r = 8) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
 
+/* =========================
+   ROUNDED IMAGE (8px)
+========================= */
+function drawRoundedImage(img, x, y, w, h, r = 8) {
+  ctx.save();
+
+  roundRectPath(x, y, w, h, r);
   ctx.clip();
 
   const scale = Math.max(w / img.width, h / img.height);
@@ -198,8 +204,14 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
+  /* =========================
+     WHITE FRAME (ROUNDED)
+  ========================= */
+  ctx.save();
+  roundRectPath(innerX, innerY, innerW, innerH, 8);
   ctx.fillStyle = "white";
-  ctx.fillRect(innerX, innerY, innerW, innerH);
+  ctx.fill();
+  ctx.restore();
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
@@ -235,18 +247,25 @@ function draw() {
     drawRoundedImage(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
   }
 
-  // BIG IMAGE (rows 2–4)
+  /* =========================
+     BIG SLOT (ROUNDED AREA)
+  ========================= */
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
-
   const bw = colW * 2 + gap;
   const bh = rowH * 3 + gap * 2;
+
+  ctx.save();
+  roundRectPath(bx, by, bw, bh, 8);
+  ctx.clip();
 
   if (slotBackground.complete) {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  drawRoundedImage(safe(bigImage), bx, by, bw, bh);
+  drawRoundedImage(bigImage, bx, by, bw, bh, 8);
+
+  ctx.restore();
 
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
