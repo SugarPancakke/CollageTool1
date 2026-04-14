@@ -7,7 +7,7 @@
 <style>
 body {
   margin: 0;
-  background: #391823; /* UI ONLY */
+  background: #391823;
   font-family: Arial;
   display: flex;
   justify-content: center;
@@ -15,19 +15,24 @@ body {
   color: white;
 }
 
+/* ✔ FIX: forces real centering */
 .container {
   width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* TOOL BOX (UI ONLY) */
+/* TOOL BOX */
 .tool {
   background: #643545;
   padding: 15px;
   border-radius: 12px;
   margin-bottom: 15px;
+  width: 100%;
 }
 
-/* BUTTONS (UI ONLY) */
+/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -43,12 +48,12 @@ button:hover {
   background: #c06f7f;
 }
 
-/* CANVAS PREVIEW */
+/* ✔ FIX: proper canvas centering */
 canvas {
+  display: block;
   margin-top: 15px;
-  border-radius: 0px;
   transform: scale(0.7);
-  transform-origin: top center;
+  transform-origin: center top;
 }
 </style>
 </head>
@@ -147,12 +152,11 @@ async function generate() {
   draw();
 }
 
-// DRAW (RESTORED ORIGINAL CANVAS COLOR)
+// DRAW
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
 
-  // ✔ ORIGINAL CANVAS BACKGROUND RESTORED
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
 
