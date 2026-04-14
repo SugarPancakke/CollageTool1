@@ -15,20 +15,22 @@ body {
   color: white;
 }
 
+/* ✔ FIX: compact editor width */
 .container {
-  width: 900px;
+  width: 700px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* TOOL */
+/* TOOL PANEL */
 .tool {
   background: #643545;
   padding: 15px;
   border-radius: 12px;
   margin-bottom: 15px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* BUTTONS */
@@ -47,12 +49,12 @@ button:hover {
   background: #c06f7f;
 }
 
-/* ✔ PREVIEW FIXED */
+/* ✔ FIX: compact preview frame */
 .preview {
-  background: #643545;   /* MATCH TOOL COLOR */
-  padding: 10px;         /* smaller so it doesn't feel huge */
+  background: #643545;
+  padding: 6px;
   border-radius: 12px;
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
 }
@@ -77,7 +79,7 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <!-- PREVIEW AREA -->
+  <!-- PREVIEW -->
   <div class="preview">
     <canvas id="canvas" width="1450" height="1510"></canvas>
   </div>
@@ -110,7 +112,9 @@ function loadImages(files) {
       const r = new FileReader();
       r.onload = e => {
         const img = new Image();
-        img.onload = () => res({ img, name: file.name });
+        img.onload = () => {
+          res({ img, name: file.name });
+        };
         img.src = e.target.result;
       };
       r.readAsDataURL(file);
