@@ -77,7 +77,7 @@ const outerTop = 3.75 * mm;
 const outerSide = 3.75 * mm;
 const outerBottom = 14 * mm;
 
-// ✅ BACKGROUND IMAGE (FIXED LOAD)
+// ✅ background image
 const bigBackground = new Image();
 bigBackground.src = "../images/T_showpic_clothes_blank.png";
 
@@ -90,7 +90,10 @@ function loadImages(files) {
       const r = new FileReader();
       r.onload = e => {
         const img = new Image();
-        img.onload = () => res(img);
+        img.onload = () => res({
+          img: img,
+          name: (file.name || "").toLowerCase().trim()
+        });
         img.src = e.target.result;
       };
       r.readAsDataURL(file);
@@ -123,12 +126,29 @@ function softFrame(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// GENERATE
+// =====================
+// GENERATE (BIG IMAGE FIX)
+// =====================
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
-  images = await loadImages(files);
+  const loaded = await loadImages(files);
+
+  let bigImage = null;
+  let others = [];
+
+  loaded.forEach(item => {
+    if (item.name.startsWith("t_showpic_suit_") && !bigImage) {
+      bigImage = item.img;
+    } else {
+      others.push(item.img);
+    }
+  });
+
+  // 🔥 IMPORTANT: big image goes LAST
+  images = [...others, bigImage].filter(Boolean);
+
   draw();
 }
 
@@ -186,12 +206,12 @@ function draw() {
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // ✅ DRAW BACKGROUND FIRST (ONLY HERE)
+  // background
   if (bigBackground.complete) {
     ctx.drawImage(bigBackground, bx, by, bw, bh);
   }
 
-  // THEN USER IMAGE
+  // big image
   if (images[i]) {
     drawCover(images[i], bx, by, bw, bh);
   }
