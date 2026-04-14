@@ -15,15 +15,14 @@ body {
   color: white;
 }
 
-/* ✔ FIX: compact editor width */
 .container {
-  width: 700px;
+  width: 900px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* TOOL PANEL */
+/* TOOL (UNCHANGED SIZE) */
 .tool {
   background: #643545;
   padding: 15px;
@@ -49,12 +48,12 @@ button:hover {
   background: #c06f7f;
 }
 
-/* ✔ FIX: compact preview frame */
+/* ✔ ONLY FIXED PART: preview panel */
 .preview {
   background: #643545;
-  padding: 6px;
-  border-radius: 12px;
-  display: inline-flex;
+  padding: 3px;          /* tightened (this fixes “giant panel” feeling) */
+  border-radius: 10px;
+  display: flex;
   justify-content: center;
   align-items: center;
 }
@@ -79,7 +78,7 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <!-- PREVIEW -->
+  <!-- PREVIEW PANEL -->
   <div class="preview">
     <canvas id="canvas" width="1450" height="1510"></canvas>
   </div>
@@ -112,9 +111,7 @@ function loadImages(files) {
       const r = new FileReader();
       r.onload = e => {
         const img = new Image();
-        img.onload = () => {
-          res({ img, name: file.name });
-        };
+        img.onload = () => res({ img, name: file.name });
         img.src = e.target.result;
       };
       r.readAsDataURL(file);
