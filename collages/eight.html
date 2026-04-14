@@ -22,7 +22,7 @@ body {
   align-items: center;
 }
 
-/* TOOL (UNCHANGED SIZE) */
+/* TOOL */
 .tool {
   background: #643545;
   padding: 15px;
@@ -48,21 +48,12 @@ button:hover {
   background: #c06f7f;
 }
 
-/* ✔ ONLY FIXED PART: preview panel */
-.preview {
-  background: #643545;
-  padding: 3px;          /* tightened (this fixes “giant panel” feeling) */
-  border-radius: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* CANVAS */
+/* CANVAS ONLY */
 canvas {
   display: block;
   transform: scale(0.5);
   transform-origin: center top;
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -78,10 +69,7 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <!-- PREVIEW PANEL -->
-  <div class="preview">
-    <canvas id="canvas" width="1450" height="1510"></canvas>
-  </div>
+  <canvas id="canvas" width="1450" height="1510"></canvas>
 
 </div>
 
@@ -104,7 +92,6 @@ let bigImage = null;
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
-// LOAD IMAGES
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -119,7 +106,6 @@ function loadImages(files) {
   }));
 }
 
-// DRAW COVER
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -131,7 +117,6 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// GENERATE
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -160,7 +145,6 @@ async function generate() {
   draw();
 }
 
-// DRAW
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -223,7 +207,6 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-// DOWNLOAD
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
