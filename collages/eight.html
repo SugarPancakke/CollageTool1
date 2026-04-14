@@ -51,7 +51,7 @@ button:hover {
 /* CANVAS */
 canvas {
   display: block;
-  transform: scale(0.5);
+  transform: scale(0.4);
   transform-origin: center top;
   margin-top: 10px;
 }
@@ -88,7 +88,7 @@ const whiteFrame = 3.5 * mm;
 
 const outerTop = 6 * mm;
 const outerSide = 6 * mm;
-const outerBottom = 14 * mm;
+const outerBottom = 18 * mm;
 
 let images = [];
 let bigImage = null;
@@ -97,7 +97,7 @@ let bigImage = null;
    FIXED PLACEHOLDER PATH
 ========================= */
 const placeholder = new Image();
-placeholder.src = "../image/cheese_placeholder.png";
+placeholder.src = "../image/T_showpic_clothes_blank.png";
 
 let placeholderReady = false;
 placeholder.onload = () => {
