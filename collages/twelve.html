@@ -47,7 +47,7 @@ button:hover {
 
 canvas {
   display: block;
-  transform: scale(0.33);
+  transform: scale(0.4);
   transform-origin: center top;
   margin-top: 10px;
 }
@@ -88,7 +88,6 @@ const outerBottom = 18 * mm;
 let images = [];
 let bigImage = null;
 
-/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -98,16 +97,13 @@ placeholder.onload = () => {
   draw();
 };
 
-/* SLOT BG */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
-/* BACK */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
-/* LOAD IMAGES */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -122,7 +118,6 @@ function loadImages(files) {
   }));
 }
 
-/* COVER DRAW */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -138,7 +133,6 @@ function safe(img) {
   return img ? img : placeholder;
 }
 
-/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -167,7 +161,6 @@ async function generate() {
   draw();
 }
 
-/* DRAW GRID */
 function draw() {
   if (!placeholderReady) return;
 
@@ -199,31 +192,24 @@ function draw() {
 
   let i = 0;
 
-  // =====================
   // ROW 1
-  // =====================
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
-  // =====================
   // ROW 2
-  // =====================
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
   }
 
-  // =====================
-  // ROW 3 (left 2 slots)
-  // =====================
+  // ROW 3 left
   const y3 = frameY + stepY * 2;
 
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
   }
 
-  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
-
+  // BIG SLOT
   const bx = frameX + 2 * stepX;
   const by = y3;
   const bw = colW * 2 + gap;
@@ -235,20 +221,27 @@ function draw() {
 
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  // skip slots replaced by big image
   i += 2;
 
-  // =====================
-  // ROW 4 (left 2 slots only)
-  // =====================
+  // ROW 4
   const y4 = frameY + stepY * 3;
 
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
   }
+
+  // =========================
+  // WATERMARK (FIXED)
+  // =========================
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
+
+  const tw = ctx.measureText(text).width;
+  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
