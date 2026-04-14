@@ -1,6 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>10 Pieces Collage</title>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+}
+
+canvas {
+  display: block;
+  transform: scale(0.4);
+  transform-origin: center top;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="tool">
+    <button onclick="goBack()">← Back</button>
+
+    <h2>10 Pieces Collage</h2>
+
+    <input type="file" id="upload" multiple accept="image/*">
+
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
+  </div>
+
+  <canvas id="canvas" width="1500" height="2100"></canvas>
+
+</div>
+
+<script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
+/* ====== SETTINGS ====== */
+const mm = 3.78;
 const gap = 9.45;
 const whiteFrame = 13.23;
 
@@ -8,9 +82,11 @@ const outerTop = 22.68;
 const outerSide = 22.68;
 const outerBottom = 68.04;
 
+/* ====== STATE ====== */
 let images = [];
 let bigImage = null;
 
+/* ====== PLACEHOLDER ====== */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -20,13 +96,12 @@ placeholder.onload = () => {
   draw();
 };
 
+/* ====== NAV ====== */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
-/* =========================
-   LOAD
-========================= */
+/* ====== LOAD FILES ====== */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -41,12 +116,8 @@ function loadImages(files) {
   }));
 }
 
-/* =========================
-   ROUND + COVER (ONE SYSTEM ONLY)
-========================= */
-function drawImage(img, x, y, w, h, r = 8) {
-  ctx.save();
-
+/* ====== ROUND PATH ====== */
+function roundRect(x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -58,7 +129,12 @@ function drawImage(img, x, y, w, h, r = 8) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
 
+/* ====== IMAGE DRAW (COVER + ROUND) ====== */
+function drawImage(img, x, y, w, h, r = 8) {
+  ctx.save();
+  roundRect(x, y, w, h, r);
   ctx.clip();
 
   const scale = Math.max(w / img.width, h / img.height);
@@ -69,17 +145,15 @@ function drawImage(img, x, y, w, h, r = 8) {
   const sy = (img.height - sh) / 2;
 
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-
   ctx.restore();
 }
 
+/* ====== SAFE IMAGE ====== */
 function safe(img) {
   return img || placeholder;
 }
 
-/* =========================
-   GENERATE
-========================= */
+/* ====== GENERATE ====== */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -107,16 +181,12 @@ async function generate() {
   draw();
 }
 
-/* =========================
-   DRAW
-========================= */
+/* ====== DRAW ====== */
 function draw() {
   if (!placeholderReady) return;
 
   const W = canvas.width;
   const H = canvas.height;
-
-  ctx.clearRect(0, 0, W, H);
 
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
@@ -128,14 +198,8 @@ function draw() {
 
   /* WHITE FRAME */
   ctx.fillStyle = "white";
-  drawImage(
-    createSolidCanvas(innerW, innerH, "white"),
-    innerX,
-    innerY,
-    innerW,
-    innerH,
-    8
-  );
+  roundRect(innerX, innerY, innerW, innerH, 8);
+  ctx.fill();
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
@@ -147,7 +211,7 @@ function draw() {
 
   let i = 0;
 
-  // ROW 1
+  /* ROW 1 */
   for (let c = 0; c < 4; c++) {
     drawImage(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
   }
@@ -156,31 +220,31 @@ function draw() {
   const y3 = y2 + rowH + gap;
   const y4 = y3 + rowH + gap;
 
-  // ROW 2
+  /* ROW 2 */
   for (let c = 0; c < 2; c++) {
     drawImage(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
   }
 
-  // ROW 3
+  /* ROW 3 */
   for (let c = 0; c < 2; c++) {
     drawImage(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
 
-  // ROW 4
+  /* ROW 4 */
   for (let c = 0; c < 2; c++) {
     drawImage(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
   }
 
-  /* SLOT 9 */
+  /* SLOT 9 BIG */
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 3 + gap * 2;
 
-  drawImage(slotBackground, bx, by, bw, bh);
-  drawImage(bigImage || placeholder, bx, by, bw, bh);
+  drawImage(placeholder, bx, by, bw, bh);
+  drawImage(bigImage, bx, by, bw, bh);
 
-  /* WATERMARK (FORCED LAST, NO CLIP RISK) */
+  /* WATERMARK (ALWAYS LAST) */
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
 
@@ -190,21 +254,14 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - 40);
 }
 
-/* helper for frame */
-function createSolidCanvas(w, h, color) {
-  const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
-  const cctx = c.getContext("2d");
-  cctx.fillStyle = color;
-  cctx.fillRect(0, 0, w, h);
-  return c;
-}
-
-/* DOWNLOAD */
+/* ====== DOWNLOAD ====== */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
+</script>
+
+</body>
+</html>
