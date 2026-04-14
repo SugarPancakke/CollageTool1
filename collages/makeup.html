@@ -1,85 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>10 Pieces Collage</title>
-
-<style>
-body {
-  margin: 0;
-  background: #391823;
-  font-family: Arial;
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-  color: white;
-}
-
-.container {
-  width: 900px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.tool {
-  background: #643545;
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 15px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-button {
-  margin-top: 10px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  background: #db8b9a;
-  color: white;
-  cursor: pointer;
-}
-
-canvas {
-  display: block;
-  transform: scale(0.4);
-  transform-origin: center top;
-  margin-top: 10px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-  <div class="tool">
-    <button onclick="goBack()">← Back</button>
-
-    <h2>10 Pieces Collage</h2>
-
-    <input type="file" id="upload" multiple accept="image/*">
-
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
-  </div>
-
-  <canvas id="canvas" width="1500" height="2100"></canvas>
-
-</div>
-
-<script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const mm = 3.78;
-const gap = 2.5 * mm;
-const whiteFrame = 3.5 * mm;
+const gap = 9.45;
+const whiteFrame = 13.23;
 
-const outerTop = 6 * mm;
-const outerSide = 6 * mm;
-const outerBottom = 18 * mm;
+const outerTop = 22.68;
+const outerSide = 22.68;
+const outerBottom = 68.04;
 
 let images = [];
 let bigImage = null;
@@ -93,15 +20,12 @@ placeholder.onload = () => {
   draw();
 };
 
-const slotBackground = new Image();
-slotBackground.src = "../image/T_showpic_clothes_blank.png";
-
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
 /* =========================
-   LOAD IMAGES
+   LOAD
 ========================= */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
@@ -118,9 +42,11 @@ function loadImages(files) {
 }
 
 /* =========================
-   ROUND PATH
+   ROUND + COVER (ONE SYSTEM ONLY)
 ========================= */
-function roundRectPath(x, y, w, h, r) {
+function drawImage(img, x, y, w, h, r = 8) {
+  ctx.save();
+
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -132,14 +58,7 @@ function roundRectPath(x, y, w, h, r) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
-}
 
-/* =========================
-   IMAGE DRAW (COVER + ROUND)
-========================= */
-function drawImage(img, x, y, w, h, r = 8) {
-  ctx.save();
-  roundRectPath(x, y, w, h, r);
   ctx.clip();
 
   const scale = Math.max(w / img.width, h / img.height);
@@ -150,26 +69,10 @@ function drawImage(img, x, y, w, h, r = 8) {
   const sy = (img.height - sh) / 2;
 
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+
   ctx.restore();
 }
 
-/* =========================
-   COVER (NO STRETCH)
-========================= */
-function drawCover(img, x, y, w, h) {
-  const scale = Math.max(w / img.width, h / img.height);
-  const sw = w / scale;
-  const sh = h / scale;
-
-  const sx = (img.width - sw) / 2;
-  const sy = (img.height - sh) / 2;
-
-  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-}
-
-/* =========================
-   SAFE IMAGE
-========================= */
 function safe(img) {
   return img || placeholder;
 }
@@ -186,21 +89,21 @@ async function generate() {
   images = [];
   bigImage = null;
 
-  let normalImages = [];
+  let normal = [];
 
   for (const item of loaded) {
     if (item.name.startsWith("T_showpic_suit_")) {
       bigImage = item.img;
     } else {
-      normalImages.push(item.img);
+      normal.push(item.img);
     }
   }
 
-  if (!bigImage && normalImages.length > 0) {
-    bigImage = normalImages.shift();
+  if (!bigImage && normal.length > 0) {
+    bigImage = normal.shift();
   }
 
-  images = normalImages;
+  images = normal;
   draw();
 }
 
@@ -213,6 +116,8 @@ function draw() {
   const W = canvas.width;
   const H = canvas.height;
 
+  ctx.clearRect(0, 0, W, H);
+
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
 
@@ -221,10 +126,16 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
-  // WHITE FRAME (rounded)
+  /* WHITE FRAME */
   ctx.fillStyle = "white";
-  roundRectPath(innerX, innerY, innerW, innerH, 8);
-  ctx.fill();
+  drawImage(
+    createSolidCanvas(innerW, innerH, "white"),
+    innerX,
+    innerY,
+    innerW,
+    innerH,
+    8
+  );
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
@@ -260,44 +171,40 @@ function draw() {
     drawImage(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
   }
 
-  /* =========================
-     SLOT 9 BIG AREA
-  ========================= */
+  /* SLOT 9 */
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 3 + gap * 2;
 
-  // BACKGROUND (NO STRETCH)
-  if (slotBackground.complete) {
-    drawCover(slotBackground, bx, by, bw, bh);
-  }
+  drawImage(slotBackground, bx, by, bw, bh);
+  drawImage(bigImage || placeholder, bx, by, bw, bh);
 
-  // BIG IMAGE
-  drawImage(bigImage, bx, by, bw, bh, 8);
-
-  /* =========================
-     WATERMARK (ALWAYS LAST)
-  ========================= */
-  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
-
+  /* WATERMARK (FORCED LAST, NO CLIP RISK) */
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
 
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
   const tw = ctx.measureText(text).width;
+
   ctx.fillText(text, (W - tw) / 2, H - 40);
 }
 
-/* =========================
-   DOWNLOAD
-========================= */
+/* helper for frame */
+function createSolidCanvas(w, h, color) {
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const cctx = c.getContext("2d");
+  cctx.fillStyle = color;
+  cctx.fillRect(0, 0, w, h);
+  return c;
+}
+
+/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
-</script>
-
-</body>
-</html>
