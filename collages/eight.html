@@ -63,8 +63,6 @@ canvas {
 <div class="container">
 
   <div class="tool">
-
-    <!-- BACK BUTTON (FIXED) -->
     <button onclick="goBack()">← Back</button>
 
     <h2>Collage Tool</h2>
@@ -98,7 +96,11 @@ let bigImage = null;
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
-// LOAD IMAGES
+/* OPTIONAL PLACEHOLDER */
+const placeholder = new Image();
+placeholder.src = "image/cheese_placeholder.png";
+
+/* ---------------- LOAD ---------------- */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -113,7 +115,7 @@ function loadImages(files) {
   }));
 }
 
-// DRAW COVER
+/* ---------------- DRAW COVER ---------------- */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -125,36 +127,40 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// GENERATE
+/* ---------------- GENERATE (FIXED SLOT 9 RULE) ---------------- */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
   const loaded = await loadImages(files);
 
-  images = [];
-  bigImage = null;
-
+  let suitImage = null;
   let normalImages = [];
 
+  // STEP 1: split
   for (const item of loaded) {
     if (item.name.startsWith("T_showpic_suit_")) {
-      bigImage = item.img;
+      suitImage = item.img; // SLOT 9 PRIORITY
     } else {
       normalImages.push(item.img);
     }
   }
 
-  if (!bigImage && normalImages.length > 0) {
-    bigImage = normalImages.shift();
+  // STEP 2: assign slot 9
+  let slot9Image = suitImage;
+
+  if (!slot9Image && normalImages.length > 0) {
+    slot9Image = normalImages.shift();
   }
 
+  // STEP 3: remaining slots
+  bigImage = slot9Image;
   images = normalImages;
 
   draw();
 }
 
-// DRAW
+/* ---------------- DRAW ---------------- */
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -195,6 +201,7 @@ function draw() {
     if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
+  /* ---------------- SLOT 9 ---------------- */
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
@@ -204,10 +211,10 @@ function draw() {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  if (bigImage) {
-    drawCover(bigImage, bx, by, bw, bh);
-  }
+  const slot9Final = bigImage ? bigImage : placeholder;
+  drawCover(slot9Final, bx, by, bw, bh);
 
+  /* ---------------- WATERMARK ---------------- */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
@@ -217,7 +224,7 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-// DOWNLOAD
+/* ---------------- DOWNLOAD ---------------- */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
@@ -225,7 +232,7 @@ function download() {
   link.click();
 }
 
-// BACK BUTTON FIXED
+/* ---------------- BACK ---------------- */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
