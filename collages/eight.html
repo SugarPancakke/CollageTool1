@@ -38,14 +38,14 @@ button {
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
-  background: #db8b9a;
+  ground: #db8b9a;
   color: white;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 button:hover {
-  background: #c06f7f;
+  ground: #c06f7f;
 }
 
 /* CANVAS ONLY */
@@ -61,9 +61,11 @@ canvas {
 <body>
 
 <div class="container">
-  <button onclick="goBack()">← Back</button>
 
   <div class="tool">
+
+    <button onclick="go()">← Back</button>
+    
     <h2>Collage Tool</h2>
     <input type="file" id="upload" multiple accept="image/*">
     <button onclick="generate()">Generate</button>
