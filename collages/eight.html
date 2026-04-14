@@ -7,7 +7,7 @@
 <style>
 body {
   margin: 0;
-  background: #16161d;
+  background: #1A1A1A;
   font-family: Arial;
   display: flex;
   justify-content: center;
@@ -31,9 +31,14 @@ button {
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
-  background: #4f7cff;
+  background: #C44D7C;
   color: white;
   cursor: pointer;
+  transition: 0.2s ease;
+}
+
+button:hover {
+  background: #a83e69;
 }
 
 canvas {
@@ -81,9 +86,7 @@ let bigImage = null;
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
-// =====================
-// LOAD IMAGES (FIXED WITH NAME TRACKING)
-// =====================
+// LOAD IMAGES
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -91,7 +94,7 @@ function loadImages(files) {
       r.onload = e => {
         const img = new Image();
         img.onload = () => {
-          res({ img, name: file.name }); // 👈 IMPORTANT CHANGE
+          res({ img, name: file.name });
         };
         img.src = e.target.result;
       };
@@ -100,9 +103,7 @@ function loadImages(files) {
   }));
 }
 
-// =====================
 // DRAW COVER
-// =====================
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -114,9 +115,7 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// =====================
 // ROUND RECT
-// =====================
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -129,9 +128,7 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// =====================
 // GENERATE
-// =====================
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -141,12 +138,9 @@ async function generate() {
   images = [];
   bigImage = null;
 
-  // =====================
-  // SUIT RULE (NEW)
-  // =====================
   for (const item of loaded) {
     if (item.name.startsWith("T_showpic_suit_")) {
-      bigImage = item.img;   // ALWAYS slot 9
+      bigImage = item.img;
     } else {
       images.push(item.img);
     }
@@ -155,14 +149,12 @@ async function generate() {
   draw();
 }
 
-// =====================
 // DRAW
-// =====================
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
 
-  ctx.fillStyle = "#16161d";
+  ctx.fillStyle = "#1A1A1A";
   ctx.fillRect(0, 0, W, H);
 
   const innerX = outerSide;
@@ -211,17 +203,14 @@ function draw() {
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // background always
   if (slotBackground.complete) {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  // SUIT IMAGE OVERRIDE
   if (bigImage) {
     drawCover(bigImage, bx, by, bw, bh);
   }
 
-  // watermark
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
@@ -231,9 +220,7 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-// =====================
 // DOWNLOAD
-// =====================
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
