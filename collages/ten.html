@@ -75,7 +75,8 @@ canvas {
 </div>
 
 <script>
-let canvas, ctx;
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
 
@@ -93,22 +94,16 @@ const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
 let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw();
+};
 
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
 function goBack() {
   window.location.href = "/CollageTool/";
-}
-
-function init() {
-  canvas = document.getElementById("canvas");
-  ctx = canvas.getContext("2d");
-
-  placeholder.onload = () => {
-    placeholderReady = true;
-    draw();
-  };
 }
 
 function loadImages(files) {
@@ -169,7 +164,7 @@ async function generate() {
 }
 
 function draw() {
-  if (!placeholderReady || !ctx) return;
+  if (!placeholderReady) return;
 
   const W = canvas.width;
   const H = canvas.height;
@@ -195,6 +190,7 @@ function draw() {
 
   let i = 0;
 
+  // ROW 1
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
   }
@@ -203,18 +199,22 @@ function draw() {
   const y3 = y2 + rowH + gap;
   const y4 = y3 + rowH + gap;
 
+  // ROW 2
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
   }
 
+  // ROW 3
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
 
+  // ROW 4
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
   }
 
+  // BIG IMAGE (extends rows 2–4)
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
 
@@ -242,8 +242,6 @@ function download() {
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
-
-window.onload = init;
 </script>
 
 </body>
