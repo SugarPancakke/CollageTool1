@@ -45,6 +45,10 @@ canvas {
 <div class="container">
 
   <div class="tool">
+
+    <!-- ONLY ADDITION: BACK BUTTON -->
+    <button onclick="goBack()">← Back</button>
+
     <h2>8 Piece Collage</h2>
     <input type="file" id="upload" multiple accept="image/*">
     <button onclick="generate()">Generate</button>
@@ -69,33 +73,11 @@ const outerBottom = 14 * mm;
 
 let images = [];
 
-// =====================
-// BACK BUTTON (if present in your version)
-// =====================
+// ONLY ADDITION: BACK BUTTON FUNCTION
 function goBack() {
   window.location.href = "../";
 }
 
-// =====================
-// ROUND RECT HELPER
-// =====================
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
-// =====================
-// LOAD IMAGES
-// =====================
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -110,9 +92,6 @@ function loadImages(files) {
   }));
 }
 
-// =====================
-// DRAW COVER
-// =====================
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -124,9 +103,6 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// =====================
-// GENERATE
-// =====================
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -135,9 +111,6 @@ async function generate() {
   draw();
 }
 
-// =====================
-// DRAW
-// =====================
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -151,10 +124,7 @@ function draw() {
   const innerH = H - outerTop - outerBottom;
 
   ctx.fillStyle = "white";
-
-  // ✅ UPDATED: rounded frame instead of square
-  roundRect(ctx, innerX, innerY, innerW, innerH, 8);
-  ctx.fill();
+  ctx.fillRect(innerX, innerY, innerW, innerH);
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
@@ -186,7 +156,6 @@ function draw() {
   if (images[i]) drawCover(images[i], bx, by, bw, bh);
 
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
-
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
 
@@ -194,9 +163,6 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-// =====================
-// DOWNLOAD
-// =====================
 function download() {
   const a = document.createElement("a");
   a.download = "collage.png";
