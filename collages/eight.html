@@ -92,7 +92,7 @@ function loadImages(files) {
   }));
 }
 
-// NO STRETCH (CROP)
+// NO STRETCH (CROP ONLY)
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -117,7 +117,9 @@ function softFrame(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// GENERATE (WITH BIG IMAGE AUTO PICK)
+// =====================
+// GENERATE (FIXED BIG IMAGE LOGIC)
+// =====================
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -129,7 +131,7 @@ async function generate() {
         const img = new Image();
         img.onload = () => res({
           img: img,
-          name: file.name
+          name: (file.name || "").toLowerCase().trim()
         });
         img.src = e.target.result;
       };
@@ -141,19 +143,23 @@ async function generate() {
   let others = [];
 
   loaded.forEach(item => {
-    if (item.name.toLowerCase().startsWith("t_showpic_suit_") && !bigImage) {
+    // ✅ STRICT RULE: must START WITH prefix
+    if (item.name.startsWith("t_showpic_suit_") && !bigImage) {
       bigImage = item.img;
     } else {
       others.push(item.img);
     }
   });
 
+  // big image ALWAYS last (required for layout)
   images = [...others, bigImage].filter(Boolean);
 
   draw();
 }
 
+// =====================
 // DRAW
+// =====================
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -166,7 +172,6 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
-  // WHITE FRAME
   ctx.fillStyle = "white";
   softFrame(ctx, innerX, innerY, innerW, innerH, 2);
   ctx.fill();
@@ -190,19 +195,19 @@ function draw() {
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
-  // ROW 2 LEFT (2 images)
+  // ROW 2 LEFT
   for (let c = 0; c < 2; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
   }
 
-  // ROW 3 LEFT (2 images)
+  // ROW 3 LEFT
   for (let c = 0; c < 2; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
-  // BIG RIGHT SLOT (auto suit image)
+  // BIG RIGHT SLOT
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
@@ -211,7 +216,7 @@ function draw() {
   if (images[i])
     drawCover(images[i], bx, by, bw, bh);
 
-  // TEXT
+  // WATERMARK
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
@@ -221,7 +226,9 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
+// =====================
 // DOWNLOAD
+// =====================
 function download() {
   const a = document.createElement("a");
   a.download = "collage.png";
