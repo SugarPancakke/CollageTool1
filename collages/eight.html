@@ -36,9 +36,14 @@ button {
   cursor: pointer;
 }
 
+/* ✅ FIXED PREVIEW SIZE (70% smaller) */
 canvas {
-  margin-top: 15px;
+  display: block;
+  margin: 20px auto;
   border-radius: 6px;
+
+  width: 420px;   /* 👈 preview size */
+  height: auto;
 }
 </style>
 </head>
@@ -48,12 +53,18 @@ canvas {
 <div class="container">
 
   <div class="tool">
+    <button onclick="window.location.href='../index.html'">
+      ← Back
+    </button>
+
     <h2>8 Piece Collage</h2>
+
     <input type="file" id="upload" multiple accept="image/*">
     <button onclick="generate()">Generate</button>
     <button onclick="download()">Download PNG</button>
   </div>
 
+  <!-- KEEP FULL RESOLUTION -->
   <canvas id="canvas" width="1450" height="1510"></canvas>
 
 </div>
@@ -130,7 +141,6 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
-  // white frame (slightly rounded)
   ctx.fillStyle = "white";
   softFrame(ctx, innerX, innerY, innerW, innerH, 2);
   ctx.fill();
@@ -145,24 +155,31 @@ function draw() {
 
   let i = 0;
 
-  for (let c = 0; c < 4; c++)
-    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
+  for (let c = 0; c < 4; c++) {
+    if (images[i])
+      drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
+  }
 
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
-  for (let c = 0; c < 2; c++)
-    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
+  for (let c = 0; c < 2; c++) {
+    if (images[i])
+      drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
+  }
 
-  for (let c = 0; c < 2; c++)
-    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
+  for (let c = 0; c < 2; c++) {
+    if (images[i])
+      drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
+  }
 
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  if (images[i]) drawCover(images[i], bx, by, bw, bh);
+  if (images[i])
+    drawCover(images[i], bx, by, bw, bh);
 
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
