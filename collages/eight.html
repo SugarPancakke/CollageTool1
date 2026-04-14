@@ -38,17 +38,17 @@ button {
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
-  ground: #db8b9a;
+  background: #db8b9a;
   color: white;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 button:hover {
-  ground: #c06f7f;
+  background: #c06f7f;
 }
 
-/* CANVAS ONLY */
+/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.5);
@@ -64,10 +64,13 @@ canvas {
 
   <div class="tool">
 
-    <button onclick="go()">← Back</button>
-    
+    <!-- BACK BUTTON (FIXED) -->
+    <button onclick="goBack()">← Back</button>
+
     <h2>Collage Tool</h2>
+
     <input type="file" id="upload" multiple accept="image/*">
+
     <button onclick="generate()">Generate</button>
     <button onclick="download()">Download PNG</button>
   </div>
@@ -95,6 +98,7 @@ let bigImage = null;
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
+// LOAD IMAGES
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -109,6 +113,7 @@ function loadImages(files) {
   }));
 }
 
+// DRAW COVER
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -120,6 +125,7 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+// GENERATE
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -148,6 +154,7 @@ async function generate() {
   draw();
 }
 
+// DRAW
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -210,17 +217,18 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
+// DOWNLOAD
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
   link.href = canvas.toDataURL("image/png");
-  link.click();  
+  link.click();
 }
 
+// BACK BUTTON FIXED
 function goBack() {
-  window.location.href = "../";
+  window.location.href = "/CollageTool/";
 }
-  
 </script>
 
 </body>
