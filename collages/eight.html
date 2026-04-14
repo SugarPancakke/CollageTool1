@@ -63,7 +63,6 @@ canvas {
 <div class="container">
 
   <div class="tool">
-
     <button onclick="goBack()">← Back</button>
 
     <h2>Collage Tool</h2>
@@ -95,16 +94,18 @@ let images = [];
 let bigImage = null;
 
 /* =========================
-   PLACEHOLDER (NEW)
+   FIXED PLACEHOLDER PATH
 ========================= */
 const placeholder = new Image();
 placeholder.src = "../image/cheese_placeholder.png";
 
-/* SAFE WRAPPER */
-function safe(img) {
-  return img ? img : placeholder;
-}
+let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw(); // redraw when loaded
+};
 
+/* BIG SLOT BACKGROUND */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
@@ -140,6 +141,11 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+/* SAFE IMAGE */
+function safe(img) {
+  return img ? img : placeholder;
+}
+
 /* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
@@ -171,6 +177,8 @@ async function generate() {
 
 /* DRAW */
 function draw() {
+  if (!placeholderReady) return;
+
   const W = canvas.width;
   const H = canvas.height;
 
@@ -195,12 +203,10 @@ function draw() {
 
   let i = 0;
 
-  /* ROW 1 */
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
   }
 
-  /* ROW 2 */
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
@@ -208,12 +214,10 @@ function draw() {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
   }
 
-  /* ROW 3 */
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
 
-  /* BIG SLOT */
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
@@ -225,7 +229,6 @@ function draw() {
 
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  /* WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
