@@ -48,22 +48,24 @@ button:hover {
   background: #c06f7f;
 }
 
-/* CANVAS */
-canvas {
-  display: block;
-  transform: scale(0.4);
-  transform-origin: center top;
-  margin-top: 10px;
-}
-
-  .preview-panel {
+/* PREVIEW PANEL */
+.preview-panel {
   background: #643545;
-  padding: 25px;
+  padding: 12px;
   border-radius: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  width: fit-content;
+  margin-top: 10px;
+}
+
+/* SCALE ONLY VISUAL CANVAS */
+.preview-panel canvas {
+  transform: scale(0.4);
+  transform-origin: top center;
+  display: block;
 }
 </style>
 </head>
@@ -105,19 +107,17 @@ const outerBottom = 14 * mm;
 let images = [];
 let bigImage = null;
 
-/* =========================
-   FIXED PLACEHOLDER PATH
-========================= */
+/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
 let placeholderReady = false;
 placeholder.onload = () => {
   placeholderReady = true;
-  draw(); // redraw when loaded
+  draw();
 };
 
-/* BIG SLOT BACKGROUND */
+/* BACKGROUND */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
