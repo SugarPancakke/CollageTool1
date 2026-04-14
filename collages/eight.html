@@ -82,7 +82,7 @@ const slotBackground = new Image();
 slotBackground.src = "image/T_showpic_clothes_blank.png";
 
 // =====================
-// LOAD IMAGES (FIXED WITH NAME TRACKING)
+// LOAD IMAGES
 // =====================
 function loadImages(files) {
   return Promise.all([...files].map(file => {
@@ -91,7 +91,7 @@ function loadImages(files) {
       r.onload = e => {
         const img = new Image();
         img.onload = () => {
-          res({ img, name: file.name }); // 👈 IMPORTANT CHANGE
+          res({ img, name: file.name });
         };
         img.src = e.target.result;
       };
@@ -142,11 +142,11 @@ async function generate() {
   bigImage = null;
 
   // =====================
-  // SUIT RULE (NEW)
+  // STRICT SUIT RULE (slot 9)
   // =====================
   for (const item of loaded) {
     if (item.name.startsWith("T_showpic_suit_")) {
-      bigImage = item.img;   // ALWAYS slot 9
+      bigImage = item.img;   // ALWAYS big slot
     } else {
       images.push(item.img);
     }
@@ -205,18 +205,18 @@ function draw() {
       drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
-  // BIG SLOT
+  // BIG SLOT (slot 9)
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // background always
+  // background
   if (slotBackground.complete) {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  // SUIT IMAGE OVERRIDE
+  // SUIT OVERRIDE (slot 9)
   if (bigImage) {
     drawCover(bigImage, bx, by, bw, bh);
   }
