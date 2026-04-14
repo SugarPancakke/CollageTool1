@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Collage Hub</title>
+<title>Collage Tool Hub</title>
 
 <style>
 body {
@@ -23,25 +23,17 @@ h1 {
   margin-bottom: 20px;
 }
 
-.tabs {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-a {
-  display: block;
-  padding: 15px;
+.card {
   background: #222838;
-  border-radius: 10px;
-  color: white;
-  text-decoration: none;
-  font-size: 18px;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  cursor: pointer;
   transition: 0.2s;
 }
 
-a:hover {
-  background: #2f3a5a;
+.card:hover {
+  background: #2d3550;
 }
 </style>
 </head>
@@ -50,14 +42,18 @@ a:hover {
 
 <div class="container">
 
-  <h1>Collage Tools</h1>
+  <h1>Collage Tool</h1>
 
-  <div class="tabs">
-    <a href="collages/eight.html">8 Piece Collage</a>
-    <a href="collages/ten.html">10 Piece Collage</a>
-    <a href="collages/twelve.html">12 Piece Collage</a>
-    <a href="collages/makeup.html">Makeup Collage</a>
-    <a href="collages/deep.html">Deep Echoes</a>
+  <div class="card" onclick="location.href='collages/eight.html'">
+    🧩 8 Piece Collage (Main Template)
+  </div>
+
+  <div class="card" onclick="location.href='collages/simple.html'">
+    🔲 Simple Grid Collage
+  </div>
+
+  <div class="card" onclick="location.href='collages/big.html'">
+    🎯 Big Focus Collage
   </div>
 
 </div>
