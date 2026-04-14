@@ -77,13 +77,17 @@ const outerTop = 3.75 * mm;
 const outerSide = 3.75 * mm;
 const outerBottom = 14 * mm;
 
-// ✅ background image
+// =====================
+// BIG SLOT BACKGROUND IMAGE
+// =====================
 const bigBackground = new Image();
-bigBackground.src = "../images/T_showpic_clothes_blank.png";
+bigBackground.src = "image/T_showpic_clothes_blank.png";
 
 let images = [];
 
+// =====================
 // LOAD IMAGES
+// =====================
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -101,7 +105,9 @@ function loadImages(files) {
   }));
 }
 
-// NO STRETCH
+// =====================
+// NO STRETCH (CROP ONLY)
+// =====================
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -113,7 +119,9 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+// =====================
 // SOFT FRAME
+// =====================
 function softFrame(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -127,7 +135,7 @@ function softFrame(ctx, x, y, w, h, r) {
 }
 
 // =====================
-// GENERATE (BIG IMAGE FIX)
+// GENERATE
 // =====================
 async function generate() {
   const files = document.getElementById("upload").files;
@@ -146,13 +154,14 @@ async function generate() {
     }
   });
 
-  // 🔥 IMPORTANT: big image goes LAST
   images = [...others, bigImage].filter(Boolean);
 
   draw();
 }
 
+// =====================
 // DRAW
+// =====================
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -179,7 +188,7 @@ function draw() {
 
   let i = 0;
 
-  // ROW 1
+  // TOP ROW
   for (let c = 0; c < 4; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
@@ -188,30 +197,29 @@ function draw() {
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
-  // ROW 2 LEFT
+  // LEFT ROWS
   for (let c = 0; c < 2; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
   }
 
-  // ROW 3 LEFT
   for (let c = 0; c < 2; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
-  // BIG SLOT
+  // =====================
+  // BIG SLOT (FIXED 2 LAYERS)
+  // =====================
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // background
-  if (bigBackground.complete) {
-    ctx.drawImage(bigBackground, bx, by, bw, bh);
-  }
+  // 1. background ALWAYS
+  ctx.drawImage(bigBackground, bx, by, bw, bh);
 
-  // big image
+  // 2. big image ALWAYS on top
   if (images[i]) {
     drawCover(images[i], bx, by, bw, bh);
   }
@@ -226,7 +234,9 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
+// =====================
 // DOWNLOAD
+// =====================
 function download() {
   const a = document.createElement("a");
   a.download = "collage.png";
