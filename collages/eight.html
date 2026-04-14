@@ -66,6 +66,9 @@ const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
 
+// =====================
+// SETTINGS
+// =====================
 const gap = 2.5 * mm;
 const whiteFrame = 3.5 * mm;
 
@@ -76,20 +79,13 @@ const outerBottom = 14 * mm;
 let images = [];
 
 // =====================
-// IMAGES
+// BIG SLOT BACKGROUND IMAGE (FIXED PATH)
 // =====================
 const slotBackground = new Image();
 slotBackground.src = "image/T_showpic_clothes_blank.png";
 
-// wait flag (important fix)
-let bgReady = false;
-slotBackground.onload = () => {
-  bgReady = true;
-  draw();
-};
-
 // =====================
-// LOAD
+// LOAD IMAGES
 // =====================
 function loadImages(files) {
   return Promise.all([...files].map(file => {
@@ -106,7 +102,7 @@ function loadImages(files) {
 }
 
 // =====================
-// DRAW COVER
+// NO STRETCH (CROP ONLY)
 // =====================
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
@@ -120,7 +116,7 @@ function drawCover(img, x, y, w, h) {
 }
 
 // =====================
-// SOFT FRAME
+// ROUNDED RECT
 // =====================
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -160,7 +156,6 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
-  // white frame (soft corners)
   ctx.fillStyle = "white";
   roundRect(ctx, innerX, innerY, innerW, innerH, 8);
   ctx.fill();
@@ -175,49 +170,79 @@ function draw() {
 
   let i = 0;
 
-  // GRID
+  // ROW 1
   for (let c = 0; c < 4; c++) {
-    if (images[i])
-      drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
+    if (!images[i]) break;
+
+    drawCover(images[i++],
+      frameX + c * (colW + gap),
+      frameY,
+      colW,
+      rowH
+    );
   }
 
+  // ROW 2 LEFT
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
   for (let c = 0; c < 2; c++) {
-    if (images[i])
-      drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
+    if (!images[i]) break;
+
+    drawCover(images[i++],
+      frameX + c * (colW + gap),
+      y2,
+      colW,
+      rowH
+    );
   }
 
+  // ROW 3 LEFT
   for (let c = 0; c < 2; c++) {
-    if (images[i])
-      drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
+    if (!images[i]) break;
+
+    drawCover(images[i++],
+      frameX + c * (colW + gap),
+      y3,
+      colW,
+      rowH
+    );
   }
 
-  // BIG SLOT
+  // =========================
+  // BIG RIGHT SLOT
+  // =========================
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // ✅ FIXED BACKGROUND (always drawn)
-  if (bgReady) {
+  // 1. ALWAYS draw slot background first
+  if (slotBackground.complete) {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
+  } else {
+    slotBackground.onload = () => {
+      draw();
+    };
   }
 
-  // foreground image
-  if (images[i]) {
-    drawCover(images[i], bx, by, bw, bh);
+  // 2. overlay uploaded image (if exists)
+  const bigImg = images[i];
+  if (bigImg) {
+    drawCover(bigImg, bx, by, bw, bh);
   }
 
-  // TEXT
+  // watermark
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
 
-  const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+  const textWidth = ctx.measureText(text).width;
+  const x = (W - textWidth) / 2;
+  const y = H - (outerBottom / 2) + 15;
+
+  ctx.fillText(text, x, y);
 }
 
 // =====================
