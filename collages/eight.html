@@ -15,7 +15,6 @@ body {
   color: white;
 }
 
-/* ✔ FIX: forces real centering */
 .container {
   width: 900px;
   display: flex;
@@ -48,11 +47,21 @@ button:hover {
   background: #c06f7f;
 }
 
-/* ✔ FIX: proper canvas centering */
+/* ✔ NEW: preview stage background */
+.preview {
+  background: #222838;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+}
+
+/* CANVAS */
 canvas {
   display: block;
-  margin-top: 15px;
-  transform: scale(0.5);
+  transform: scale(0.7);
   transform-origin: center top;
 }
 </style>
@@ -69,7 +78,10 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <canvas id="canvas" width="1450" height="1510"></canvas>
+  <!-- ✔ NEW PREVIEW AREA -->
+  <div class="preview">
+    <canvas id="canvas" width="1450" height="1510"></canvas>
+  </div>
 
 </div>
 
@@ -90,7 +102,6 @@ const outerBottom = 14 * mm;
 let images = [];
 let bigImage = null;
 
-// BIG SLOT BACKGROUND
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
@@ -101,9 +112,7 @@ function loadImages(files) {
       const r = new FileReader();
       r.onload = e => {
         const img = new Image();
-        img.onload = () => {
-          res({ img, name: file.name });
-        };
+        img.onload = () => res({ img, name: file.name });
         img.src = e.target.result;
       };
       r.readAsDataURL(file);
@@ -123,7 +132,7 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// GENERATE (slot 9 rule unchanged)
+// GENERATE
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
