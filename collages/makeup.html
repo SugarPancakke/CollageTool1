@@ -100,6 +100,9 @@ function goBack() {
   window.location.href = "/CollageTool/";
 }
 
+/* =========================
+   LOAD IMAGES
+========================= */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -115,7 +118,7 @@ function loadImages(files) {
 }
 
 /* =========================
-   ROUND HELPER
+   ROUND PATH
 ========================= */
 function roundRectPath(x, y, w, h, r) {
   ctx.beginPath();
@@ -132,9 +135,9 @@ function roundRectPath(x, y, w, h, r) {
 }
 
 /* =========================
-   IMAGE DRAW (SAFE)
+   IMAGE DRAW (COVER + ROUND)
 ========================= */
-function drawImageCover(img, x, y, w, h, r = 8) {
+function drawImage(img, x, y, w, h, r = 8) {
   ctx.save();
   roundRectPath(x, y, w, h, r);
   ctx.clip();
@@ -150,10 +153,30 @@ function drawImageCover(img, x, y, w, h, r = 8) {
   ctx.restore();
 }
 
+/* =========================
+   COVER (NO STRETCH)
+========================= */
+function drawCover(img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
+
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
+
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+/* =========================
+   SAFE IMAGE
+========================= */
 function safe(img) {
   return img || placeholder;
 }
 
+/* =========================
+   GENERATE
+========================= */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -178,17 +201,18 @@ async function generate() {
   }
 
   images = normalImages;
-
   draw();
 }
 
+/* =========================
+   DRAW
+========================= */
 function draw() {
   if (!placeholderReady) return;
 
   const W = canvas.width;
   const H = canvas.height;
 
-  // background
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
 
@@ -197,7 +221,7 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
-  // FRAME (NO CLIP HERE)
+  // WHITE FRAME (rounded)
   ctx.fillStyle = "white";
   roundRectPath(innerX, innerY, innerW, innerH, 8);
   ctx.fill();
@@ -214,7 +238,7 @@ function draw() {
 
   // ROW 1
   for (let c = 0; c < 4; c++) {
-    drawImageCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
+    drawImage(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
   }
 
   const y2 = frameY + rowH + gap;
@@ -223,46 +247,50 @@ function draw() {
 
   // ROW 2
   for (let c = 0; c < 2; c++) {
-    drawImageCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
+    drawImage(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
   }
 
   // ROW 3
   for (let c = 0; c < 2; c++) {
-    drawImageCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
+    drawImage(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
 
   // ROW 4
   for (let c = 0; c < 2; c++) {
-    drawImageCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
+    drawImage(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
   }
 
-  // BIG SLOT (NO GLOBAL CLIP LEAK)
+  /* =========================
+     SLOT 9 BIG AREA
+  ========================= */
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 3 + gap * 2;
 
-  ctx.save();
-  roundRectPath(bx, by, bw, bh, 8);
-  ctx.clip();
-
+  // BACKGROUND (NO STRETCH)
   if (slotBackground.complete) {
-    ctx.drawImage(slotBackground, bx, by, bw, bh);
+    drawCover(slotBackground, bx, by, bw, bh);
   }
 
-  drawImageCover(bigImage, bx, by, bw, bh, 8);
-  ctx.restore();
+  // BIG IMAGE
+  drawImage(bigImage, bx, by, bw, bh, 8);
 
-  // WATERMARK (ALWAYS OUTSIDE CLIP)
+  /* =========================
+     WATERMARK (ALWAYS LAST)
+  ========================= */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
 
   const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+  ctx.fillText(text, (W - tw) / 2, H - 40);
 }
 
+/* =========================
+   DOWNLOAD
+========================= */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
