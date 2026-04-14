@@ -22,6 +22,7 @@ body {
   align-items: center;
 }
 
+/* TOOL */
 .tool {
   background: #643545;
   padding: 15px;
@@ -31,6 +32,7 @@ body {
   box-sizing: border-box;
 }
 
+/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -46,6 +48,7 @@ button:hover {
   background: #c06f7f;
 }
 
+/* CANVAS ONLY */
 canvas {
   display: block;
   transform: scale(0.5);
@@ -86,14 +89,9 @@ const outerBottom = 14 * mm;
 let images = [];
 let bigImage = null;
 
-// ✔ PLACEHOLDER IMAGE
-const placeholder = new Image();
-placeholder.src = "image/cheese_placeholder.png";
-
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
-// LOAD IMAGES
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -108,7 +106,6 @@ function loadImages(files) {
   }));
 }
 
-// DRAW COVER
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -120,12 +117,6 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// GET IMAGE OR PLACEHOLDER
-function getImage(img) {
-  return img ? img : placeholder;
-}
-
-// GENERATE
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -154,7 +145,6 @@ async function generate() {
   draw();
 }
 
-// DRAW
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -181,18 +171,18 @@ function draw() {
   let i = 0;
 
   for (let c = 0; c < 4; c++) {
-    drawCover(getImage(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
+    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
   }
 
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
   for (let c = 0; c < 2; c++) {
-    drawCover(getImage(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
+    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
   }
 
   for (let c = 0; c < 2; c++) {
-    drawCover(getImage(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
+    if (images[i]) drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
   const bx = frameX + 2 * (colW + gap);
@@ -200,13 +190,13 @@ function draw() {
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // background always
   if (slotBackground.complete) {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  // big slot image OR placeholder
-  drawCover(bigImage ? bigImage : placeholder, bx, by, bw, bh);
+  if (bigImage) {
+    drawCover(bigImage, bx, by, bw, bh);
+  }
 
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
@@ -217,7 +207,6 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-// DOWNLOAD
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
