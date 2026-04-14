@@ -77,13 +77,13 @@ const outerTop = 3.75 * mm;
 const outerSide = 3.75 * mm;
 const outerBottom = 14 * mm;
 
-// BIG SLOT BACKGROUND
+// background for big slot
 const bigBackground = new Image();
 bigBackground.src = "image/T_showpic_clothes_blank.png";
 
 let images = [];
 
-// LOAD IMAGES
+// LOAD
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -98,7 +98,7 @@ function loadImages(files) {
   }));
 }
 
-// NO STRETCH CROP
+// crop
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -110,7 +110,7 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// SOFT FRAME
+// frame
 function softFrame(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -128,12 +128,7 @@ async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
-  const loaded = await loadImages(files);
-
-  let bigImage = loaded.length ? loaded[loaded.length - 1].img : null;
-  let others = loaded.slice(0, -1).map(x => x.img);
-
-  images = [...others, bigImage].filter(Boolean);
+  images = await loadImages(files);
 
   draw();
 }
@@ -165,6 +160,7 @@ function draw() {
 
   let i = 0;
 
+  // GRID FILL (everything in order)
   for (let c = 0; c < 4; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
@@ -183,16 +179,14 @@ function draw() {
       drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
-  // BIG SLOT
+  // BIG SLOT (just next image in sequence if exists)
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // background
   ctx.drawImage(bigBackground, bx, by, bw, bh);
 
-  // big image (last uploaded)
   if (images[i]) {
     drawCover(images[i], bx, by, bw, bh);
   }
