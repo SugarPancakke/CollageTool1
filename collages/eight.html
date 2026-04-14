@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>8 Piece Collage</title>
+<title>Collage Tool</title>
 
 <style>
 body {
@@ -37,11 +37,10 @@ button {
 }
 
 canvas {
-  display: block;
-  margin: 20px auto;
+  margin-top: 15px;
   border-radius: 6px;
-  width: 420px;
-  height: auto;
+  transform: scale(0.7);
+  transform-origin: top center;
 }
 </style>
 </head>
@@ -51,10 +50,7 @@ canvas {
 <div class="container">
 
   <div class="tool">
-    <button onclick="window.location.href='../index.html'">← Back</button>
-
-    <h2>8 Piece Collage</h2>
-
+    <h2>Collage Tool</h2>
     <input type="file" id="upload" multiple accept="image/*">
     <button onclick="generate()">Generate</button>
     <button onclick="download()">Download PNG</button>
@@ -71,19 +67,30 @@ const ctx = canvas.getContext("2d");
 const mm = 3.78;
 
 const gap = 2.5 * mm;
-const whiteFrame = 3 * mm;
+const whiteFrame = 3.5 * mm;
 
-const outerTop = 3.75 * mm;
-const outerSide = 3.75 * mm;
+const outerTop = 6 * mm;
+const outerSide = 6 * mm;
 const outerBottom = 14 * mm;
-
-// background for big slot
-const bigBackground = new Image();
-bigBackground.src = "image/T_showpic_clothes_blank.png";
 
 let images = [];
 
+// =====================
+// IMAGES
+// =====================
+const slotBackground = new Image();
+slotBackground.src = "image/T_showpic_clothes_blank.png";
+
+// wait flag (important fix)
+let bgReady = false;
+slotBackground.onload = () => {
+  bgReady = true;
+  draw();
+};
+
+// =====================
 // LOAD
+// =====================
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -98,7 +105,9 @@ function loadImages(files) {
   }));
 }
 
-// crop
+// =====================
+// DRAW COVER
+// =====================
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -110,8 +119,10 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// frame
-function softFrame(ctx, x, y, w, h, r) {
+// =====================
+// SOFT FRAME
+// =====================
+function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -123,17 +134,20 @@ function softFrame(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+// =====================
 // GENERATE
+// =====================
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
   images = await loadImages(files);
-
   draw();
 }
 
+// =====================
 // DRAW
+// =====================
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -146,8 +160,9 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
+  // white frame (soft corners)
   ctx.fillStyle = "white";
-  softFrame(ctx, innerX, innerY, innerW, innerH, 2);
+  roundRect(ctx, innerX, innerY, innerW, innerH, 8);
   ctx.fill();
 
   const frameX = innerX + whiteFrame;
@@ -160,7 +175,7 @@ function draw() {
 
   let i = 0;
 
-  // GRID FILL (everything in order)
+  // GRID
   for (let c = 0; c < 4; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
@@ -179,14 +194,18 @@ function draw() {
       drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
-  // BIG SLOT (just next image in sequence if exists)
+  // BIG SLOT
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  ctx.drawImage(bigBackground, bx, by, bw, bh);
+  // ✅ FIXED BACKGROUND (always drawn)
+  if (bgReady) {
+    ctx.drawImage(slotBackground, bx, by, bw, bh);
+  }
 
+  // foreground image
   if (images[i]) {
     drawCover(images[i], bx, by, bw, bh);
   }
@@ -201,12 +220,14 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
+// =====================
 // DOWNLOAD
+// =====================
 function download() {
-  const a = document.createElement("a");
-  a.download = "collage.png";
-  a.href = canvas.toDataURL("image/png");
-  a.click();
+  const link = document.createElement("a");
+  link.download = "collage.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 }
 </script>
 
