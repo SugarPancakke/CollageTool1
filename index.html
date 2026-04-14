@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Collage Tool</title>
+
+<style>
+body {
+  margin: 0;
+  background: #16161d;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 900px;
+}
+
+.tool {
+  background: #222838;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #4f7cff;
+  color: white;
+  cursor: pointer;
+}
+
+canvas {
+  margin-top: 15px;
+  border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="tool">
+    <h2>Collage Tool</h2>
+    <input type="file" id="upload" multiple accept="image/*">
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
+  </div>
+
+  <canvas id="canvas" width="1450" height="1510"></canvas>
+
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const mm = 3.78;
+
+// =====================
+// SETTINGS
+// =====================
+const gap = 2.5 * mm;
+
+// SIMPLE WHITE FRAME (RESTORED STYLE)
+const whiteFrame = 3 * mm;
+
+// OUTER DARK FRAME
+const outerTop = 3.75 * mm;
+const outerSide = 3.75 * mm;
+const outerBottom = 14 * mm;
+
+let images = [];
+
+// =====================
+// LOAD IMAGES
+// =====================
+function loadImages(files) {
+  return Promise.all([...files].map(file => {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => res(img);
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }));
+}
+
+// =====================
+// NO STRETCH CROP
+// =====================
+function drawCover(img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
+
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
+
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+// =====================
+// GENERATE
+// =====================
+async function generate() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
+
+  images = await loadImages(files);
+  draw();
+}
+
+// =====================
+// DRAW
+// =====================
+function draw() {
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // background
+  ctx.fillStyle = "#16161d";
+  ctx.fillRect(0, 0, W, H);
+
+  // OUTER DARK FRAME AREA
+  const innerX = outerSide;
+  const innerY = outerTop;
+  const innerW = W - outerSide * 2;
+  const innerH = H - outerTop - outerBottom;
+
+  // SIMPLE WHITE BACKGROUND (ROUNDED)
+  ctx.fillStyle = "white";
+  function softFrame(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.closePath();
+}
+
+softFrame(ctx, innerX, innerY, innerW, innerH, 2);
+ctx.fillStyle = "white";
+ctx.fill();
+
+  // GRID AREA INSIDE WHITE FRAME
+  const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+  const frameW = innerW - whiteFrame * 2;
+  const frameH = innerH - whiteFrame * 2;
+
+  const colW = (frameW - gap * 3) / 4;
+  const rowH = (frameH - gap * 2) / 3;
+
+  let i = 0;
+
+  // ROW 1 (4 images)
+  for (let c = 0; c < 4; c++) {
+    if (!images[i]) break;
+    drawCover(images[i++],
+      frameX + c * (colW + gap),
+      frameY,
+      colW,
+      rowH
+    );
+  }
+
+  // ROW 2 LEFT (2 images)
+  const y2 = frameY + rowH + gap;
+  const y3 = y2 + rowH + gap;
+
+  for (let c = 0; c < 2; c++) {
+    if (!images[i]) break;
+    drawCover(images[i++],
+      frameX + c * (colW + gap),
+      y2,
+      colW,
+      rowH
+    );
+  }
+
+  // ROW 3 LEFT (2 images)
+  for (let c = 0; c < 2; c++) {
+    if (!images[i]) break;
+    drawCover(images[i++],
+      frameX + c * (colW + gap),
+      y3,
+      colW,
+      rowH
+    );
+  }
+
+  // BIG RIGHT SLOT
+  const bx = frameX + 2 * (colW + gap);
+  const by = y2;
+  const bw = colW * 2 + gap;
+  const bh = rowH * 2 + gap;
+
+  const bigImg = images[i];
+
+  if (bigImg) {
+    drawCover(bigImg, bx, by, bw, bh);
+  }
+
+  // watermark
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
+
+  const textWidth = ctx.measureText(text).width;
+  const x = (W - textWidth) / 2;
+  const y = H - (outerBottom / 2) + 15;
+
+  ctx.fillText(text, x, y);
+}
+
+// =====================
+// DOWNLOAD
+// =====================
+function download() {
+  const link = document.createElement("a");
+  link.download = "collage.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+</script>
+
+</body>
+</html>
