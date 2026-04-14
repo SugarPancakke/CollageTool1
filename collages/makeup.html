@@ -39,11 +39,6 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s ease;
-}
-
-button:hover {
-  background: #c06f7f;
 }
 
 canvas {
@@ -79,7 +74,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-
 const gap = 2.5 * mm;
 const whiteFrame = 3.5 * mm;
 
@@ -121,7 +115,7 @@ function loadImages(files) {
 }
 
 /* =========================
-   ROUND PATH HELPER
+   ROUND HELPER
 ========================= */
 function roundRectPath(x, y, w, h, r) {
   ctx.beginPath();
@@ -138,11 +132,10 @@ function roundRectPath(x, y, w, h, r) {
 }
 
 /* =========================
-   ROUNDED IMAGE (8px)
+   IMAGE DRAW (SAFE)
 ========================= */
-function drawRoundedImage(img, x, y, w, h, r = 8) {
+function drawImageCover(img, x, y, w, h, r = 8) {
   ctx.save();
-
   roundRectPath(x, y, w, h, r);
   ctx.clip();
 
@@ -154,12 +147,11 @@ function drawRoundedImage(img, x, y, w, h, r = 8) {
   const sy = (img.height - sh) / 2;
 
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-
   ctx.restore();
 }
 
 function safe(img) {
-  return img ? img : placeholder;
+  return img || placeholder;
 }
 
 async function generate() {
@@ -196,6 +188,7 @@ function draw() {
   const W = canvas.width;
   const H = canvas.height;
 
+  // background
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
 
@@ -204,14 +197,10 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
-  /* =========================
-     WHITE FRAME (ROUNDED)
-  ========================= */
-  ctx.save();
-  roundRectPath(innerX, innerY, innerW, innerH, 8);
+  // FRAME (NO CLIP HERE)
   ctx.fillStyle = "white";
+  roundRectPath(innerX, innerY, innerW, innerH, 8);
   ctx.fill();
-  ctx.restore();
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
@@ -225,7 +214,7 @@ function draw() {
 
   // ROW 1
   for (let c = 0; c < 4; c++) {
-    drawRoundedImage(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
+    drawImageCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
   }
 
   const y2 = frameY + rowH + gap;
@@ -234,22 +223,20 @@ function draw() {
 
   // ROW 2
   for (let c = 0; c < 2; c++) {
-    drawRoundedImage(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
+    drawImageCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
   }
 
   // ROW 3
   for (let c = 0; c < 2; c++) {
-    drawRoundedImage(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
+    drawImageCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
 
   // ROW 4
   for (let c = 0; c < 2; c++) {
-    drawRoundedImage(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
+    drawImageCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
   }
 
-  /* =========================
-     BIG SLOT (ROUNDED AREA)
-  ========================= */
+  // BIG SLOT (NO GLOBAL CLIP LEAK)
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
@@ -263,10 +250,10 @@ function draw() {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  drawRoundedImage(bigImage, bx, by, bw, bh, 8);
-
+  drawImageCover(bigImage, bx, by, bw, bh, 8);
   ctx.restore();
 
+  // WATERMARK (ALWAYS OUTSIDE CLIP)
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
