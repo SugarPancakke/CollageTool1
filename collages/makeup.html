@@ -8,10 +8,10 @@
 body {
   margin: 0;
   background: #391823;
-  font-family: Arial;
   display: flex;
   justify-content: center;
   padding: 20px;
+  font-family: Arial;
   color: white;
 }
 
@@ -26,14 +26,13 @@ body {
   background: #643545;
   padding: 15px;
   border-radius: 12px;
-  margin-bottom: 15px;
   width: 100%;
-  box-sizing: border-box;
+  margin-bottom: 15px;
 }
 
 button {
   margin-top: 10px;
-  padding: 10px 14px;
+  padding: 10px;
   border: none;
   border-radius: 8px;
   background: #db8b9a;
@@ -42,10 +41,9 @@ button {
 }
 
 canvas {
-  display: block;
   transform: scale(0.4);
-  transform-origin: center top;
-  margin-top: 10px;
+  transform-origin: top center;
+  display: block;
 }
 </style>
 </head>
@@ -55,211 +53,164 @@ canvas {
 <div class="container">
 
   <div class="tool">
-    <button onclick="goBack()">← Back</button>
-
     <h2>10 Pieces Collage</h2>
-
     <input type="file" id="upload" multiple accept="image/*">
-
     <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+    <button onclick="download()">Download</button>
   </div>
 
   <canvas id="canvas" width="1500" height="2100"></canvas>
-
 </div>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-/* ====== SETTINGS ====== */
-const mm = 3.78;
-const gap = 9.45;
-const whiteFrame = 13.23;
+/* ===== SETTINGS ===== */
+const gap = 24;
+const framePad = 20;
+const radius = 8;
 
-const outerTop = 22.68;
-const outerSide = 22.68;
-const outerBottom = 68.04;
+/* ===== STATE ===== */
+let imgs = [];
+let big = null;
 
-/* ====== STATE ====== */
-let images = [];
-let bigImage = null;
-
-/* ====== PLACEHOLDER ====== */
-const placeholder = new Image();
-placeholder.src = "../image/T_showpic_clothes_blank.png";
-
-let placeholderReady = false;
-placeholder.onload = () => {
-  placeholderReady = true;
-  draw();
-};
-
-/* ====== NAV ====== */
-function goBack() {
-  window.location.href = "/CollageTool/";
-}
-
-/* ====== LOAD FILES ====== */
-function loadImages(files) {
-  return Promise.all([...files].map(file => {
-    return new Promise(res => {
+/* ===== LOAD ===== */
+function load(files) {
+  return Promise.all([...files].map(f =>
+    new Promise(res => {
       const r = new FileReader();
       r.onload = e => {
-        const img = new Image();
-        img.onload = () => res({ img, name: file.name });
-        img.src = e.target.result;
+        const i = new Image();
+        i.onload = () => res(i);
+        i.src = e.target.result;
       };
-      r.readAsDataURL(file);
-    });
-  }));
+      r.readAsDataURL(f);
+    })
+  ));
 }
 
-/* ====== ROUND PATH ====== */
-function roundRect(x, y, w, h, r) {
+/* ===== ROUND RECT ===== */
+function round(x,y,w,h,r){
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
   ctx.closePath();
 }
 
-/* ====== IMAGE DRAW (COVER + ROUND) ====== */
-function drawImage(img, x, y, w, h, r = 8) {
+/* ===== COVER DRAW (NO STRETCH) ===== */
+function draw(img,x,y,w,h){
   ctx.save();
-  roundRect(x, y, w, h, r);
+  round(x,y,w,h,radius);
   ctx.clip();
 
-  const scale = Math.max(w / img.width, h / img.height);
-  const sw = w / scale;
-  const sh = h / scale;
+  const s = Math.max(w/img.width, h/img.height);
+  const sw = w/s;
+  const sh = h/s;
 
-  const sx = (img.width - sw) / 2;
-  const sy = (img.height - sh) / 2;
+  const sx = (img.width - sw)/2;
+  const sy = (img.height - sh)/2;
 
-  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
   ctx.restore();
 }
 
-/* ====== SAFE IMAGE ====== */
-function safe(img) {
-  return img || placeholder;
-}
-
-/* ====== GENERATE ====== */
-async function generate() {
+/* ===== GENERATE ===== */
+async function generate(){
   const files = document.getElementById("upload").files;
-  if (!files.length) return alert("Upload images first");
+  if(!files.length) return alert("Upload images");
 
-  const loaded = await loadImages(files);
+  const loaded = await load(files);
 
-  images = [];
-  bigImage = null;
+  imgs = [];
+  big = null;
 
   let normal = [];
 
-  for (const item of loaded) {
-    if (item.name.startsWith("T_showpic_suit_")) {
-      bigImage = item.img;
-    } else {
-      normal.push(item.img);
-    }
-  }
+  loaded.forEach((img,i)=>{
+    if(i===0) big = img; else normal.push(img);
+  });
 
-  if (!bigImage && normal.length > 0) {
-    bigImage = normal.shift();
-  }
-
-  images = normal;
-  draw();
+  imgs = normal;
+  drawAll();
 }
 
-/* ====== DRAW ====== */
-function draw() {
-  if (!placeholderReady) return;
+/* ===== DRAW ===== */
+function drawAll(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
   const W = canvas.width;
   const H = canvas.height;
 
   ctx.fillStyle = "#16161d";
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0,0,W,H);
 
-  const innerX = outerSide;
-  const innerY = outerTop;
-  const innerW = W - outerSide * 2;
-  const innerH = H - outerTop - outerBottom;
+  const x = framePad;
+  const y = framePad;
+  const w = W - framePad*2;
+  const h = H - framePad*2;
 
-  /* WHITE FRAME */
+  /* FRAME */
   ctx.fillStyle = "white";
-  roundRect(innerX, innerY, innerW, innerH, 8);
+  round(x,y,w,h,radius);
   ctx.fill();
 
-  const frameX = innerX + whiteFrame;
-  const frameY = innerY + whiteFrame;
-  const frameW = innerW - whiteFrame * 2;
-  const frameH = innerH - whiteFrame * 2;
+  const fx = x + 20;
+  const fy = y + 20;
+  const fw = w - 40;
+  const fh = h - 40;
 
-  const colW = (frameW - gap * 3) / 4;
-  const rowH = (frameH - gap * 3) / 4;
+  const col = (fw - gap*3)/4;
+  const row = (fh - gap*3)/4;
 
   let i = 0;
 
-  /* ROW 1 */
-  for (let c = 0; c < 4; c++) {
-    drawImage(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
-  }
+  /* ROWS */
+  for(let r=0;r<4;r++){
+    for(let c=0;c< (r===0?4:2);c++){
+      if(r===1 && c===1) continue;
+      if(r===2 && c===1) continue;
+      if(r===3 && c===1) continue;
 
-  const y2 = frameY + rowH + gap;
-  const y3 = y2 + rowH + gap;
-  const y4 = y3 + rowH + gap;
-
-  /* ROW 2 */
-  for (let c = 0; c < 2; c++) {
-    drawImage(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
-  }
-
-  /* ROW 3 */
-  for (let c = 0; c < 2; c++) {
-    drawImage(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
-  }
-
-  /* ROW 4 */
-  for (let c = 0; c < 2; c++) {
-    drawImage(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
+      if(i<imgs.length){
+        draw(imgs[i++], fx + c*(col+gap), fy + r*(row+gap), col, row);
+      }
+    }
   }
 
   /* SLOT 9 BIG */
-  const bx = frameX + 2 * (colW + gap);
-  const by = y2;
-  const bw = colW * 2 + gap;
-  const bh = rowH * 3 + gap * 2;
+  const bx = fx + 2*(col+gap);
+  const by = fy + (row+gap);
+  const bw = col*2 + gap;
+  const bh = row*3 + gap*2;
 
-  drawImage(placeholder, bx, by, bw, bh);
-  drawImage(bigImage, bx, by, bw, bh);
+  if(big){
+    draw(big, bx,by,bw,bh);
+  }
 
-  /* WATERMARK (ALWAYS LAST) */
+  /* WATERMARK */
   ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Comic Sans MS";
+  ctx.font = "bold 40px Arial";
 
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
   const tw = ctx.measureText(text).width;
 
-  ctx.fillText(text, (W - tw) / 2, H - 40);
+  ctx.fillText(text, (W-tw)/2, H-30);
 }
 
-/* ====== DOWNLOAD ====== */
-function download() {
-  const link = document.createElement("a");
-  link.download = "collage.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+/* ===== DOWNLOAD ===== */
+function download(){
+  const a = document.createElement("a");
+  a.download = "collage.png";
+  a.href = canvas.toDataURL();
+  a.click();
 }
 </script>
 
