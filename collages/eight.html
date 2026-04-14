@@ -2,45 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Collage Tool</title>
+<title>Collage Hub</title>
 
 <style>
 body {
   margin: 0;
   background: #16161d;
   font-family: Arial;
+  color: white;
   display: flex;
   justify-content: center;
-  padding: 20px;
-  color: white;
+  padding: 40px;
 }
 
 .container {
   width: 900px;
 }
 
-.tool {
-  background: #222838;
+h1 {
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+a {
+  display: block;
   padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 15px;
-}
-
-button {
-  margin-top: 10px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  background: #4f7cff;
+  background: #222838;
+  border-radius: 10px;
   color: white;
-  cursor: pointer;
+  text-decoration: none;
+  font-size: 18px;
+  transition: 0.2s;
 }
 
-canvas {
-  margin-top: 15px;
-  border-radius: 6px;
-  transform: scale(0.7);
-  transform-origin: top center;
+a:hover {
+  background: #2f3a5a;
 }
 </style>
 </head>
@@ -49,212 +50,17 @@ canvas {
 
 <div class="container">
 
-  <div class="tool">
-    <h2>Collage Tool</h2>
-    <input type="file" id="upload" multiple accept="image/*">
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+  <h1>Collage Tools</h1>
+
+  <div class="tabs">
+    <a href="collages/eight.html">8 Piece Collage</a>
+    <a href="collages/ten.html">10 Piece Collage</a>
+    <a href="collages/twelve.html">12 Piece Collage</a>
+    <a href="collages/makeup.html">Makeup Collage</a>
+    <a href="collages/deep.html">Deep Echoes</a>
   </div>
 
-  <canvas id="canvas" width="1450" height="1510"></canvas>
-
 </div>
-
-<script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-const mm = 3.78;
-
-// =====================
-// SETTINGS
-// =====================
-const gap = 2.5 * mm;
-const whiteFrame = 3.5 * mm;
-
-const outerTop = 6 * mm;
-const outerSide = 6 * mm;
-const outerBottom = 14 * mm;
-
-let images = [];
-
-// =====================
-// BIG SLOT BACKGROUND IMAGE (FIXED PATH)
-// =====================
-const slotBackground = new Image();
-slotBackground.src = "image/T_showpic_clothes_blank.png";
-
-// =====================
-// LOAD IMAGES
-// =====================
-function loadImages(files) {
-  return Promise.all([...files].map(file => {
-    return new Promise(res => {
-      const r = new FileReader();
-      r.onload = e => {
-        const img = new Image();
-        img.onload = () => res(img);
-        img.src = e.target.result;
-      };
-      r.readAsDataURL(file);
-    });
-  }));
-}
-
-// =====================
-// NO STRETCH (CROP ONLY)
-// =====================
-function drawCover(img, x, y, w, h) {
-  const scale = Math.max(w / img.width, h / img.height);
-  const sw = w / scale;
-  const sh = h / scale;
-
-  const sx = (img.width - sw) / 2;
-  const sy = (img.height - sh) / 2;
-
-  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-}
-
-// =====================
-// ROUNDED RECT
-// =====================
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.closePath();
-}
-
-// =====================
-// GENERATE
-// =====================
-async function generate() {
-  const files = document.getElementById("upload").files;
-  if (!files.length) return alert("Upload images first");
-
-  images = await loadImages(files);
-  draw();
-}
-
-// =====================
-// DRAW
-// =====================
-function draw() {
-  const W = canvas.width;
-  const H = canvas.height;
-
-  ctx.fillStyle = "#16161d";
-  ctx.fillRect(0, 0, W, H);
-
-  const innerX = outerSide;
-  const innerY = outerTop;
-  const innerW = W - outerSide * 2;
-  const innerH = H - outerTop - outerBottom;
-
-  ctx.fillStyle = "white";
-  roundRect(ctx, innerX, innerY, innerW, innerH, 8);
-  ctx.fill();
-
-  const frameX = innerX + whiteFrame;
-  const frameY = innerY + whiteFrame;
-  const frameW = innerW - whiteFrame * 2;
-  const frameH = innerH - whiteFrame * 2;
-
-  const colW = (frameW - gap * 3) / 4;
-  const rowH = (frameH - gap * 2) / 3;
-
-  let i = 0;
-
-  // ROW 1
-  for (let c = 0; c < 4; c++) {
-    if (!images[i]) break;
-
-    drawCover(images[i++],
-      frameX + c * (colW + gap),
-      frameY,
-      colW,
-      rowH
-    );
-  }
-
-  // ROW 2 LEFT
-  const y2 = frameY + rowH + gap;
-  const y3 = y2 + rowH + gap;
-
-  for (let c = 0; c < 2; c++) {
-    if (!images[i]) break;
-
-    drawCover(images[i++],
-      frameX + c * (colW + gap),
-      y2,
-      colW,
-      rowH
-    );
-  }
-
-  // ROW 3 LEFT
-  for (let c = 0; c < 2; c++) {
-    if (!images[i]) break;
-
-    drawCover(images[i++],
-      frameX + c * (colW + gap),
-      y3,
-      colW,
-      rowH
-    );
-  }
-
-  // =========================
-  // BIG RIGHT SLOT
-  // =========================
-  const bx = frameX + 2 * (colW + gap);
-  const by = y2;
-  const bw = colW * 2 + gap;
-  const bh = rowH * 2 + gap;
-
-  // 1. ALWAYS draw slot background first
-  if (slotBackground.complete) {
-    ctx.drawImage(slotBackground, bx, by, bw, bh);
-  } else {
-    slotBackground.onload = () => {
-      draw();
-    };
-  }
-
-  // 2. overlay uploaded image (if exists)
-  const bigImg = images[i];
-  if (bigImg) {
-    drawCover(bigImg, bx, by, bw, bh);
-  }
-
-  // watermark
-  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
-
-  ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Comic Sans MS";
-
-  const textWidth = ctx.measureText(text).width;
-  const x = (W - textWidth) / 2;
-  const y = H - (outerBottom / 2) + 15;
-
-  ctx.fillText(text, x, y);
-}
-
-// =====================
-// DOWNLOAD
-// =====================
-function download() {
-  const link = document.createElement("a");
-  link.download = "collage.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-}
-</script>
 
 </body>
 </html>
