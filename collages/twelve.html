@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>10 Pieces Collage</title>
+<title>12 Pieces Collage</title>
 
 <style>
 body {
@@ -39,7 +39,6 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s ease;
 }
 
 button:hover {
@@ -48,7 +47,7 @@ button:hover {
 
 canvas {
   display: block;
-  transform: scale(0.33);
+  transform: scale(0.4);
   transform-origin: center top;
   margin-top: 10px;
 }
@@ -62,7 +61,7 @@ canvas {
   <div class="tool">
     <button onclick="goBack()">← Back</button>
 
-    <h2>10 Pieces Collage</h2>
+    <h2>Collage Tool</h2>
 
     <input type="file" id="upload" multiple accept="image/*">
 
@@ -79,7 +78,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-
 const gap = 2.5 * mm;
 const whiteFrame = 3.5 * mm;
 
@@ -181,43 +179,45 @@ function draw() {
   ctx.fillRect(innerX, innerY, innerW, innerH);
 
   const frameX = innerX + whiteFrame;
-  const frameY = innerY + whiteFrame;
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
   const colW = (frameW - gap * 3) / 4;
-  const rowH = (frameH - gap * 3) / 4;
+  const rowH = (frameH - gap * 3) / 4; // 4 rows now
+
+  const offset = rowH + gap;
+
+  // 4 ROWS
+  const y0 = innerY + whiteFrame;
+  const y1 = y0 + offset;
+  const y2 = y0 + offset * 2;
+  const y3 = y0 + offset * 3;
 
   let i = 0;
 
-  // ROW 1 (4 images)
+  // ROW 0 (DUPLICATE TOP ROW)
   for (let c = 0; c < 4; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
+    drawCover(safe(images[c]), frameX + c * (colW + gap), y0, colW, rowH);
   }
 
-  const y2 = frameY + rowH + gap;
-  const y3 = y2 + rowH + gap;
-  const y4 = y3 + rowH + gap;
-
-  // ROW 2 (EMPTY)
+  // ROW 1 (ORIGINAL TOP ROW)
   for (let c = 0; c < 4; c++) {
-    drawCover(placeholder, frameX + c * (colW + gap), y2, colW, rowH);
+    drawCover(safe(images[c]), frameX + c * (colW + gap), y1, colW, rowH);
   }
 
-  // ROW 3 (2 images)
+  // ROW 2 (middle + big row)
   for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
+    drawCover(safe(images[4 + c]), frameX + c * (colW + gap), y2, colW, rowH);
   }
 
-  // ROW 4 (2 images)
+  // ROW 3 bottom-left
   for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
+    drawCover(safe(images[6 + c]), frameX + c * (colW + gap), y3, colW, rowH);
   }
 
-  // BIG IMAGE (Row 3–4 only)
+  // BIG SLOT (shifted down automatically)
   const bx = frameX + 2 * (colW + gap);
-  const by = y3;
-
+  const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
