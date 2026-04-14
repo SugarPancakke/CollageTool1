@@ -36,14 +36,9 @@ button {
   cursor: pointer;
 }
 
-/* ✅ FIXED PREVIEW SIZE (70% smaller) */
 canvas {
-  display: block;
-  margin: 20px auto;
+  margin-top: 15px;
   border-radius: 6px;
-
-  width: 420px;   /* 👈 preview size */
-  height: auto;
 }
 </style>
 </head>
@@ -53,9 +48,7 @@ canvas {
 <div class="container">
 
   <div class="tool">
-    <button onclick="window.location.href='../index.html'">
-      ← Back
-    </button>
+    <button onclick="window.location.href='../index.html'">← Back</button>
 
     <h2>8 Piece Collage</h2>
 
@@ -64,7 +57,6 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <!-- KEEP FULL RESOLUTION -->
   <canvas id="canvas" width="1450" height="1510"></canvas>
 
 </div>
@@ -75,6 +67,7 @@ const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
 
+// SETTINGS
 const gap = 2.5 * mm;
 const whiteFrame = 3 * mm;
 
@@ -84,6 +77,7 @@ const outerBottom = 14 * mm;
 
 let images = [];
 
+// LOAD IMAGES
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -98,6 +92,7 @@ function loadImages(files) {
   }));
 }
 
+// NO STRETCH (CROP)
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -109,14 +104,7 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-async function generate() {
-  const files = document.getElementById("upload").files;
-  if (!files.length) return alert("Upload images first");
-
-  images = await loadImages(files);
-  draw();
-}
-
+// SOFT FRAME
 function softFrame(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -129,6 +117,43 @@ function softFrame(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+// GENERATE (WITH BIG IMAGE AUTO PICK)
+async function generate() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
+
+  const loaded = await Promise.all([...files].map(file => {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => res({
+          img: img,
+          name: file.name
+        });
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }));
+
+  let bigImage = null;
+  let others = [];
+
+  loaded.forEach(item => {
+    if (item.name.toLowerCase().startsWith("t_showpic_suit_") && !bigImage) {
+      bigImage = item.img;
+    } else {
+      others.push(item.img);
+    }
+  });
+
+  images = [...others, bigImage].filter(Boolean);
+
+  draw();
+}
+
+// DRAW
 function draw() {
   const W = canvas.width;
   const H = canvas.height;
@@ -141,6 +166,7 @@ function draw() {
   const innerW = W - outerSide * 2;
   const innerH = H - outerTop - outerBottom;
 
+  // WHITE FRAME
   ctx.fillStyle = "white";
   softFrame(ctx, innerX, innerY, innerW, innerH, 2);
   ctx.fill();
@@ -155,6 +181,7 @@ function draw() {
 
   let i = 0;
 
+  // ROW 1 (4 images)
   for (let c = 0; c < 4; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), frameY, colW, rowH);
@@ -163,16 +190,19 @@ function draw() {
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
+  // ROW 2 LEFT (2 images)
   for (let c = 0; c < 2; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), y2, colW, rowH);
   }
 
+  // ROW 3 LEFT (2 images)
   for (let c = 0; c < 2; c++) {
     if (images[i])
       drawCover(images[i++], frameX + c * (colW + gap), y3, colW, rowH);
   }
 
+  // BIG RIGHT SLOT (auto suit image)
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
@@ -181,6 +211,7 @@ function draw() {
   if (images[i])
     drawCover(images[i], bx, by, bw, bh);
 
+  // TEXT
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
@@ -190,6 +221,7 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
+// DOWNLOAD
 function download() {
   const a = document.createElement("a");
   a.download = "collage.png";
