@@ -48,24 +48,12 @@ button:hover {
   background: #c06f7f;
 }
 
-/* PREVIEW PANEL */
-.preview-panel {
-  background: #643545;
-  padding: 12px;
-  border-radius: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  width: fit-content;
-  margin-top: 10px;
-}
-
-/* SCALE ONLY VISUAL CANVAS */
-.preview-panel canvas {
-  transform: scale(0.4);
-  transform-origin: top center;
+/* CANVAS */
+canvas {
   display: block;
+  transform: scale(0.5);
+  transform-origin: center top;
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -85,9 +73,7 @@ button:hover {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <div class="preview-panel">
-    <canvas id="canvas" width="1450" height="1510"></canvas>
-  </div>
+  <canvas id="canvas" width="1450" height="1510"></canvas>
 
 </div>
 
@@ -107,17 +93,19 @@ const outerBottom = 14 * mm;
 let images = [];
 let bigImage = null;
 
-/* PLACEHOLDER */
+/* =========================
+   FIXED PLACEHOLDER PATH
+========================= */
 const placeholder = new Image();
-placeholder.src = "../image/T_showpic_clothes_blank.png";
+placeholder.src = "../image/cheese_placeholder.png";
 
 let placeholderReady = false;
 placeholder.onload = () => {
   placeholderReady = true;
-  draw();
+  draw(); // redraw when loaded
 };
 
-/* BACKGROUND */
+/* BIG SLOT BACKGROUND */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
