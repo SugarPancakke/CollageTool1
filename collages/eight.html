@@ -2,46 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Collage Hub</title>
+<title>8 Piece Collage</title>
 
 <style>
 body {
   margin: 0;
   background: #16161d;
   font-family: Arial;
-  color: white;
   display: flex;
   justify-content: center;
-  padding: 40px;
+  padding: 20px;
+  color: white;
 }
 
 .container {
   width: 900px;
 }
 
-h1 {
-  margin-bottom: 20px;
-}
-
-.tabs {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-a {
-  display: block;
-  padding: 15px;
+.tool {
   background: #222838;
-  border-radius: 10px;
-  color: white;
-  text-decoration: none;
-  font-size: 18px;
-  transition: 0.2s;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
 }
 
-a:hover {
-  background: #2f3a5a;
+button {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #4f7cff;
+  color: white;
+  cursor: pointer;
+}
+
+canvas {
+  display: block;
+  margin: 20px auto;
+  border-radius: 6px;
+  width: 420px;
+  height: auto;
 }
 </style>
 </head>
@@ -50,17 +50,164 @@ a:hover {
 
 <div class="container">
 
-  <h1>Collage Tools</h1>
+  <div class="tool">
+    <button onclick="window.location.href='../index.html'">← Back</button>
 
-  <div class="tabs">
-    <a href="collages/eight.html">8 Piece Collage</a>
-    <a href="collages/ten.html">10 Piece Collage</a>
-    <a href="collages/twelve.html">12 Piece Collage</a>
-    <a href="collages/makeup.html">Makeup Collage</a>
-    <a href="collages/deep.html">Deep Echoes</a>
+    <h2>8 Piece Collage</h2>
+
+    <input type="file" id="upload" multiple accept="image/*">
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
   </div>
 
+  <canvas id="canvas" width="1450" height="1510"></canvas>
+
 </div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const mm = 3.78;
+
+const gap = 2.5 * mm;
+const whiteFrame = 3 * mm;
+
+const outerTop = 3.75 * mm;
+const outerSide = 3.75 * mm;
+const outerBottom = 14 * mm;
+
+// BIG SLOT IMAGE (fixed)
+const bigSlotImage = new Image();
+bigSlotImage.src = "../image/T_showpic_clothes_blank.png";
+
+// placeholder
+const placeholder = new Image();
+placeholder.src = "../image/cheese_placeholder.png";
+
+let images = [];
+
+// LOAD
+function loadImages(files) {
+  return Promise.all([...files].map(file => {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => res(img);
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }));
+}
+
+// GET IMAGE OR PLACEHOLDER
+function getImg(i) {
+  return images[i] || placeholder;
+}
+
+// DRAW COVER
+function drawCover(img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
+
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
+
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+// ROUND FRAME
+function softFrame(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.closePath();
+}
+
+// GENERATE
+async function generate() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
+
+  images = await loadImages(files);
+  draw();
+}
+
+// DRAW
+function draw() {
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.fillStyle = "#16161d";
+  ctx.fillRect(0, 0, W, H);
+
+  const innerX = outerSide;
+  const innerY = outerTop;
+  const innerW = W - outerSide * 2;
+  const innerH = H - outerTop - outerBottom;
+
+  ctx.fillStyle = "white";
+  softFrame(ctx, innerX, innerY, innerW, innerH, 2);
+  ctx.fill();
+
+  const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+  const frameW = innerW - whiteFrame * 2;
+  const frameH = innerH - whiteFrame * 2;
+
+  const colW = (frameW - gap * 3) / 4;
+  const rowH = (frameH - gap * 2) / 3;
+
+  let i = 0;
+
+  // 8 grid slots
+  for (let c = 0; c < 4; c++) {
+    drawCover(getImg(i++), frameX + c * (colW + gap), frameY, colW, rowH);
+  }
+
+  const y2 = frameY + rowH + gap;
+  const y3 = y2 + rowH + gap;
+
+  for (let c = 0; c < 2; c++) {
+    drawCover(getImg(i++), frameX + c * (colW + gap), y2, colW, rowH);
+  }
+
+  for (let c = 0; c < 2; c++) {
+    drawCover(getImg(i++), frameX + c * (colW + gap), y3, colW, rowH);
+  }
+
+  // big slot fixed image
+  const bx = frameX + 2 * (colW + gap);
+  const by = y2;
+  const bw = colW * 2 + gap;
+  const bh = rowH * 2 + gap;
+
+  ctx.drawImage(bigSlotImage, bx, by, bw, bh);
+
+  // text
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+  const tw = ctx.measureText(text).width;
+  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+}
+
+// DOWNLOAD
+function download() {
+  const a = document.createElement("a");
+  a.download = "collage.png";
+  a.href = canvas.toDataURL("image/png");
+  a.click();
+}
+</script>
 
 </body>
 </html>
