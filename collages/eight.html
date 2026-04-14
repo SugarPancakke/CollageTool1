@@ -61,6 +61,7 @@ canvas {
 <body>
 
 <div class="container">
+  <button onclick="goBack()">← Back</button>
 
   <div class="tool">
     <h2>Collage Tool</h2>
@@ -211,8 +212,13 @@ function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
   link.href = canvas.toDataURL("image/png");
-  link.click();
+  link.click();  
 }
+
+function goBack() {
+  window.location.href = "../";
+}
+  
 </script>
 
 </body>
