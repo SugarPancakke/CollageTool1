@@ -216,32 +216,31 @@ function draw() {
   /* DRAW BIG IMAGE FIRST */
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  /* WATERMARK */
-  const overlayText = "@eidams_secrets @eidams_secrets";
+/* WATERMARK */
+const overlayText = "@eidams_secrets @eidams_secrets";
 
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
-  ctx.textAlign = "center";
-  
-  ctx.font = "bold 79px Comic Sans MS";
+ctx.fillStyle = "rgba(255,255,255,0.35)";
+ctx.textAlign = "center";
 
-  const positions = [
-    frameY + 80,
-    frameY + rowH + gap + 80,
-    frameY + (rowH + gap) * 2 + 80
-  ];
+ctx.font = "bold 79px Comic Sans MS";
 
-  positions.forEach(y => {
-    ctx.fillText(overlayText, frameX + 15, y);
-  });
+const positions = [
+  frameY + 80,
+  frameY + rowH + gap + 80,
+  frameY + (rowH + gap) * 2 + 80
+];
 
-  /* BOTTOM WATERMARK */
-  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+positions.forEach(y => {
+  ctx.fillText(overlayText, frameX + frameW / 2, y);
+});
 
-  ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Comic Sans MS";
+/* BOTTOM WATERMARK */
+const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
-  const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+ctx.fillStyle = "rgba(84,84,84,0.75)";
+ctx.font = "bold 40px Comic Sans MS";
+
+ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
 function download() {
