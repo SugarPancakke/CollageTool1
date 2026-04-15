@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -22,7 +23,6 @@ body {
   align-items: center;
 }
 
-/* TOOL */
 .tool {
   background: #643545;
   padding: 15px;
@@ -32,7 +32,6 @@ body {
   box-sizing: border-box;
 }
 
-/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -48,7 +47,6 @@ button:hover {
   background: #c06f7f;
 }
 
-/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.43);
@@ -56,6 +54,7 @@ canvas {
   margin-top: 10px;
 }
 </style>
+
 </head>
 
 <body>
@@ -64,16 +63,13 @@ canvas {
 
   <div class="tool">
     <button onclick="goBack()">← Back</button>
-
     <h2>8 Pieces Collage</h2>
-
     <input type="file" id="upload" multiple accept="image/*">
-
     <button onclick="generate()">Generate</button>
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <canvas id="canvas" width="1450" height="1510"></canvas>
+<canvas id="canvas" width="1450" height="1510"></canvas>
 
 </div>
 
@@ -93,26 +89,22 @@ const outerBottom = 18 * mm;
 let images = [];
 let bigImage = null;
 
-/* FIXED PLACEHOLDER PATH */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
 let placeholderReady = false;
 placeholder.onload = () => {
   placeholderReady = true;
-  draw(); // redraw when loaded
+  draw();
 };
 
-/* BIG SLOT BACKGROUND */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
-/* BACK BUTTON */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
-/* LOAD IMAGES */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -127,7 +119,6 @@ function loadImages(files) {
   }));
 }
 
-/* DRAW COVER */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -139,12 +130,10 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-/* SAFE IMAGE */
 function safe(img) {
   return img ? img : placeholder;
 }
 
-/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -173,7 +162,6 @@ async function generate() {
   draw();
 }
 
-/* DRAW */
 function draw() {
   if (!placeholderReady) return;
 
@@ -225,46 +213,44 @@ function draw() {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-/* WATERMARK */
-const overlayText = "@eidams_secrets  @eidams_secrets";
+  /* DRAW BIG IMAGE FIRST */
+  drawCover(safe(bigImage), bx, by, bw, bh);
 
-ctx.fillStyle = "rgba(255,255,255,0.35)";
-ctx.textAlign = "left";
+  /* WATERMARK */
+  const overlayText = "@eidams_secrets  @eidams_secrets";
 
-let fontSize = 10;
-do {
-  fontSize += 2;
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "left";
+
+  let fontSize = 10;
+  do {
+    fontSize += 2;
+    ctx.font = `bold ${fontSize}px Comic Sans MS`;
+  } while (ctx.measureText(overlayText).width < frameW);
+
+  fontSize -= 2;
   ctx.font = `bold ${fontSize}px Comic Sans MS`;
-} while (ctx.measureText(overlayText).width < frameW);
 
-fontSize -= 2;
-ctx.font = `bold ${fontSize}px Comic Sans MS`;
+  const positions = [
+    frameY + 60,
+    frameY + rowH + gap + 60,
+    frameY + (rowH + gap) * 2 + 60
+  ];
 
-const positions = [
-  frameY + 80,                         
-  frameY + frameH / 2,                 
-  frameY + frameH - 80                 
-];
+  positions.forEach(y => {
+    ctx.fillText(overlayText, frameX, y);
+  });
 
-const positions = [
-  frameY + 60,                        
-  frameY + rowH + gap + 60,           
-  frameY + (rowH + gap) * 2 + 60     
-]);
-  
-/* BOTTOM WATERMARK */
-drawCover(safe(bigImage), bx, by, bw, bh);
+  /* BOTTOM WATERMARK */
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
-const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
 
-ctx.fillStyle = "rgba(84,84,84,0.75)";
-ctx.font = "bold 40px Comic Sans MS";
-
-const tw = ctx.measureText(text).width;
-ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+  const tw = ctx.measureText(text).width;
+  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
