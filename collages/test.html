@@ -238,12 +238,11 @@ ctx.font = "bold 79px Comic Sans MS";
 
 const offset = 78;
 
-// row positions (bottom of each row)
 const positions = [
-  frameY + rowH - offset,                         // row 1
-  frameY + rowH + gap + rowH - offset,           // row 2
-  frameY + (rowH + gap) * 2 + rowH - offset,     // row 3
-  frameY + (rowH + gap) * 3 + rowH - offset      // row 4
+  frameY + offset,                       
+  frameY + rowH + gap + offset,            
+  frameY + (rowH + gap) * 2 + offset,      
+  frameY + (rowH + gap) * 3 + offset      
 ];
 
 positions.forEach(y => {
