@@ -80,14 +80,13 @@ canvas {
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const scale = 1500 / 1450;
+const mm = 3.78;
+const gap = 2.5 * mm;
+const whiteFrame = 3.5 * mm;
 
-const gap = 9.45 * scale;            // ≈ 9.77
-const whiteFrame = 13.23 * scale;    // ≈ 13.68
-
-const outerTop = 22.68 * scale;      // ≈ 23.46
-const outerSide = 22.68 * scale;     // ≈ 23.46
-const outerBottom = 68.04 * scale;   // ≈ 70.38
+const outerTop = 6 * mm;
+const outerSide = 6 * mm;
+const outerBottom = 18 * mm;
 
 let images = [];
 let bigImage = null;
