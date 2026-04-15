@@ -89,13 +89,13 @@ const outerBottom = 18 * mm;
 
 let images = [];
 
-/* LABEL POSITIONS (grid index) */
+/* LABEL POSITIONS */
 const labels = {
   0: "Base:",
   6: "Glow-up:"
 };
 
-/* FIXED PLACEHOLDER */
+/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -127,8 +127,6 @@ function loadImages(files) {
 
 /* COVER DRAW */
 function drawCover(img, x, y, w, h) {
-  if (!img) return;
-
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
   const sh = h / scale;
@@ -147,7 +145,7 @@ function safe(img) {
 /* LABEL */
 function drawLabel(text, x, y) {
   ctx.fillStyle = "rgba(22, 22, 29, 0.7)";
-  ctx.font = "bold 36px Arial";
+  ctx.font = "bold 36px Comic Sans MS";
   ctx.textBaseline = "top";
   ctx.fillText(text, x + 12, y + 12);
 }
@@ -219,14 +217,17 @@ function draw() {
     }
   }
 
-  /* WATERMARK */
+  /* FIXED WATERMARK (NO CLIPPING) */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Arial";
+  ctx.font = "bold 40px Comic Sans MS";
+  ctx.textBaseline = "bottom";
 
   const tw = ctx.measureText(text).width;
-  const yText = H - (outerBottom / 2) + 15;
+
+  const paddingBottom = 25;
+  const yText = H - paddingBottom;
 
   ctx.fillText(text, (W - tw) / 2, yText);
 }
