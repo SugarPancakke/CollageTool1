@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>10 Pieces Collage</title>
-
+  
 <style>
 body {
   margin: 0;
@@ -229,13 +229,33 @@ function draw() {
   /* WATERMARK */
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+/* ROW WATERMARK (4 ROWS) */
+const overlayText = "@eidams_secrets @eidams_secrets";
+
+ctx.fillStyle = "rgba(255,255,255,0.35)";
+ctx.textAlign = "center";
+ctx.font = "bold 81px Comic Sans MS";
+
+const offset = 82;
+
+const positions = [
+  frameY + offset,                          
+  frameY + rowH + gap + offset,            
+  frameY + (rowH + gap) * 2 + offset,     
+  frameY + (rowH + gap) * 3 + offset       
+];
+
+positions.forEach(y => {
+  ctx.fillText(overlayText, frameX + frameW / 2, y);
+});
+
+/* BOTTOM WATERMARK */
+  const text = "@eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
 
-  const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
 /* DOWNLOAD */
