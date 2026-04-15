@@ -222,16 +222,16 @@ function draw() {
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "left";
   
-  ctx.font = "bold 77.5px Comic Sans MS";
+  ctx.font = "bold 77px Comic Sans MS";
 
   const positions = [
-    frameY + 65,
-    frameY + rowH + gap + 65,
-    frameY + (rowH + gap) * 2 + 65
+    frameY + 70,
+    frameY + rowH + gap + 70,
+    frameY + (rowH + gap) * 2 + 70
   ];
 
   positions.forEach(y => {
-    ctx.fillText(overlayText, frameX +5, y);
+    ctx.fillText(overlayText, frameX +10, y);
   });
 
   /* BOTTOM WATERMARK */
