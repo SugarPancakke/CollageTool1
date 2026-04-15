@@ -246,9 +246,11 @@ const positions = [
   frameY + frameH - 80                 
 ];
 
-positions.forEach(y => {
-  ctx.fillText(overlayText, frameX, y); 
-});
+const positions = [
+  frameY + 60,                        
+  frameY + rowH + gap + 60,           
+  frameY + (rowH + gap) * 2 + 60     
+]);
   
 /* BOTTOM WATERMARK */
 drawCover(safe(bigImage), bx, by, bw, bh);
