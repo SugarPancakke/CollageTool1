@@ -217,17 +217,22 @@ function draw() {
     }
   }
 
-  /* FIXED WATERMARK (NO CLIPPING) */
+  /* WATERMARK (RESTORED LOOK + SAFE CLAMP ONLY) */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
-  ctx.textBaseline = "bottom";
+  ctx.textBaseline = "alphabetic";
 
   const tw = ctx.measureText(text).width;
 
-  const paddingBottom = 25;
-  const yText = H - paddingBottom;
+  let yText = H - (outerBottom / 2) + 15;
+
+  const minY = 40;
+  const maxY = H - 10;
+
+  if (yText > maxY) yText = maxY;
+  if (yText < minY) yText = minY;
 
   ctx.fillText(text, (W - tw) / 2, yText);
 }
