@@ -32,7 +32,7 @@ body {
   box-sizing: border-box;
 }
 
-/* BUTTONS */ 
+/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -83,15 +83,6 @@ const ctx = canvas.getContext("2d");
 const BASE_W = 1500;
 const BASE_H = 2100;
 
-/* FIXED DESIGN VALUES (source layout) */
-const DESIGN = {
-  gap: 9,
-  whiteFrame: 13,
-  outerTop: 23,
-  outerSide: 23,
-  outerBottom: 70
-};
-
 let images = [];
 let bigImage = null;
 
@@ -105,7 +96,7 @@ placeholder.onload = () => {
   draw();
 };
 
-/* BACKGROUND SLOT */
+/* SLOT BG */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
@@ -128,7 +119,7 @@ function loadImages(files) {
   }));
 }
 
-/* COVER DRAW */
+/* DRAW COVER */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -176,22 +167,30 @@ async function generate() {
 function draw() {
   if (!placeholderReady) return;
 
-  /* SCALE SYSTEM (design lock) */
-  const scaleX = canvas.width / BASE_W;
-  const scaleY = canvas.height / BASE_H;
+  // RESET TRANSFORM
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const gap = DESIGN.gap * scaleX;
-  const whiteFrame = DESIGN.whiteFrame * scaleX;
+  const scale = Math.min(
+    canvas.width / BASE_W,
+    canvas.height / BASE_H
+  );
 
-  const outerTop = DESIGN.outerTop * scaleY;
-  const outerSide = DESIGN.outerSide * scaleX;
-  const outerBottom = DESIGN.outerBottom * scaleY;
+  // APPLY GLOBAL SCALE (THIS IS THE KEY FIX)
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
 
-  const W = canvas.width;
-  const H = canvas.height;
+  const W = BASE_W;
+  const H = BASE_H;
 
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
+
+  const gap = 9;
+  const whiteFrame = 13;
+
+  const outerTop = 23;
+  const outerSide = 23;
+  const outerBottom = 70;
 
   const innerX = outerSide;
   const innerY = outerTop;
@@ -214,23 +213,23 @@ function draw() {
 
   let i = 0;
 
-  /* ROW 1 */
+  // ROW 1
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
-  /* ROW 2 */
+  // ROW 2
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
   }
 
-  /* ROW 3 LEFT 2 */
+  // ROW 3 LEFT
   const y3 = frameY + stepY * 2;
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
   }
 
-  /* BIG CENTER */
+  // BIG CENTER
   const bx = frameX + 2 * stepX;
   const by = y3;
   const bw = colW * 2 + gap;
@@ -244,13 +243,13 @@ function draw() {
 
   i += 2;
 
-  /* ROW 4 */
+  // ROW 4
   const y4 = frameY + stepY * 3;
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
   }
 
-  /* WATERMARK */
+  // WATERMARK
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
