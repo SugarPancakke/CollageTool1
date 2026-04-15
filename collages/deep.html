@@ -198,15 +198,25 @@ function draw() {
     }
   }
 
-  /* WATERMARK */
-  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+/* WATERMARK (2 BLOCKS) */
+const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
-  ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Comic Sans MS";
+ctx.fillStyle = "rgba(84,84,84,0.75)";
+ctx.font = "bold 40px Comic Sans MS";
 
-  const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
-}
+const cellW = colW + gap;
+
+const leftCenter =
+  frameX + (cellW * 3 - gap) / 2;
+const rightCenter =
+  frameX + cellW * 3 + (cellW * 3 - gap) / 2;
+
+const yText = H - (outerBottom / 2) + 15;
+
+const tw1 = ctx.measureText(text).width;
+ctx.fillText(text, leftCenter - tw1 / 2, yText);
+const tw2 = ctx.measureText(text).width;
+ctx.fillText(text, rightCenter - tw2 / 2, yText);
 
 /* DOWNLOAD */
 function download() {
