@@ -47,11 +47,9 @@ button:hover {
   background: #c06f7f;
 }
 
-/* CANVAS */
+/* CANVAS (IMPORTANT FIX: NO transform scale) */
 canvas {
   display: block;
-  transform: scale(0.33);
-  transform-origin: center top;
   margin-top: 10px;
 }
 </style>
@@ -72,16 +70,26 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <canvas id="canvas" width="1500" height="2100"></canvas>
+  <canvas id="canvas"></canvas>
 
 </div>
 
 <script>
+const BASE_W = 1500;
+const BASE_H = 2100;
+
+const DISPLAY_SCALE = 0.33;
+
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const BASE_W = 1500;
-const BASE_H = 2100;
+/* Set real resolution (drawing space) */
+canvas.width = BASE_W;
+canvas.height = BASE_H;
+
+/* Set visible size (THIS is the correct scaling method) */
+canvas.style.width = (BASE_W * DISPLAY_SCALE) + "px";
+canvas.style.height = (BASE_H * DISPLAY_SCALE) + "px";
 
 let images = [];
 let bigImage = null;
@@ -167,18 +175,6 @@ async function generate() {
 function draw() {
   if (!placeholderReady) return;
 
-  // RESET TRANSFORM
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const scale = Math.min(
-    canvas.width / BASE_W,
-    canvas.height / BASE_H
-  );
-
-  // APPLY GLOBAL SCALE (THIS IS THE KEY FIX)
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
-
   const W = BASE_W;
   const H = BASE_H;
 
@@ -213,23 +209,23 @@ function draw() {
 
   let i = 0;
 
-  // ROW 1
+  /* ROW 1 */
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
-  // ROW 2
+  /* ROW 2 */
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
   }
 
-  // ROW 3 LEFT
+  /* ROW 3 LEFT */
   const y3 = frameY + stepY * 2;
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
   }
 
-  // BIG CENTER
+  /* BIG CENTER */
   const bx = frameX + 2 * stepX;
   const by = y3;
   const bw = colW * 2 + gap;
@@ -243,13 +239,13 @@ function draw() {
 
   i += 2;
 
-  // ROW 4
+  /* ROW 4 */
   const y4 = frameY + stepY * 3;
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
   }
 
-  // WATERMARK
+  /* WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
