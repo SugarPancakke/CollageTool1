@@ -1,1 +1,254 @@
-test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>12 Pieces Collage</title>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #c06f7f;
+}
+
+canvas {
+  display: block;
+  transform: scale(0.33);
+  transform-origin: center top;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="tool">
+    <button onclick="goBack()">← Back</button>
+
+    <h2>12 Pieces Collage</h2>
+
+    <input type="file" id="upload" multiple accept="image/*">
+
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
+  </div>
+
+  <canvas id="canvas" width="1500" height="2100"></canvas>
+
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const mm = 3.78;
+const gap = 2.5 * mm;
+const whiteFrame = 3.5 * mm;
+
+const outerTop = 6 * mm;
+const outerSide = 6 * mm;
+const outerBottom = 18 * mm;
+
+let images = [];
+let bigImage = null;
+
+const placeholder = new Image();
+placeholder.src = "../image/T_showpic_clothes_blank.png";
+
+let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw();
+};
+
+const slotBackground = new Image();
+slotBackground.src = "../image/T_showpic_clothes_blank.png";
+
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
+
+function loadImages(files) {
+  return Promise.all([...files].map(file => {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => res({ img, name: file.name });
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }));
+}
+
+function drawCover(img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
+
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
+
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+function safe(img) {
+  return img ? img : placeholder;
+}
+
+async function generate() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
+
+  const loaded = await loadImages(files);
+
+  images = [];
+  bigImage = null;
+
+  let normal = [];
+
+  for (const item of loaded) {
+    if (item.name.startsWith("T_showpic_suit_")) {
+      bigImage = item.img;
+    } else {
+      normal.push(item.img);
+    }
+  }
+
+  if (!bigImage && normal.length > 0) {
+    bigImage = normal.shift();
+  }
+
+  images = normal;
+
+  draw();
+}
+
+function draw() {
+  if (!placeholderReady) return;
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.fillStyle = "#16161d";
+  ctx.fillRect(0, 0, W, H);
+
+  const innerX = outerSide;
+  const innerY = outerTop;
+  const innerW = W - outerSide * 2;
+  const innerH = H - outerTop - outerBottom;
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(innerX, innerY, innerW, innerH);
+
+  const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+
+  const frameW = innerW - whiteFrame * 2;
+  const frameH = innerH - whiteFrame * 2;
+
+  const colW = (frameW - gap * 3) / 4;
+  const rowH = (frameH - gap * 3) / 4;
+
+  const stepX = colW + gap;
+  const stepY = rowH + gap;
+
+  let i = 0;
+
+  // ROW 1
+  for (let c = 0; c < 4; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
+  }
+
+  // ROW 2
+  for (let c = 0; c < 4; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
+  }
+
+  // ROW 3 left
+  const y3 = frameY + stepY * 2;
+
+  for (let c = 0; c < 2; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
+  }
+
+  // BIG SLOT
+  const bx = frameX + 2 * stepX;
+  const by = y3;
+  const bw = colW * 2 + gap;
+  const bh = rowH * 2 + gap;
+
+  if (slotBackground.complete) {
+    ctx.drawImage(slotBackground, bx, by, bw, bh);
+  }
+
+  drawCover(safe(bigImage), bx, by, bw, bh);
+
+  i += 2;
+
+  // ROW 4
+  const y4 = frameY + stepY * 3;
+
+  for (let c = 0; c < 2; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
+  }
+
+  // =========================
+  // WATERMARK (FIXED)
+  // =========================
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
+
+  const tw = ctx.measureText(text).width;
+  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+}
+
+function download() {
+  const link = document.createElement("a");
+  link.download = "collage.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+</script>
+
+</body>
+</html>
