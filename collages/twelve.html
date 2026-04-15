@@ -32,7 +32,7 @@ body {
   box-sizing: border-box;
 }
 
-/* BUTTONS */ 
+/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -80,18 +80,22 @@ canvas {
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const mm = 3.78;
-const gap = 2.5 * mm;
-const whiteFrame = 3.5 * mm;
-
-const outerTop = 6 * mm;
-const outerSide = 6 * mm;
-const outerBottom = 18 * mm;
-
 let images = [];
 let bigImage = null;
 
-/* PLACEHOLDER PATH */
+/* RESPONSIVE LAYOUT */
+function getLayout(W, H) {
+  return {
+    gap: W * 0.0065,
+    whiteFrame: W * 0.01,
+
+    outerTop: H * 0.03,
+    outerSide: W * 0.035,
+    outerBottom: H * 0.06
+  };
+}
+
+/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -101,6 +105,7 @@ placeholder.onload = () => {
   draw();
 };
 
+/* SLOT BG */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
@@ -122,6 +127,7 @@ function loadImages(files) {
   }));
 }
 
+/* COVER DRAW */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -137,6 +143,7 @@ function safe(img) {
   return img ? img : placeholder;
 }
 
+/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -161,15 +168,23 @@ async function generate() {
   }
 
   images = normal;
-
   draw();
 }
 
+/* DRAW */
 function draw() {
   if (!placeholderReady) return;
 
   const W = canvas.width;
   const H = canvas.height;
+
+  const L = getLayout(W, H);
+
+  const gap = L.gap;
+  const whiteFrame = L.whiteFrame;
+  const outerTop = L.outerTop;
+  const outerSide = L.outerSide;
+  const outerBottom = L.outerBottom;
 
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
@@ -188,22 +203,25 @@ function draw() {
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
-  const colW = (frameW - gap * 3) / 4;
-  const rowH = (frameH - gap * 3) / 4;
+  const colW = frameW / 4 - gap * 0.75;
+  const rowH = frameH / 4 - gap * 0.75;
 
   const stepX = colW + gap;
   const stepY = rowH + gap;
 
   let i = 0;
 
+  /* ROW 1 */
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
+  /* ROW 2 */
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
   }
-  
+
+  /* ROW 3 LEFT + CENTER BIG */
   const y3 = frameY + stepY * 2;
 
   for (let c = 0; c < 2; c++) {
@@ -223,6 +241,7 @@ function draw() {
 
   i += 2;
 
+  /* ROW 4 */
   const y4 = frameY + stepY * 3;
 
   for (let c = 0; c < 2; c++) {
@@ -239,6 +258,7 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
+/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
