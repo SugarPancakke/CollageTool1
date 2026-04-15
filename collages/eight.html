@@ -225,13 +225,13 @@ function draw() {
   ctx.font = "bold 77.5px Comic Sans MS";
 
   const positions = [
-    frameY + 65,
-    frameY + rowH + gap + 65,
-    frameY + (rowH + gap) * 2 + 65
+    frameY + 55,
+    frameY + rowH + gap + 55,
+    frameY + (rowH + gap) * 2 + 55
   ];
 
   positions.forEach(y => {
-    ctx.fillText(overlayText, frameX +5, y);
+    ctx.fillText(overlayText, frameX +, y);
   });
 
   /* BOTTOM WATERMARK */
