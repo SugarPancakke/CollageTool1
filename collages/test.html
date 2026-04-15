@@ -22,7 +22,6 @@ body {
   align-items: center;
 }
 
-/* TOOL */
 .tool {
   background: #643545;
   padding: 15px;
@@ -32,7 +31,6 @@ body {
   box-sizing: border-box;
 }
 
-/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -48,7 +46,6 @@ button:hover {
   background: #c06f7f;
 }
 
-/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.33);
@@ -93,7 +90,7 @@ const outerBottom = 20 * mm;
 let images = [];
 let bigImage = null;
 
-/* PLACEHOLDER PATH */
+/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -106,10 +103,12 @@ placeholder.onload = () => {
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
+/* BACK */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
+/* LOAD IMAGES */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -124,6 +123,7 @@ function loadImages(files) {
   }));
 }
 
+/* DRAW COVER */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -135,10 +135,12 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+/* SAFE */
 function safe(img) {
   return img ? img : placeholder;
 }
 
+/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -167,6 +169,7 @@ async function generate() {
   draw();
 }
 
+/* DRAW */
 function draw() {
   if (!placeholderReady) return;
 
@@ -209,8 +212,6 @@ function draw() {
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
-  
-
 
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
@@ -226,16 +227,20 @@ function draw() {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  /* WATERMARK */
   drawCover(safe(bigImage), bx, by, bw, bh);
 
+  /* ✅ FIXED WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 50px Comic Sans MS";
 
-  const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+
+  const y = H - (outerBottom / 2) + 15;
+
+  ctx.fillText(text, W / 2, y);
 }
 
 /* DOWNLOAD */
