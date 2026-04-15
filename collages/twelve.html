@@ -32,7 +32,7 @@ body {
   box-sizing: border-box;
 }
 
-/* BUTTONS */
+/* BUTTONS */ 
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -47,9 +47,11 @@ button:hover {
   background: #c06f7f;
 }
 
-/* CANVAS (IMPORTANT FIX: NO transform scale) */
+/* CANVAS */
 canvas {
   display: block;
+  transform: scale(0.33);
+  transform-origin: center top;
   margin-top: 10px;
 }
 </style>
@@ -70,31 +72,26 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <canvas id="canvas"></canvas>
+  <canvas id="canvas" width="1500" height="2100"></canvas>
 
 </div>
 
 <script>
-const BASE_W = 1500;
-const BASE_H = 2100;
-
-const DISPLAY_SCALE = 0.33;
-
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-/* Set real resolution (drawing space) */
-canvas.width = BASE_W;
-canvas.height = BASE_H;
+const mm = 3.78;
+const gap = 2.5 * mm;
+const whiteFrame = 3.5 * mm;
 
-/* Set visible size (THIS is the correct scaling method) */
-canvas.style.width = (BASE_W * DISPLAY_SCALE) + "px";
-canvas.style.height = (BASE_H * DISPLAY_SCALE) + "px";
+const outerTop = 6 * mm;
+const outerSide = 6 * mm;
+const outerBottom = 18 * mm;
 
 let images = [];
 let bigImage = null;
 
-/* PLACEHOLDER */
+/* PLACEHOLDER PATH */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -104,7 +101,6 @@ placeholder.onload = () => {
   draw();
 };
 
-/* SLOT BG */
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
@@ -112,7 +108,6 @@ function goBack() {
   window.location.href = "/CollageTool/";
 }
 
-/* LOAD IMAGES */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -127,7 +122,6 @@ function loadImages(files) {
   }));
 }
 
-/* DRAW COVER */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -143,7 +137,6 @@ function safe(img) {
   return img ? img : placeholder;
 }
 
-/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -168,25 +161,18 @@ async function generate() {
   }
 
   images = normal;
+
   draw();
 }
 
-/* DRAW */
 function draw() {
   if (!placeholderReady) return;
 
-  const W = BASE_W;
-  const H = BASE_H;
+  const W = canvas.width;
+  const H = canvas.height;
 
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
-
-  const gap = 9;
-  const whiteFrame = 13;
-
-  const outerTop = 23;
-  const outerSide = 23;
-  const outerBottom = 70;
 
   const innerX = outerSide;
   const innerY = outerTop;
@@ -198,6 +184,7 @@ function draw() {
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
+
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
@@ -209,23 +196,20 @@ function draw() {
 
   let i = 0;
 
-  /* ROW 1 */
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
-  /* ROW 2 */
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
   }
-
-  /* ROW 3 LEFT */
+  
   const y3 = frameY + stepY * 2;
+
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
   }
 
-  /* BIG CENTER */
   const bx = frameX + 2 * stepX;
   const by = y3;
   const bw = colW * 2 + gap;
@@ -239,8 +223,8 @@ function draw() {
 
   i += 2;
 
-  /* ROW 4 */
   const y4 = frameY + stepY * 3;
+
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
   }
@@ -252,10 +236,9 @@ function draw() {
   ctx.font = "bold 40px Comic Sans MS";
 
   const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - outerBottom / 2 + 15);
+  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
-/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
