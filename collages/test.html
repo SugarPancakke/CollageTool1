@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>8 Piece Collage</title>
+<title>Deep Echoes Collage</title>
 
 <style>
 body {
@@ -63,13 +63,19 @@ canvas {
 
   <div class="tool">
     <button onclick="goBack()">← Back</button>
-    <h2>8 Pieces Collage</h2>
-    <input type="file" id="upload" multiple accept="image/*">
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+
+```
+<h2>Deep Echoes Collage</h2>
+
+<input type="file" id="upload" multiple accept="image/*">
+
+<button onclick="generate()">Generate</button>
+<button onclick="download()">Download PNG</button>
+```
+
   </div>
 
-<canvas id="canvas" width="1450" height="1510"></canvas>
+<canvas id="canvas" width="2500" height="1220"></canvas>
 
 </div>
 
@@ -87,8 +93,13 @@ const outerSide = 6 * mm;
 const outerBottom = 18 * mm;
 
 let images = [];
-let bigImage = null;
 
+/* IMAGE ORDER (ZIG ZAG) */
+const getImageIndex = (r, c) => {
+  return r === 0 ? c * 2 : c * 2 + 1;
+};
+
+/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -98,20 +109,19 @@ placeholder.onload = () => {
   draw();
 };
 
-const slotBackground = new Image();
-slotBackground.src = "../image/T_showpic_clothes_blank.png";
-
+/* BACK */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
+/* LOAD IMAGES */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
       const r = new FileReader();
       r.onload = e => {
         const img = new Image();
-        img.onload = () => res({ img, name: file.name });
+        img.onload = () => res(img);
         img.src = e.target.result;
       };
       r.readAsDataURL(file);
@@ -119,6 +129,7 @@ function loadImages(files) {
   }));
 }
 
+/* COVER DRAW */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -130,38 +141,34 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+/* SAFE */
 function safe(img) {
   return img ? img : placeholder;
 }
 
+/* LABEL */
+function drawLabel(text, x, y) {
+  ctx.fillStyle = "rgba(22, 22, 29, 0.7)";
+  ctx.font = "bold 50px Comic Sans MS";
+  ctx.textBaseline = "top";
+  ctx.fillText(text, x + 12, y + 12);
+}
+
+/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
-  const loaded = await loadImages(files);
+  images = await loadImages(files);
 
-  images = [];
-  bigImage = null;
-
-  let normalImages = [];
-
-  for (const item of loaded) {
-    if (item.name.startsWith("T_showpic_suit_")) {
-      bigImage = item.img;
-    } else {
-      normalImages.push(item.img);
-    }
+  while (images.length < 12) {
+    images.push(null);
   }
-
-  if (!bigImage && normalImages.length > 0) {
-    bigImage = normalImages.shift();
-  }
-
-  images = normalImages;
 
   draw();
 }
 
+/* DRAW */
 function draw() {
   if (!placeholderReady) return;
 
@@ -184,72 +191,45 @@ function draw() {
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
-  const colW = (frameW - gap * 3) / 4;
-  const rowH = (frameH - gap * 2) / 3;
+  const cols = 6;
+  const rows = 2;
 
-  let i = 0;
+  const colW = (frameW - gap * (cols - 1)) / cols;
+  const rowH = (frameH - gap * (rows - 1)) / rows;
 
-  for (let c = 0; c < 4; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+
+      const imgIndex = getImageIndex(r, c);
+
+      const x = frameX + c * (colW + gap);
+      const y = frameY + r * (rowH + gap);
+
+      drawCover(
+        safe(images[imgIndex]),
+        x,
+        y,
+        colW,
+        rowH
+      );
+    }
   }
 
-  const y2 = frameY + rowH + gap;
-  const y3 = y2 + rowH + gap;
-
-  for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
-  }
-
-  for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
-  }
-
-  const bx = frameX + 2 * (colW + gap);
-  const by = y2;
-  const bw = colW * 2 + gap;
-  const bh = rowH * 2 + gap;
-
-  if (slotBackground.complete) {
-    ctx.drawImage(slotBackground, bx, by, bw, bh);
-  }
-
-  drawCover(safe(bigImage), bx, by, bw, bh);
+  /* LABELS (CLEAN POSITION-BASED) */
+  drawLabel("Base:", frameX, frameY);
+  drawLabel("Glow-up:", frameX, frameY + rowH + gap);
 
   /* WATERMARK */
-  const overlayText = "@eidams_secrets @eidams_secrets";
-
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
-  ctx.font = "bold 79px Comic Sans MS";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-
-  const positions = [
-    frameY + 80,
-    frameY + rowH + gap + 80,
-    frameY + (rowH + gap) * 2 + 80
-  ];
-
-  const minY = 40;
-  const maxY = H - 10;
-
-  positions.forEach(y => {
-    let yText = y;
-
-    if (yText > maxY) yText = maxY;
-    if (yText < minY) yText = minY;
-
-    ctx.fillText(overlayText, frameX + frameW / 2, yText);
-  });
-
-  /* BOTTOM WATERMARK */
-  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
   ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
 
   let yText = H - (outerBottom / 2) + 15;
+
+  const minY = 40;
+  const maxY = H - 10;
 
   if (yText > maxY) yText = maxY;
   if (yText < minY) yText = minY;
@@ -257,6 +237,7 @@ function draw() {
   ctx.fillText(text, W / 2, yText);
 }
 
+/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
@@ -267,4 +248,3 @@ function download() {
 
 </body>
 </html>
-
