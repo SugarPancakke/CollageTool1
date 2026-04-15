@@ -22,6 +22,7 @@ body {
   align-items: center;
 }
 
+/* TOOL */
 .tool {
   background: #643545;
   padding: 15px;
@@ -31,6 +32,7 @@ body {
   box-sizing: border-box;
 }
 
+/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -46,6 +48,7 @@ button:hover {
   background: #c06f7f;
 }
 
+/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.33);
@@ -123,7 +126,7 @@ function loadImages(files) {
   }));
 }
 
-/* DRAW COVER */
+/* COVER DRAW */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -229,18 +232,24 @@ function draw() {
 
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  /* ✅ FIXED WATERMARK */
+  /* ✅ WATERMARK FIXED: CENTERED INSIDE BOTTOM BAR ONLY */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 50px Comic Sans MS";
 
   ctx.textAlign = "center";
-  ctx.textBaseline = "bottom";
+  ctx.textBaseline = "middle";
 
-  const y = H - (outerBottom / 2) + 15;
+  const barX = 0;
+  const barY = H - outerBottom;
+  const barW = W;
+  const barH = outerBottom;
 
-  ctx.fillText(text, W / 2, y);
+  const cx = barX + barW / 2;
+  const cy = barY + barH / 2;
+
+  ctx.fillText(text, cx, cy);
 }
 
 /* DOWNLOAD */
