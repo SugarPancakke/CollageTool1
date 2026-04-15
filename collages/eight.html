@@ -225,6 +225,19 @@ function draw() {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
+/* WATERMARK */
+  const overlayText = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+  
+  ctx.fillStyle = "rgba(255,255,255,0.3)"; 
+  ctx.font = "bold 40px Comic Sans MS";
+  
+  const lineHeight = 180;
+  
+  for (let y = frameY + 60; y < frameY + frameH; y += lineHeight) {
+  const tw = ctx.measureText(overlayText).width;
+  ctx.fillText(overlayText, (W - tw) / 2, y);
+}
+
   drawCover(safe(bigImage), bx, by, bw, bh);
 
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
