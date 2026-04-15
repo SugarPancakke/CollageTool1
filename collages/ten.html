@@ -22,6 +22,7 @@ body {
   align-items: center;
 }
 
+/* TOOL */
 .tool {
   background: #643545;
   padding: 15px;
@@ -31,6 +32,7 @@ body {
   box-sizing: border-box;
 }
 
+/* BUTTONS */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -46,6 +48,7 @@ button:hover {
   background: #c06f7f;
 }
 
+/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.33);
@@ -90,6 +93,7 @@ const outerBottom = 18 * mm;
 let images = [];
 let bigImage = null;
 
+/* PLACEHOLDER PATH */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -190,7 +194,6 @@ function draw() {
 
   let i = 0;
 
-  // ROW 1
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
   }
@@ -199,22 +202,20 @@ function draw() {
   const y3 = y2 + rowH + gap;
   const y4 = y3 + rowH + gap;
 
-  // ROW 2
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
   }
 
-  // ROW 3
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
+  
 
-  // ROW 4
+
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
   }
 
-  // BIG IMAGE (extends rows 2–4)
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
 
@@ -225,6 +226,7 @@ function draw() {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
+  /* WATERMARK */
   drawCover(safe(bigImage), bx, by, bw, bh);
 
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
@@ -236,6 +238,7 @@ function draw() {
   ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
 }
 
+/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
