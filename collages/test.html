@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <title>Deep Echoes Collage</title>
 
-<link rel="icon" href="/favicon.ico?v=999">
-  
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>">
+
 <style>
 body {
   margin: 0;
@@ -55,11 +55,13 @@ canvas {
   margin-top: 10px;
 }
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
+
   <div class="tool">
     <button onclick="goBack()">← Back</button>
     <h2>Deep Echoes Collage</h2>
@@ -68,7 +70,8 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-  <canvas id="canvas" width="2500" height="1220"></canvas>
+<canvas id="canvas" width="2500" height="1220"></canvas>
+
 </div>
 
 <script>
@@ -76,6 +79,7 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
+
 const gap = 2.5 * mm;
 const whiteFrame = 3.5 * mm;
 
@@ -85,19 +89,24 @@ const outerBottom = 18 * mm;
 
 let images = [];
 
-const getImageIndex = (r, c) => (r === 0 ? c * 2 : c * 2 + 1);
+/* IMAGE ORDER */
+const getImageIndex = (r, c) => {
+  return r === 0 ? c * 2 : c * 2 + 1;
+};
 
-/* PLACEHOLDER (with fallback) */
+/* PLACEHOLDER (PATH MUST STAY) */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
 let placeholderReady = false;
 
+/* SUCCESS */
 placeholder.onload = () => {
   placeholderReady = true;
   draw();
 };
 
+/* ✅ FIX: FAIL-SAFE FALLBACK */
 placeholder.onerror = () => {
   console.warn("Placeholder failed, using fallback");
 
@@ -106,24 +115,28 @@ placeholder.onerror = () => {
   fallback.height = 500;
 
   const fctx = fallback.getContext("2d");
+
   fctx.fillStyle = "#2a2a2a";
-  fctx.fillRect(0, 0, 500, 500);
+  fctx.fillRect(0, 0, fallback.width, fallback.height);
 
   fctx.fillStyle = "#888";
   fctx.font = "bold 40px Arial";
   fctx.textAlign = "center";
   fctx.textBaseline = "middle";
-  fctx.fillText("No Image", 250, 250);
+  fctx.fillText("No Image", fallback.width / 2, fallback.height / 2);
 
-  placeholder.src = fallback.toDataURL();
   placeholderReady = true;
+  placeholder.src = fallback.toDataURL();
+
   draw();
 };
 
+/* BACK */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
+/* LOAD */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -138,6 +151,7 @@ function loadImages(files) {
   }));
 }
 
+/* DRAW IMAGE */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -149,28 +163,35 @@ function drawCover(img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+/* SAFE */
 function safe(img) {
   return img || placeholder;
 }
 
+/* LABEL */
 function drawLabel(text, x, y) {
-  ctx.fillStyle = "rgba(22,22,29,0.7)";
+  ctx.fillStyle = "rgba(22, 22, 29, 0.7)";
   ctx.font = "bold 50px Comic Sans MS";
   ctx.textBaseline = "top";
+  ctx.textAlign = "left";
   ctx.fillText(text, x + 12, y + 12);
 }
 
+/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
-  if (!files.length) return;
+  if (!files.length) return alert("Upload images first");
 
   images = await loadImages(files);
 
-  while (images.length < 12) images.push(null);
+  while (images.length < 12) {
+    images.push(null);
+  }
 
   draw();
 }
 
+/* DRAW */
 function draw() {
   if (!placeholderReady) return;
 
@@ -201,22 +222,28 @@ function draw() {
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const i = getImageIndex(r, c);
+
+      const imgIndex = getImageIndex(r, c);
+
+      const x = frameX + c * (colW + gap);
+      const y = frameY + r * (rowH + gap);
 
       drawCover(
-        safe(images[i]),
-        frameX + c * (colW + gap),
-        frameY + r * (rowH + gap),
+        safe(images[imgIndex]),
+        x,
+        y,
         colW,
         rowH
       );
     }
   }
 
+  /* LABELS */
   drawLabel("Base:", frameX + 15, frameY + 15);
   drawLabel("Glow-up:", frameX + 15, frameY + rowH + gap + 15);
 
-  const overlay = "@eidams_secrets @eidams_secrets @eidams_secrets";
+  /* ROW WATERMARK */
+  const overlayText = "@eidams_secrets @eidams_secrets @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
@@ -224,26 +251,35 @@ function draw() {
 
   const offset = 85;
 
-  [
+  const positions = [
     frameY + rowH - offset,
     frameY + rowH + gap + rowH - offset
-  ].forEach(y => {
-    ctx.fillText(overlay, frameX + frameW / 2, y);
+  ];
+
+  positions.forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
   });
+
+  /* BOTTOM WATERMARK */
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
 
   let yText = H - (outerBottom / 2) + 15;
-  yText = Math.max(40, Math.min(H - 10, yText));
 
-  ctx.fillText(
-    "@eidams_secrets  @eidams_secrets  @eidams_secrets",
-    W / 2,
-    yText
-  );
+  const minY = 40;
+  const maxY = H - 10;
+
+  if (yText > maxY) yText = maxY;
+  if (yText < minY) yText = minY;
+
+  ctx.fillText(text, W / 2, yText);
 }
 
+/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
