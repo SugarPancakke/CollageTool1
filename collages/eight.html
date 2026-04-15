@@ -221,20 +221,13 @@ function draw() {
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "left";
-
-  let fontSize = 10;
-  do {
-    fontSize += 2;
-    ctx.font = `bold ${fontSize}px Comic Sans MS`;
-  } while (ctx.measureText(overlayText).width < frameW);
-
-  fontSize -= 2;
-  ctx.font = `bold ${fontSize}px Comic Sans MS`;
+  
+  ctx.font = "bold 62px Comic Sans MS";
 
   const positions = [
-    frameY + 60,
-    frameY + rowH + gap + 60,
-    frameY + (rowH + gap) * 2 + 60
+    frameY + 55,
+    frameY + rowH + gap + 55,
+    frameY + (rowH + gap) * 2 + 55
   ];
 
   positions.forEach(y => {
