@@ -22,6 +22,7 @@ body {
   align-items: center;
 }
 
+/* TOOL */
 .tool {
   background: #643545;
   padding: 15px;
@@ -31,6 +32,7 @@ body {
   box-sizing: border-box;
 }
 
+/* BUTTONS */ 
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -45,6 +47,7 @@ button:hover {
   background: #c06f7f;
 }
 
+/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.33);
@@ -88,6 +91,7 @@ const outerBottom = 18 * mm;
 let images = [];
 let bigImage = null;
 
+/* PLACEHOLDER PATH */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -192,24 +196,20 @@ function draw() {
 
   let i = 0;
 
-  // ROW 1
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
-  // ROW 2
   for (let c = 0; c < 4; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
   }
-
-  // ROW 3 left
+  
   const y3 = frameY + stepY * 2;
 
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
   }
 
-  // BIG SLOT
   const bx = frameX + 2 * stepX;
   const by = y3;
   const bw = colW * 2 + gap;
@@ -223,16 +223,13 @@ function draw() {
 
   i += 2;
 
-  // ROW 4
   const y4 = frameY + stepY * 3;
 
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
   }
 
-  // =========================
-  // WATERMARK (FIXED)
-  // =========================
+  /* WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
