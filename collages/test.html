@@ -145,7 +145,7 @@ function safe(img) {
 /* LABEL */
 function drawLabel(text, x, y) {
   ctx.fillStyle = "rgba(22, 22, 29, 0.7)";
-  ctx.font = "bold 50px Comic Sans MS";
+  ctx.font = "bold 36px Comic Sans MS";
   ctx.textBaseline = "top";
   ctx.fillText(text, x + 12, y + 12);
 }
@@ -187,13 +187,14 @@ function draw() {
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
-  const cols = 6;
+  const cols = 4;
   const rows = 2;
 
   const colW = (frameW - gap * (cols - 1)) / cols;
   const rowH = (frameH - gap * (rows - 1)) / rows;
 
-  let i = 0;
+  /* 🔥 CUSTOM SLOT ORDER: (1)(3)(5)(7) / (2)(4)(6)(8) */
+  const order = [0, 2, 4, 6, 1, 3, 5, 7];
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -201,10 +202,10 @@ function draw() {
       const x = frameX + c * (colW + gap);
       const y = frameY + r * (rowH + gap);
 
-      const index = r * cols + c;
+      const index = order[r * cols + c];
 
       drawCover(
-        safe(images[i++]),
+        safe(images[index]),
         x,
         y,
         colW,
@@ -217,7 +218,7 @@ function draw() {
     }
   }
 
-  /* WATERMARK (RESTORED LOOK + SAFE CLAMP ONLY) */
+  /* WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
