@@ -63,16 +63,10 @@ canvas {
 
   <div class="tool">
     <button onclick="goBack()">← Back</button>
-
-```
-<h2>Deep Echoes Collage</h2>
-
-<input type="file" id="upload" multiple accept="image/*">
-
-<button onclick="generate()">Generate</button>
-<button onclick="download()">Download PNG</button>
-```
-
+    <h2>Deep Echoes Collage</h2>
+    <input type="file" id="upload" multiple accept="image/*">
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
   </div>
 
 <canvas id="canvas" width="2500" height="1220"></canvas>
@@ -94,7 +88,7 @@ const outerBottom = 18 * mm;
 
 let images = [];
 
-/* IMAGE ORDER (ZIG ZAG) */
+/* IMAGE ORDER */
 const getImageIndex = (r, c) => {
   return r === 0 ? c * 2 : c * 2 + 1;
 };
@@ -114,7 +108,7 @@ function goBack() {
   window.location.href = "/CollageTool/";
 }
 
-/* LOAD IMAGES */
+/* LOAD */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -129,7 +123,7 @@ function loadImages(files) {
   }));
 }
 
-/* COVER DRAW */
+/* DRAW IMAGE */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -151,6 +145,7 @@ function drawLabel(text, x, y) {
   ctx.fillStyle = "rgba(22, 22, 29, 0.7)";
   ctx.font = "bold 50px Comic Sans MS";
   ctx.textBaseline = "top";
+  ctx.textAlign = "left";
   ctx.fillText(text, x + 12, y + 12);
 }
 
@@ -215,16 +210,33 @@ function draw() {
     }
   }
 
-  /* LABELS (CLEAN POSITION-BASED) */
-  drawLabel("Base:", frameX, frameY);
-  drawLabel("Glow-up:", frameX, frameY + rowH + gap);
+  /* LABELS */
+  drawLabel("Base:", frameX + 15, frameY + 15);
+  drawLabel("Glow-up:", frameX + 15, frameY + rowH + gap + 15);
 
-  /* WATERMARK */
+  /* ROW WATERMARK (BOTTOM) */
+  const overlayText = "@eidams_secrets @eidams_secrets";
+
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "center";
+  ctx.font = "bold 79px Comic Sans MS";
+
+  const offset = 78;
+
+  const positions = [
+    frameY + rowH - offset,
+    frameY + rowH + gap + rowH - offset
+  ];
+
+  positions.forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
+  });
+
+  /* BOTTOM WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
-
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
