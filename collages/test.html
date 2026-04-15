@@ -256,7 +256,7 @@ positions.forEach(y => {
   ctx.font = "bold 40px Comic Sans MS";
 
   const tw = ctx.measureText(text).width;
-  ctx.fillText(text, (W - tw) / 2, H - (outerBottom / 2) + 15);
+  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
 /* DOWNLOAD */
