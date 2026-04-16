@@ -46,16 +46,46 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
+  transition: 0.2s;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
+/* 🎨 CUSTOM DROPDOWN */
 select {
-  padding: 8px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
   border: none;
+
+  background: #db8b9a;
+  color: white;
+
+  font-weight: bold;
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  transition: 0.2s ease;
+
+  /* custom arrow */
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px;
+}
+
+select:hover {
+  background: #c06f7f;
+}
+
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(219,139,154,0.5);
 }
 
 /* PREVIEW */
@@ -92,16 +122,15 @@ select {
   <div class="tool">
     <h2>Batch Watermark Tool</h2>
 
+```
 <div class="controls">
   <input type="file" id="upload" multiple accept="image/*">
 
-  <!-- LINE MODE -->
   <select id="mode">
     <option value="2">2 Lines</option>
     <option value="3">3 Lines</option>
   </select>
 
-  <!-- COLOR MODE -->
   <select id="color">
     <option value="white">White</option>
     <option value="dark">Dark</option>
@@ -110,6 +139,7 @@ select {
   <button onclick="generate()">Generate Preview</button>
   <button onclick="download()">Download All (ZIP)</button>
 </div>
+```
 
   </div>
 
@@ -146,7 +176,6 @@ function drawWatermarked(ctx, img, W, H) {
   const mode = document.getElementById("mode").value;
   const color = document.getElementById("color").value;
 
-  // COLOR SWITCH
   if (color === "white") {
     ctx.fillStyle = "rgba(255,255,255,0.35)";
     ctx.shadowColor = "rgba(0,0,0,0.5)";
@@ -162,7 +191,7 @@ function drawWatermarked(ctx, img, W, H) {
   // TOP
   ctx.fillText(text, W / 2, H * 0.08);
 
-  // MIDDLE (only if 3 lines)
+  // MIDDLE (if 3 lines)
   if (mode === "3") {
     ctx.fillText(text, W / 2, H * 0.52);
   }
