@@ -46,20 +46,19 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-/* 🎨 CUSTOM DROPDOWN */
+/* 🎨 FIXED DROPDOWN */
 select {
   padding: 8px 12px;
   border-radius: 8px;
   border: none;
 
-  background: #db8b9a;
+  background-color: #db8b9a;
   color: white;
 
   font-weight: bold;
@@ -69,7 +68,7 @@ select {
   -webkit-appearance: none;
   -moz-appearance: none;
 
-  transition: 0.2s ease;
+  transition: none;
 
   /* custom arrow */
   background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
@@ -80,12 +79,18 @@ select {
 }
 
 select:hover {
-  background: #c06f7f;
+  background-color: #c06f7f;
 }
 
 select:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(219,139,154,0.5);
+  box-shadow: none;
+}
+
+/* 🔥 dropdown options */
+select option {
+  background-color: #c06f7f;
+  color: white;
 }
 
 /* PREVIEW */
@@ -102,12 +107,12 @@ select:focus {
   max-width: 100%;
   border-radius: 8px;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 #preview canvas:hover {
   opacity: 0.85;
   transform: scale(1.02);
+  transition: 0.2s;
 }
 </style>
 
@@ -191,7 +196,7 @@ function drawWatermarked(ctx, img, W, H) {
   // TOP
   ctx.fillText(text, W / 2, H * 0.08);
 
-  // MIDDLE (if 3 lines)
+  // MIDDLE
   if (mode === "3") {
     ctx.fillText(text, W / 2, H * 0.52);
   }
