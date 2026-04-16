@@ -46,16 +46,17 @@ button:hover {
   background: #c06f7f;
 }
 
-/* PREVIEW GRID */
+/* PREVIEW LAYOUT (HEIGHT-BASED) */
 #preview {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 15px;
-  width: 100%;
+  justify-content: center;
 }
 
 #preview canvas {
-  width: 200px;   /* uniform width */
+  height: 500px;   /* fixed height */
+  width: auto;     /* auto width */
   max-width: 100%;
   border-radius: 8px;
 }
@@ -106,15 +107,15 @@ function loadImages(files) {
   }));
 }
 
-/* DRAW WATERMARK (NO FRAME, CLEAN) */
+/* DRAW WATERMARK (CLEAN) */
 function drawWatermarked(ctx, img, W, H) {
 
   // draw original image
   ctx.drawImage(img, 0, 0, W, H);
 
-  const text = "@eidams_secrets   @eidams_secrets   @eidams_secrets";
+  const text = "@eidams_secrets  @eidams_secrets";
 
-  const fontSize = H * 0.080;
+  const fontSize = H * 0.08;
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
@@ -127,7 +128,7 @@ function drawWatermarked(ctx, img, W, H) {
   ctx.fillText(text, W / 2, H * 0.97);
 }
 
-/* GENERATE ALL PREVIEWS */
+/* GENERATE PREVIEWS */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -143,11 +144,11 @@ async function generate() {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
-    // 🔥 fixed width, auto height
-    const previewWidth = 200;
+    // 🔥 fixed height, auto width
+    const previewHeight = 500;
 
-    canvas.width = previewWidth;
-    canvas.height = img.height * (previewWidth / img.width);
+    canvas.height = previewHeight;
+    canvas.width = img.width * (previewHeight / img.height);
 
     drawWatermarked(ctx, img, canvas.width, canvas.height);
 
@@ -155,7 +156,7 @@ async function generate() {
   }
 }
 
-/* DOWNLOAD ZIP (FULL RESOLUTION) */
+/* DOWNLOAD ZIP */
 async function download() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
