@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Watermark Tool - Pills</title>
+<title>Watermark Tool</title>
 
 <style>
 body {
@@ -38,6 +38,7 @@ body {
   align-items: center;
 }
 
+/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -45,6 +46,7 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
+  font-size: 14px;
 }
 
 button:hover {
@@ -60,10 +62,14 @@ button:hover {
 }
 
 .pill {
-  padding: 8px 14px;
+  padding: 10px 14px;
   cursor: pointer;
   background: transparent;
   color: white;
+
+  font-size: 14px;
+  display: flex;
+  align-items: center;
 }
 
 .pill.active {
@@ -94,6 +100,8 @@ button:hover {
 
 <div class="container">
 <div class="tool">
+
+<button onclick="goBack()">← Back</button>
 
 <h2>Watermark Tool</h2>
 
@@ -126,6 +134,11 @@ button:hover {
 let images = [];
 let mode = "2";
 let color = "white";
+
+/* BACK BUTTON */
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
 
 /* PILLS */
 document.querySelectorAll(".pill-group").forEach(group => {
@@ -182,6 +195,8 @@ function draw(ctx,img,W,H){
 /* PREVIEW */
 async function generate(){
   const files=document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
+
   const preview=document.getElementById("preview");
   preview.innerHTML="";
 
@@ -202,7 +217,7 @@ async function generate(){
   });
 }
 
-/* DOWNLOAD */
+/* SINGLE DOWNLOAD */
 function downloadSingle(img,i){
   const c=document.createElement("canvas");
   c.width=img.width;
@@ -210,21 +225,28 @@ function downloadSingle(img,i){
   draw(c.getContext("2d"),img,c.width,c.height);
 
   const a=document.createElement("a");
-  a.download=`img_${i}.png`;
+  a.download=`img_${i+1}.png`;
   a.href=c.toDataURL();
   a.click();
 }
 
+/* ZIP */
 async function download(){
+  if (!images.length) return alert("Generate first");
+
   const zip=new JSZip();
+
   for(let i=0;i<images.length;i++){
     const img=images[i];
     const c=document.createElement("canvas");
     c.width=img.width;
     c.height=img.height;
+
     draw(c.getContext("2d"),img,c.width,c.height);
-    zip.file(`img_${i}.png`,c.toDataURL().split(",")[1],{base64:true});
+
+    zip.file(`img_${i+1}.png`,c.toDataURL().split(",")[1],{base64:true});
   }
+
   const blob=await zip.generateAsync({type:"blob"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
