@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Batch Watermark Tool</title>
+<title>Watermark Tool - Pills</title>
 
 <style>
 body {
@@ -29,14 +29,13 @@ body {
   border-radius: 12px;
   margin-bottom: 15px;
   width: 100%;
-  box-sizing: border-box;
 }
 
 .controls {
   display: flex;
   gap: 10px;
-  align-items: center;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 button {
@@ -52,45 +51,23 @@ button:hover {
   background: #c06f7f;
 }
 
-/* 🎨 FIXED DROPDOWN */
-select {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
+/* 🔘 PILLS */
+.pill-group {
+  display: flex;
+  background: #b06a7a;
+  border-radius: 999px;
+  overflow: hidden;
+}
 
-  background-color: #db8b9a;
-  color: white;
-
-  font-weight: bold;
+.pill {
+  padding: 8px 14px;
   cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  transition: none;
-
-  /* custom arrow */
-  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 16px;
-  padding-right: 30px;
-}
-
-select:hover {
-  background-color: #c06f7f;
-}
-
-select:focus {
-  outline: none;
-  box-shadow: none;
-}
-
-/* 🔥 dropdown options */
-select option {
-  background-color: #c06f7f;
+  background: transparent;
   color: white;
+}
+
+.pill.active {
+  background: #db8b9a;
 }
 
 /* PREVIEW */
@@ -104,15 +81,8 @@ select option {
 #preview canvas {
   height: 300px;
   width: auto;
-  max-width: 100%;
   border-radius: 8px;
   cursor: pointer;
-}
-
-#preview canvas:hover {
-  opacity: 0.85;
-  transform: scale(1.02);
-  transition: 0.2s;
 }
 </style>
 
@@ -123,161 +93,143 @@ select option {
 <body>
 
 <div class="container">
+<div class="tool">
 
-  <div class="tool">
-    <h2>Batch Watermark Tool</h2>
+<h2>Watermark Tool</h2>
 
 <div class="controls">
-  <input type="file" id="upload" multiple accept="image/*">
+<input type="file" id="upload" multiple>
 
-  <select id="mode">
-    <option value="2">2 Lines</option>
-    <option value="3">3 Lines</option>
-  </select>
+<!-- LINE MODE -->
 
-  <select id="color">
-    <option value="white">White</option>
-    <option value="dark">Dark</option>
-  </select>
-
-  <button onclick="generate()">Generate Preview</button>
-  <button onclick="download()">Download All (ZIP)</button>
+<div class="pill-group" id="modeGroup">
+  <div class="pill active" data-value="2">2 Lines</div>
+  <div class="pill" data-value="3">3 Lines</div>
 </div>
 
-  </div>
+<!-- COLOR MODE -->
 
-  <div id="preview"></div>
+<div class="pill-group" id="colorGroup">
+  <div class="pill active" data-value="white">White</div>
+  <div class="pill" data-value="dark">Dark</div>
+</div>
 
+<button onclick="generate()">Generate</button> <button onclick="download()">Download ZIP</button>
+
+</div>
+</div>
+
+<div id="preview"></div>
 </div>
 
 <script>
 let images = [];
+let mode = "2";
+let color = "white";
+
+/* PILLS */
+document.querySelectorAll(".pill-group").forEach(group => {
+  group.querySelectorAll(".pill").forEach(pill => {
+    pill.onclick = () => {
+      group.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+
+      if (group.id === "modeGroup") mode = pill.dataset.value;
+      if (group.id === "colorGroup") color = pill.dataset.value;
+    };
+  });
+});
 
 /* LOAD */
-function loadImages(files) {
-  return Promise.all([...files].map(file => {
-    return new Promise(res => {
-      const r = new FileReader();
-      r.onload = e => {
-        const img = new Image();
-        img.onload = () => res(img);
-        img.src = e.target.result;
+function loadImages(files){
+  return Promise.all([...files].map(f=>{
+    return new Promise(res=>{
+      const r=new FileReader();
+      r.onload=e=>{
+        const img=new Image();
+        img.onload=()=>res(img);
+        img.src=e.target.result;
       };
-      r.readAsDataURL(file);
+      r.readAsDataURL(f);
     });
   }));
 }
 
-/* DRAW WATERMARK */
-function drawWatermarked(ctx, img, W, H) {
+/* DRAW */
+function draw(ctx,img,W,H){
+  ctx.drawImage(img,0,0,W,H);
 
-  ctx.drawImage(img, 0, 0, W, H);
+  const text="@eidams_secrets   @eidams_secrets";
+  const size=H*0.08;
 
-  const text = "@eidams_secrets   @eidams_secrets   @eidams_secrets";
-  const fontSize = H * 0.08;
-
-  const mode = document.getElementById("mode").value;
-  const color = document.getElementById("color").value;
-
-  if (color === "white") {
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
+  if(color==="white"){
+    ctx.fillStyle="rgba(255,255,255,0.35)";
+    ctx.shadowColor="rgba(0,0,0,0.5)";
   } else {
-    ctx.fillStyle = "rgba(40,40,40,0.35)";
-    ctx.shadowColor = "rgba(255,255,255,0.3)";
+    ctx.fillStyle="rgba(40,40,40,0.35)";
+    ctx.shadowColor="rgba(255,255,255,0.3)";
   }
 
-  ctx.shadowBlur = 4;
-  ctx.textAlign = "center";
-  ctx.font = `bold ${fontSize}px Comic Sans MS`;
+  ctx.shadowBlur=4;
+  ctx.textAlign="center";
+  ctx.font=`bold ${size}px Comic Sans MS`;
 
-  // TOP
-  ctx.fillText(text, W / 2, H * 0.08);
-
-  // MIDDLE
-  if (mode === "3") {
-    ctx.fillText(text, W / 2, H * 0.52);
-  }
-
-  // BOTTOM
-  ctx.fillText(text, W / 2, H * 0.97);
-}
-
-/* SINGLE DOWNLOAD */
-function downloadSingle(img, index) {
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-
-  const ctx = canvas.getContext("2d");
-
-  drawWatermarked(ctx, img, canvas.width, canvas.height);
-
-  const link = document.createElement("a");
-  link.download = `watermarked_${index + 1}.png`;
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  ctx.fillText(text,W/2,H*0.08);
+  if(mode==="3") ctx.fillText(text,W/2,H*0.52);
+  ctx.fillText(text,W/2,H*0.97);
 }
 
 /* PREVIEW */
-async function generate() {
-  const files = document.getElementById("upload").files;
-  if (!files.length) return alert("Upload images first");
+async function generate(){
+  const files=document.getElementById("upload").files;
+  const preview=document.getElementById("preview");
+  preview.innerHTML="";
 
-  const preview = document.getElementById("preview");
-  preview.innerHTML = "";
+  images=await loadImages(files);
 
-  images = await loadImages(files);
+  images.forEach((img,i)=>{
+    const c=document.createElement("canvas");
+    const ctx=c.getContext("2d");
 
-  for (let i = 0; i < images.length; i++) {
-    const img = images[i];
+    const h=500;
+    c.height=h;
+    c.width=img.width*(h/img.height);
 
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+    draw(ctx,img,c.width,c.height);
 
-    const previewHeight = 500;
-
-    canvas.height = previewHeight;
-    canvas.width = img.width * (previewHeight / img.height);
-
-    drawWatermarked(ctx, img, canvas.width, canvas.height);
-
-    canvas.onclick = () => downloadSingle(img, i);
-
-    preview.appendChild(canvas);
-  }
+    c.onclick=()=>downloadSingle(img,i);
+    preview.appendChild(c);
+  });
 }
 
-/* ZIP DOWNLOAD */
-async function download() {
-  const files = document.getElementById("upload").files;
-  if (!files.length) return alert("Upload images first");
+/* DOWNLOAD */
+function downloadSingle(img,i){
+  const c=document.createElement("canvas");
+  c.width=img.width;
+  c.height=img.height;
+  draw(c.getContext("2d"),img,c.width,c.height);
 
-  const imgs = await loadImages(files);
-  const zip = new JSZip();
+  const a=document.createElement("a");
+  a.download=`img_${i}.png`;
+  a.href=c.toDataURL();
+  a.click();
+}
 
-  for (let i = 0; i < imgs.length; i++) {
-    const img = imgs[i];
-
-    const canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
-
-    const ctx = canvas.getContext("2d");
-
-    drawWatermarked(ctx, img, canvas.width, canvas.height);
-
-    const base64 = canvas.toDataURL("image/png").split(",")[1];
-
-    zip.file(`watermarked_${i + 1}.png`, base64, { base64: true });
+async function download(){
+  const zip=new JSZip();
+  for(let i=0;i<images.length;i++){
+    const img=images[i];
+    const c=document.createElement("canvas");
+    c.width=img.width;
+    c.height=img.height;
+    draw(c.getContext("2d"),img,c.width,c.height);
+    zip.file(`img_${i}.png`,c.toDataURL().split(",")[1],{base64:true});
   }
-
-  const blob = await zip.generateAsync({ type: "blob" });
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "watermarked_images.zip";
-  link.click();
+  const blob=await zip.generateAsync({type:"blob"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="images.zip";
+  a.click();
 }
 </script>
 
