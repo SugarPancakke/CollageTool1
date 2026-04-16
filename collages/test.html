@@ -55,7 +55,7 @@ button:hover {
 }
 
 #preview canvas {
-  width: 500px;   /* uniform width */
+  width: 200px;   /* uniform width */
   max-width: 100%;
   border-radius: 8px;
 }
@@ -144,7 +144,7 @@ async function generate() {
     const ctx = canvas.getContext("2d");
 
     // 🔥 fixed width, auto height
-    const previewWidth = 500;
+    const previewWidth = 200;
 
     canvas.width = previewWidth;
     canvas.height = img.height * (previewWidth / img.width);
