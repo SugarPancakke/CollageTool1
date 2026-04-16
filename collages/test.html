@@ -92,12 +92,20 @@ select {
   <div class="tool">
     <h2>Batch Watermark Tool</h2>
 
+/* TOOL */
 <div class="controls">
   <input type="file" id="upload" multiple accept="image/*">
 
+  <!-- LINE MODE -->
   <select id="mode">
     <option value="2">2 Lines</option>
     <option value="3">3 Lines</option>
+  </select>
+
+  <!-- COLOR MODE -->
+  <select id="color">
+    <option value="white">White</option>
+    <option value="dark">Dark</option>
   </select>
 
   <button onclick="generate()">Generate Preview</button>
@@ -136,16 +144,26 @@ function drawWatermarked(ctx, img, W, H) {
   const text = "@eidams_secrets   @eidams_secrets   @eidams_secrets";
   const fontSize = H * 0.08;
 
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  const mode = document.getElementById("mode").value;
+  const color = document.getElementById("color").value;
+
+  // COLOR SWITCH
+  if (color === "white") {
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+  } else {
+    ctx.fillStyle = "rgba(40,40,40,0.35)";
+    ctx.shadowColor = "rgba(255,255,255,0.3)";
+  }
+
+  ctx.shadowBlur = 4;
   ctx.textAlign = "center";
   ctx.font = `bold ${fontSize}px Comic Sans MS`;
-
-  const mode = document.getElementById("mode").value;
 
   // TOP
   ctx.fillText(text, W / 2, H * 0.08);
 
-  // MIDDLE (only if 3-line mode)
+  // MIDDLE (only if 3 lines)
   if (mode === "3") {
     ctx.fillText(text, W / 2, H * 0.52);
   }
