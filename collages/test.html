@@ -48,7 +48,7 @@ button:hover {
 
 canvas {
   display: block;
-  transform: scale(0.6);
+  transform: scale(0.43);
   transform-origin: center top;
   margin-top: 10px;
 }
@@ -68,13 +68,22 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 
-<canvas id="canvas" width="1200" height="800"></canvas>
+<canvas id="canvas" width="1450" height="1510"></canvas>
 
 </div>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+
+const mm = 3.78;
+
+const gap = 2.5 * mm;
+const whiteFrame = 3.5 * mm;
+
+const outerTop = 6 * mm;
+const outerSide = 6 * mm;
+const outerBottom = 18 * mm;
 
 let images = [];
 
@@ -137,22 +146,43 @@ function draw() {
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
 
-  const gap = 20;
+  const innerX = outerSide;
+  const innerY = outerTop;
+  const innerW = W - outerSide * 2;
+  const innerH = H - outerTop - outerBottom;
 
-  const imgW = (W - gap * 3) / 2;
-  const imgH = H - gap * 2;
+  ctx.fillStyle = "white";
+  ctx.fillRect(innerX, innerY, innerW, innerH);
 
-  // left image
-  drawCover(safe(images[0]), gap, gap, imgW, imgH);
+  const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+  const frameW = innerW - whiteFrame * 2;
+  const frameH = innerH - whiteFrame * 2;
 
-  // right image
-  drawCover(safe(images[1]), gap * 2 + imgW, gap, imgW, imgH);
+  // 2 columns, 1 row (same spacing logic)
+  const colW = (frameW - gap) / 2;
+  const rowH = frameH;
 
-  // watermark
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.font = "bold 50px Arial";
+  // draw 2 images
+  drawCover(safe(images[0]), frameX, frameY, colW, rowH);
+  drawCover(safe(images[1]), frameX + colW + gap, frameY, colW, rowH);
+
+  /* ROW WATERMARK (centered like original style) */
+  const overlayText = "@eidams_secrets @eidams_secrets";
+
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
-  ctx.fillText("@eidams_secrets", W / 2, H - 30);
+  ctx.font = "bold 79px Comic Sans MS";
+
+  ctx.fillText(overlayText, frameX + frameW / 2, frameY + 100);
+
+  /* BOTTOM WATERMARK */
+  const text = "@eidams_secrets  @eidams_secrets";
+
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
+
+  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
 function download() {
