@@ -46,7 +46,7 @@ button:hover {
   background: #c06f7f;
 }
 
-/* PREVIEW LAYOUT (HEIGHT-BASED) */
+/* PREVIEW LAYOUT */
 #preview {
   display: flex;
   flex-wrap: wrap;
@@ -55,14 +55,12 @@ button:hover {
 }
 
 #preview canvas {
-  height: 300px;   /* fixed height */
-  width: auto;     /* auto width */
+  height: 300px;
+  width: auto;
   max-width: 100%;
   border-radius: 8px;
 }
 </style>
-
-<!-- JSZip -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -75,10 +73,12 @@ button:hover {
   <div class="tool">
     <h2>Batch Watermark Tool</h2>
 
+```
 <input type="file" id="upload" multiple accept="image/*">
 
 <button onclick="generate()">Generate Preview</button>
 <button onclick="download()">Download All (ZIP)</button>
+```
 
   </div>
 
@@ -104,14 +104,12 @@ function loadImages(files) {
   }));
 }
 
-/* DRAW WATERMARK (CLEAN) */
+/* DRAW WATERMARK */
 function drawWatermarked(ctx, img, W, H) {
 
-  // draw original image
   ctx.drawImage(img, 0, 0, W, H);
 
   const text = "@eidams_secrets   @eidams_secrets   @eidams_secrets";
-
   const fontSize = H * 0.08;
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
@@ -120,6 +118,9 @@ function drawWatermarked(ctx, img, W, H) {
 
   // TOP
   ctx.fillText(text, W / 2, H * 0.08);
+
+  // MIDDLE
+  ctx.fillText(text, W / 2, H * 0.52);
 
   // BOTTOM
   ctx.fillText(text, W / 2, H * 0.97);
@@ -141,7 +142,6 @@ async function generate() {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
-    // 🔥 fixed height, auto width
     const previewHeight = 500;
 
     canvas.height = previewHeight;
