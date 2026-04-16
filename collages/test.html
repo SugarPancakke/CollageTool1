@@ -40,18 +40,23 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s ease;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-canvas {
-  display: block;
-  transform: scale(0.35);
-  transform-origin: center top;
-  margin-top: 10px;
+/* PREVIEW GRID */
+#preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+#preview canvas {
+  width: 100%;
+  border-radius: 8px;
 }
 </style>
 
@@ -73,20 +78,17 @@ canvas {
 
 <br>
 
-<button onclick="generate()">Preview First Image</button>
+<button onclick="generate()">Generate Preview</button>
 <button onclick="download()">Download All (ZIP)</button>
 ```
 
   </div>
 
-<canvas id="canvas"></canvas>
+  <div id="preview"></div>
 
 </div>
 
 <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
 let images = [];
 
 /* LOAD IMAGES */
@@ -104,77 +106,118 @@ function loadImages(files) {
   }));
 }
 
-/* DRAW WATERMARKED IMAGE */
+/* DRAW WATERMARKED IMAGE (MATCHES YOUR ORIGINAL POSITIONING) */
 function drawWatermarked(ctx, img, W, H) {
+
+  const mm = 3.78;
+
+  const outerTop = 6.5 * mm;
+  const outerSide = 6.5 * mm;
+  const outerBottom = 18.5 * mm;
+  const whiteFrame = 4 * mm;
 
   // background
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
 
-  // cover fit
-  const scale = Math.max(W / img.width, H / img.height);
-  const sw = W / scale;
-  const sh = H / scale;
+  // inner white
+  const innerX = outerSide;
+  const innerY = outerTop;
+  const innerW = W - outerSide * 2;
+  const innerH = H - outerTop - outerBottom;
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(innerX, innerY, innerW, innerH);
+
+  // frame
+  const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+  const frameW = innerW - whiteFrame * 2;
+  const frameH = innerH - whiteFrame * 2;
+
+  // image cover
+  const scale = Math.max(frameW / img.width, frameH / img.height);
+  const sw = frameW / scale;
+  const sh = frameH / scale;
 
   const sx = (img.width - sw) / 2;
   const sy = (img.height - sh) / 2;
 
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+  ctx.drawImage(img, sx, sy, sw, sh, frameX, frameY, frameW, frameH);
 
   /* WATERMARK */
-  const text = "@eidams_secrets  @eidams_secrets";
+  const text = "@eidams_secrets";
 
-  const fontSize = H * 0.075; // responsive
-  const offset = H * 0.06;
+  const fontSize = frameH * 0.075;
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
   ctx.font = `bold ${fontSize}px Comic Sans MS`;
 
   // TOP
-  ctx.fillText(text, W / 2, offset);
+  ctx.fillText(
+    text,
+    frameX + frameW / 2,
+    frameY + frameH * 0.08
+  );
 
   // BOTTOM
-  ctx.fillText(text, W / 2, H - offset);
+  ctx.fillText(
+    text,
+    frameX + frameW / 2,
+    frameY + frameH * 0.97
+  );
 }
 
-/* PREVIEW FIRST IMAGE */
+/* GENERATE ALL PREVIEWS */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+
   images = await loadImages(files);
 
-  const img = images[0];
+  for (let i = 0; i < images.length; i++) {
+    const img = images[i];
 
-  canvas.width = img.width;
-  canvas.height = img.height;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-  drawWatermarked(ctx, img, canvas.width, canvas.height);
+    // scale preview (keep aspect ratio)
+    const maxSize = 500;
+    let scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+
+    drawWatermarked(ctx, img, canvas.width, canvas.height);
+
+    preview.appendChild(canvas);
+  }
 }
 
-/* DOWNLOAD ALL AS ZIP */
+/* DOWNLOAD ZIP (FULL RESOLUTION) */
 async function download() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
   const imgs = await loadImages(files);
-
   const zip = new JSZip();
 
   for (let i = 0; i < imgs.length; i++) {
-
     const img = imgs[i];
 
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = img.width;
-    tempCanvas.height = img.height;
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
 
-    const tctx = tempCanvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
-    drawWatermarked(tctx, img, tempCanvas.width, tempCanvas.height);
+    drawWatermarked(ctx, img, canvas.width, canvas.height);
 
-    const base64 = tempCanvas.toDataURL("image/png").split(",")[1];
+    const base64 = canvas.toDataURL("image/png").split(",")[1];
 
     zip.file(`watermarked_${i + 1}.png`, base64, { base64: true });
   }
