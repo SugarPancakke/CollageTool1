@@ -106,66 +106,32 @@ function loadImages(files) {
   }));
 }
 
-/* DRAW WATERMARKED IMAGE (MATCHES YOUR ORIGINAL POSITIONING) */
 function drawWatermarked(ctx, img, W, H) {
 
-  const mm = 3.78;
-
-  const outerTop = 6.5 * mm;
-  const outerSide = 6.5 * mm;
-  const outerBottom = 18.5 * mm;
-  const whiteFrame = 4 * mm;
-
-  // background
-  ctx.fillStyle = "#16161d";
-  ctx.fillRect(0, 0, W, H);
-
-  // inner white
-  const innerX = outerSide;
-  const innerY = outerTop;
-  const innerW = W - outerSide * 2;
-  const innerH = H - outerTop - outerBottom;
-
-  ctx.fillStyle = "white";
-  ctx.fillRect(innerX, innerY, innerW, innerH);
-
-  // frame
-  const frameX = innerX + whiteFrame;
-  const frameY = innerY + whiteFrame;
-  const frameW = innerW - whiteFrame * 2;
-  const frameH = innerH - whiteFrame * 2;
-
-  // image cover
-  const scale = Math.max(frameW / img.width, frameH / img.height);
-  const sw = frameW / scale;
-  const sh = frameH / scale;
-
-  const sx = (img.width - sw) / 2;
-  const sy = (img.height - sh) / 2;
-
-  ctx.drawImage(img, sx, sy, sw, sh, frameX, frameY, frameW, frameH);
+  // draw image FULL (no frame, no background)
+  ctx.drawImage(img, 0, 0, W, H);
 
   /* WATERMARK */
   const text = "@eidams_secrets";
 
-  const fontSize = frameH * 0.075;
+  const fontSize = H * 0.075;
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
   ctx.font = `bold ${fontSize}px Comic Sans MS`;
 
-  // TOP
+  // TOP (same visual feel as before)
   ctx.fillText(
     text,
-    frameX + frameW / 2,
-    frameY + frameH * 0.08
+    W / 2,
+    H * 0.08
   );
 
   // BOTTOM
   ctx.fillText(
     text,
-    frameX + frameW / 2,
-    frameY + frameH * 0.97
+    W / 2,
+    H * 0.97
   );
 }
 
