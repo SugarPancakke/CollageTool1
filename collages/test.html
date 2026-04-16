@@ -1,8 +1,9 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>2 Piece Collage</title>
+<title>Batch Watermark Tool</title>
 
 <style>
 body {
@@ -48,11 +49,15 @@ button:hover {
 
 canvas {
   display: block;
-  transform: scale(0.43);
+  transform: scale(0.35);
   transform-origin: center top;
   margin-top: 10px;
 }
 </style>
+
+<!-- JSZip -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 </head>
 
@@ -61,14 +66,20 @@ canvas {
 <div class="container">
 
   <div class="tool">
-    <button onclick="goBack()">← Back</button>
-    <h2>2 Pieces Collage</h2>
-    <input type="file" id="upload" multiple accept="image/*">
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+    <h2>Batch Watermark Tool</h2>
+
+```
+<input type="file" id="upload" multiple accept="image/*">
+
+<br>
+
+<button onclick="generate()">Preview First Image</button>
+<button onclick="download()">Download All (ZIP)</button>
+```
+
   </div>
 
-<canvas id="canvas" width="1500" height="1120"></canvas>
+<canvas id="canvas"></canvas>
 
 </div>
 
@@ -76,30 +87,9 @@ canvas {
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const mm = 3.78;
-
-const gap = 3 * mm;
-const whiteFrame = 4 * mm;
-
-const outerTop = 6.5 * mm;
-const outerSide = 6.5 * mm;
-const outerBottom = 18.5 * mm;
-
 let images = [];
 
-const placeholder = new Image();
-placeholder.src = "../image/T_showpic_clothes_blank.png";
-
-let placeholderReady = false;
-placeholder.onload = () => {
-  placeholderReady = true;
-  draw();
-};
-
-function goBack() {
-  window.location.href = "/CollageTool/";
-}
-
+/* LOAD IMAGES */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -114,82 +104,86 @@ function loadImages(files) {
   }));
 }
 
-function drawCover(img, x, y, w, h) {
-  const scale = Math.max(w / img.width, h / img.height);
-  const sw = w / scale;
-  const sh = h / scale;
+/* DRAW WATERMARKED IMAGE */
+function drawWatermarked(ctx, img, W, H) {
+
+  // background
+  ctx.fillStyle = "#16161d";
+  ctx.fillRect(0, 0, W, H);
+
+  // cover fit
+  const scale = Math.max(W / img.width, H / img.height);
+  const sw = W / scale;
+  const sh = H / scale;
 
   const sx = (img.width - sw) / 2;
   const sy = (img.height - sh) / 2;
 
-  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+
+  /* WATERMARK */
+  const text = "@eidams_secrets  @eidams_secrets";
+
+  const fontSize = H * 0.075; // responsive
+  const offset = H * 0.06;
+
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "center";
+  ctx.font = `bold ${fontSize}px Comic Sans MS`;
+
+  // TOP
+  ctx.fillText(text, W / 2, offset);
+
+  // BOTTOM
+  ctx.fillText(text, W / 2, H - offset);
 }
 
-function safe(img) {
-  return img ? img : placeholder;
-}
-
+/* PREVIEW FIRST IMAGE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
   images = await loadImages(files);
-  draw();
+
+  const img = images[0];
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  drawWatermarked(ctx, img, canvas.width, canvas.height);
 }
 
-function draw() {
-  if (!placeholderReady) return;
+/* DOWNLOAD ALL AS ZIP */
+async function download() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
 
-  const W = canvas.width;
-  const H = canvas.height;
+  const imgs = await loadImages(files);
 
-  ctx.fillStyle = "#16161d";
-  ctx.fillRect(0, 0, W, H);
+  const zip = new JSZip();
 
-  const innerX = outerSide;
-  const innerY = outerTop;
-  const innerW = W - outerSide * 2;
-  const innerH = H - outerTop - outerBottom;
+  for (let i = 0; i < imgs.length; i++) {
 
-  ctx.fillStyle = "white";
-  ctx.fillRect(innerX, innerY, innerW, innerH);
+    const img = imgs[i];
 
-  const frameX = innerX + whiteFrame;
-  const frameY = innerY + whiteFrame;
-  const frameW = innerW - whiteFrame * 2;
-  const frameH = innerH - whiteFrame * 2;
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = img.width;
+    tempCanvas.height = img.height;
 
-  // 2 columns, 1 row (same spacing logic)
-  const colW = (frameW - gap) / 2;
-  const rowH = frameH;
+    const tctx = tempCanvas.getContext("2d");
 
-  // draw 2 images
-  drawCover(safe(images[0]), frameX, frameY, colW, rowH);
-  drawCover(safe(images[1]), frameX + colW + gap, frameY, colW, rowH);
+    drawWatermarked(tctx, img, tempCanvas.width, tempCanvas.height);
 
-  /* TOP WATERMARK */
-  const overlayText = "@eidams_secrets  @eidams_secrets";
+    const base64 = tempCanvas.toDataURL("image/png").split(",")[1];
 
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
-  ctx.textAlign = "center";
-  ctx.font = "bold 78.5px Comic Sans MS";
+    zip.file(`watermarked_${i + 1}.png`, base64, { base64: true });
+  }
 
-  ctx.fillText(overlayText, frameX + frameW / 2, frameY + 85);
-  ctx.fillText(overlayText, frameX + frameW / 2, frameY + frameH - 30);
+  const blob = await zip.generateAsync({ type: "blob" });
 
-  /* BOTTOM WATERMARK */
-  const text = "@eidams_secrets  @eidams_secrets";
-  
-  ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Comic Sans MS";
-
-  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
- }
-
-function download() {
   const link = document.createElement("a");
-  link.download = "collage.png";
-  link.href = canvas.toDataURL("image/png");
+  link.href = URL.createObjectURL(blob);
+  link.download = "watermarked_images.zip";
   link.click();
 }
 </script>
