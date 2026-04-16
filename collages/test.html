@@ -177,11 +177,14 @@ function draw() {
   ctx.fillText(overlayText, frameX + frameW / 2, frameY + 100);
   ctx.fillText(overlayText, frameX + frameW / 2, frameY + frameH - 40);
 
-
+  /* BOTTOM WATERMARK */
+  const text = "@eidams_secrets  @eidams_secrets";
   
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
 
-  
-}
+  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
+ }
 
 function download() {
   const link = document.createElement("a");
