@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watermark Tool</title>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* BUTTONS */
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background: #c06f7f;
+}
+
+/* 🔘 PILLS */
+.pill-group {
+  display: flex;
+  background: #b06a7a;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pill {
+  padding: 6px 12px;
+  cursor: pointer;
+  background: transparent;
+  color: white;
+
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.pill.active {
+  background: #db8b9a;
+}
+
+/* PREVIEW */
+#preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+#preview canvas {
+  height: 300px;
+  width: auto;
+  border-radius: 8px;
+  cursor: pointer;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+<div class="tool">
+
+<button onclick="goBack()">← Back</button>
+
+<h2>Watermark Tool</h2>
+
+<div class="controls">
+<input type="file" id="upload" multiple>
+
+<!-- LINE MODE -->
+
+<div class="pill-group" id="modeGroup">
+  <div class="pill active" data-value="2">2 Lines</div>
+  <div class="pill" data-value="3">3 Lines</div>
+</div>
+
+<!-- COLOR MODE -->
+
+<div class="pill-group" id="colorGroup">
+  <div class="pill active" data-value="white">White</div>
+  <div class="pill" data-value="dark">Dark</div>
+</div>
+
+<button onclick="generate()">Generate</button> <button onclick="download()">Download ZIP</button>
+
+</div>
+</div>
+
+<div id="preview"></div>
+</div>
+
+<script>
+let images = [];
+let mode = "2";
+let color = "white";
+
+/* BACK BUTTON */
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
+
+/* PILLS */
+document.querySelectorAll(".pill-group").forEach(group => {
+  group.querySelectorAll(".pill").forEach(pill => {
+    pill.onclick = () => {
+      group.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+
+      if (group.id === "modeGroup") mode = pill.dataset.value;
+      if (group.id === "colorGroup") color = pill.dataset.value;
+    };
+  });
+});
+
+/* LOAD */
+function loadImages(files){
+  return Promise.all([...files].map(f=>{
+    return new Promise(res=>{
+      const r=new FileReader();
+      r.onload=e=>{
+        const img=new Image();
+        img.onload=()=>res(img);
+        img.src=e.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+  }));
+}
+
+/* DRAW */
+function draw(ctx,img,W,H){
+  ctx.drawImage(img,0,0,W,H);
+
+  const text="@eidams_secrets   @eidams_secrets   @eidams_secrets";
+  const size=H*0.08;
+
+  if(color==="white"){
+    ctx.fillStyle="rgba(255,255,255,0.35)";
+    ctx.shadowColor="rgba(0,0,0,0.5)";
+  } else {
+    ctx.fillStyle="rgba(40,40,40,0.35)";
+    ctx.shadowColor="rgba(255,255,255,0.3)";
+  }
+
+  ctx.shadowBlur=4;
+  ctx.textAlign="center";
+  ctx.font=`bold ${size}px Comic Sans MS`;
+
+  ctx.fillText(text,W/2,H*0.08);
+  if(mode==="3") ctx.fillText(text,W/2,H*0.52);
+  ctx.fillText(text,W/2,H*0.97);
+}
+
+/* PREVIEW */
+async function generate(){
+  const files=document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
+
+  const preview=document.getElementById("preview");
+  preview.innerHTML="";
+
+  images=await loadImages(files);
+
+  images.forEach((img,i)=>{
+    const c=document.createElement("canvas");
+    const ctx=c.getContext("2d");
+
+    const h=500;
+    c.height=h;
+    c.width=img.width*(h/img.height);
+
+    draw(ctx,img,c.width,c.height);
+
+    c.onclick=()=>downloadSingle(img,i);
+    preview.appendChild(c);
+  });
+}
+
+/* SINGLE DOWNLOAD */
+function downloadSingle(img,i){
+  const c=document.createElement("canvas");
+  c.width=img.width;
+  c.height=img.height;
+  draw(c.getContext("2d"),img,c.width,c.height);
+
+  const a=document.createElement("a");
+  a.download=`img_${i+1}.png`;
+  a.href=c.toDataURL();
+  a.click();
+}
+
+/* ZIP */
+async function download(){
+  if (!images.length) return alert("Generate first");
+
+  const zip=new JSZip();
+
+  for(let i=0;i<images.length;i++){
+    const img=images[i];
+    const c=document.createElement("canvas");
+    c.width=img.width;
+    c.height=img.height;
+
+    draw(c.getContext("2d"),img,c.width,c.height);
+
+    zip.file(`img_${i+1}.png`,c.toDataURL().split(",")[1],{base64:true});
+  }
+
+  const blob=await zip.generateAsync({type:"blob"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="images.zip";
+  a.click();
+}
+</script>
+
+</body>
+</html>
