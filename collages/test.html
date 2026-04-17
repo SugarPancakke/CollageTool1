@@ -50,6 +50,12 @@ button:hover {
   background: #c06f7f;
 }
 
+/* BUTTON GROUP (fix spacing) */
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
 /* PILLS */
 .pill-group {
   display: flex;
@@ -96,8 +102,11 @@ canvas {
         <div class="pill" data-value="dark">Dark</div>
       </div>
 
-      <button onclick="generate()">Generate</button>
-      <button onclick="download()">Download PNG</button>
+      <!-- BUTTONS GROUPED -->
+      <div class="button-group">
+        <button onclick="generate()">Generate</button>
+        <button onclick="download()">Download PNG</button>
+      </div>
     </div>
   </div>
 
@@ -136,6 +145,7 @@ document.querySelectorAll("#colorGroup .pill").forEach(pill => {
   };
 });
 
+/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -144,6 +154,7 @@ placeholder.onload = () => {
   placeholderReady = true;
 };
 
+/* LOAD */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -170,13 +181,14 @@ async function generate() {
   draw();
 }
 
+/* KEEP RATIO */
 function drawContain(img, x, y, w) {
   const h = w * (img.height / img.width);
   ctx.drawImage(img, x, y, w, h);
   return h;
 }
 
-/* WATERMARK */
+/* WATERMARK (FINAL CLEAN VERSION) */
 function drawRowWatermark(xStart, y, rowWidth) {
   const text = "@eidams_secrets  @eidams_secrets";
 
@@ -184,13 +196,9 @@ function drawRowWatermark(xStart, y, rowWidth) {
 
   if (color === "white") {
     ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.shadowColor = "rgba(0,0,0,0.4)";
   } else {
-    ctx.fillStyle = "rgba(40,40,40,0.35)";
-    ctx.shadowColor = "rgba(255,255,255,0.3)";
+    ctx.fillStyle = "rgba(84,84,84,0.75)";
   }
-
-  ctx.shadowBlur = 4;
 
   const paddingTop = 85;
   const sidePadding = 25;
@@ -212,10 +220,9 @@ function drawRowWatermark(xStart, y, rowWidth) {
     xStart + sidePadding,
     y + paddingTop
   );
-
-  ctx.shadowBlur = 0;
 }
 
+/* DRAW */
 function draw() {
   if (!placeholderReady) return;
 
@@ -310,6 +317,7 @@ function draw() {
     yCursor += rowH + gap;
   });
 
+  /* BOTTOM WATERMARK */
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = 'bold 40px "Comic Sans MS"';
   ctx.textAlign = "center";
@@ -321,6 +329,7 @@ function draw() {
   );
 }
 
+/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
