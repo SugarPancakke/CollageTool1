@@ -120,12 +120,12 @@ function drawContain(img, x, y, w) {
 
 /* AUTO-SCALED WATERMARK (NO CUT, NO OVERFLOW) */
 function drawRowWatermark(xStart, y, rowWidth) {
-  const text = "@eidams_secrets   @eidams_secrets";
+  const text = "@eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "left";
 
-  const paddingTop = 75;
+  const paddingTop = 80;
   const sidePadding = 25;
 
   const usableWidth = rowWidth - sidePadding * 2;
@@ -246,7 +246,7 @@ function draw() {
   ctx.textAlign = "center";
 
   ctx.fillText(
-    "@eidams_secrets @eidams_secrets",
+    "@eidams_secrets  @eidams_secrets",
     canvas.width / 2,
     canvas.height - (outerBottom / 2) + 15
   );
