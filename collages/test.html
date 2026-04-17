@@ -112,14 +112,13 @@ async function generate() {
   draw();
 }
 
-/* KEEP ASPECT RATIO */
 function drawContain(img, x, y, w) {
   const h = w * (img.height / img.width);
   ctx.drawImage(img, x, y, w, h);
   return h;
 }
 
-/* TRUE FULL-WIDTH ROW WATERMARK */
+/* 🔥 PERFECT SYMMETRICAL WATERMARK */
 function drawRowWatermark(xStart, y, rowWidth) {
   const baseText = "@eidams_secrets   ";
 
@@ -131,20 +130,35 @@ function drawRowWatermark(xStart, y, rowWidth) {
 
   const paddingTop = 70;
 
+  // ✅ SAME padding both sides
+  const sidePadding = 40;
+
+  const usableWidth = rowWidth - sidePadding * 2;
+
   let text = baseText;
 
-  // build text until it fills full width
-  while (ctx.measureText(text).width < rowWidth) {
+  // build text to fill usable width
+  while (ctx.measureText(text).width < usableWidth) {
     text += baseText;
   }
 
-  // clip to exact row width (perfect edges)
+  // clip to padded area
   ctx.save();
   ctx.beginPath();
-  ctx.rect(xStart, y, rowWidth, 120);
+  ctx.rect(
+    xStart + sidePadding,
+    y,
+    usableWidth,
+    120
+  );
   ctx.clip();
 
-  ctx.fillText(text, xStart, y + paddingTop);
+  // draw inside padded area
+  ctx.fillText(
+    text,
+    xStart + sidePadding,
+    y + paddingTop
+  );
 
   ctx.restore();
 }
@@ -175,7 +189,6 @@ function draw() {
   let index = 0;
   let rowHeights = [];
 
-  /* PASS 1 → calculate heights */
   layout.forEach(count => {
     const totalGap = gap * (count - 1);
     const colW = (frameW - totalGap) / count;
@@ -191,7 +204,6 @@ function draw() {
     rowHeights.push(maxH);
   });
 
-  /* dynamic canvas height */
   const totalHeight =
     rowHeights.reduce((a, b) => a + b, 0) +
     gap * (rows - 1) +
@@ -201,7 +213,6 @@ function draw() {
 
   canvas.height = totalHeight;
 
-  /* background */
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -216,7 +227,6 @@ function draw() {
   const frameX = outerSide + whiteFrame;
   let yCursor = outerTop + whiteFrame;
 
-  /* PASS 2 → draw */
   index = 0;
 
   layout.forEach((count, rowIndex) => {
@@ -242,13 +252,11 @@ function draw() {
       drawContain(img, x, yCursor, colW);
     }
 
-    // PERFECT full-width watermark
     drawRowWatermark(rowStartX, yCursor, rowWidth);
 
     yCursor += rowH + gap;
   });
 
-  /* bottom strip watermark */
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = 'bold 40px "Comic Sans MS"';
   ctx.textAlign = "center";
