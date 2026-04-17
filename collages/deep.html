@@ -47,11 +47,6 @@ button:hover {
   background: #c06f7f;
 }
 
-.button-group {
-  display: flex;
-  gap: 10px; 
-}
-
 canvas {
   display: block;
   transform: scale(0.43);
@@ -67,17 +62,14 @@ canvas {
 <div class="container">
 
   <div class="tool">
-  <button onclick="goBack()">← Back</button>
-  <h2>Deep Echoes Collage</h2>
+    <button onclick="goBack()">← Back</button>
+    <h2>Deep Echoes Collage</h2>
 
-    <input type="file" id="upload" multiple accept="image/*">
-
-    <div class="button-group">
-      <button onclick="generate()">Generate</button>
-      <button onclick="download()">Download PNG</button>
-    </div>
+      <input type="file" id="upload" multiple accept="image/*">
+    
+       <button class="generate-btn" onclick="generate()">Generate</button>
+       <button onclick="download()">Download PNG</button>
   </div>
-</div>
 
 <canvas id="canvas" width="2500" height="1220"></canvas>
 
