@@ -31,9 +31,8 @@ body {
   box-sizing: border-box;
 }
 
-.controls {
-  display: flex;
-  gap: 10px;
+.controls > * {
+  margin-left: 10px;
 }
   
 button {
@@ -70,12 +69,12 @@ canvas {
     <button onclick="goBack()">← Back</button>
     <h2>Deep Echoes Collage</h2>
 
-   <div class="controls">
-     <input type="file" id="upload" multiple accept="image/*">
+    <input type="file" id="upload" multiple accept="image/*">
     
+    <div class="controls">
        <button class="generate-btn" onclick="generate()">Generate</button>
        <button onclick="download()">Download PNG</button>
-   </div>
+    </div>
   </div>
 
 <canvas id="canvas" width="2500" height="1220"></canvas>
