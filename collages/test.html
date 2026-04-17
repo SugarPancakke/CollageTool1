@@ -119,23 +119,20 @@ function drawContain(img, x, y, w) {
   return h;
 }
 
-/* WATERMARK (TOP + BOTTOM, CLEAN PADDING) */
-function drawImageWatermark(x, y, w, h) {
-  const text = "@eidams_secrets";
+/* ROW WATERMARK */
+function drawRowWatermark(xStart, y, rowWidth) {
+  const text = "@eidams_secrets   @eidams_secrets   @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
 
-  const fontSize = Math.max(22, w * 0.11);
+  // ✅ fixed font size (consistent)
+  const fontSize = 60;
   ctx.font = `bold ${fontSize}px "Comic Sans MS"`;
 
-  // 🔼 top watermark (reduced padding)
-  const topPadding = 50;
-  ctx.fillText(text, x + w / 2, y + topPadding);
+  const paddingTop = 50;
 
-  // 🔽 bottom watermark
-  const bottomPadding = 25;
-  ctx.fillText(text, x + w / 2, y + h - bottomPadding);
+  ctx.fillText(text, xStart + rowWidth / 2, y + paddingTop);
 }
 
 function draw() {
@@ -164,7 +161,7 @@ function draw() {
   let index = 0;
   let rowHeights = [];
 
-  /* PASS 1 → calculate row heights */
+  /* PASS 1 → calculate heights */
   layout.forEach(count => {
     const totalGap = gap * (count - 1);
     const colW = (frameW - totalGap) / count;
@@ -221,14 +218,18 @@ function draw() {
       offsetX = (frameW - used) / 2;
     }
 
+    const rowStartX = frameX + offsetX;
+    const rowWidth = colW * count + gap * (count - 1);
+
     for (let i = 0; i < count; i++) {
       const x = frameX + offsetX + i * (colW + gap);
       const img = safe(images[index++]);
 
-      const h = drawContain(img, x, yCursor, colW);
-
-      drawImageWatermark(x, yCursor, colW, h);
+      drawContain(img, x, yCursor, colW);
     }
+
+    // ✅ ROW WATERMARK
+    drawRowWatermark(rowStartX, yCursor, rowWidth);
 
     yCursor += rowH + gap;
   });
