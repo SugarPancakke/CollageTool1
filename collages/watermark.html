@@ -32,25 +32,9 @@ body {
   box-sizing: border-box;
 }
 
-/* BACK BUTTON GAP */
-.tool > button:first-child {
-  margin-top: 10px;
-}
-
-/* TITLE SPACING */
-h2 {
-  margin-bottom: 15px;
-}
-
-.controls {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-/* BUTTONS */
+/* MATCHES YOUR OTHER TOOL */
 button {
+  margin-top: 10px;
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
@@ -65,17 +49,24 @@ button:hover {
   background: #c06f7f;
 }
 
-.button-group {
-  display: flex;
-  gap: 10px;
+/* TITLE SPACING */
+h2 {
+  margin: 10px 0;
 }
 
-/* PILLS */
+/* INPUT SPACING */
+input[type="file"] {
+  margin-top: 10px;
+}
+
+/* PILLS (now behave like blocks, not cramped row) */
 .pill-group {
   display: flex;
   background: #b06a7a;
   border-radius: 999px;
   overflow: hidden;
+  margin-top: 10px;
+  width: fit-content;
 }
 
 .pill {
@@ -115,13 +106,13 @@ button:hover {
 <body>
 
 <div class="container">
+
 <div class="tool">
 
 <button onclick="goBack()">← Back</button>
 
 <h2>Watermark Tool</h2>
 
-<div class="controls">
 <input type="file" id="upload" multiple>
 
 <div class="pill-group" id="modeGroup">
@@ -134,15 +125,12 @@ button:hover {
   <div class="pill" data-value="dark">Dark</div>
 </div>
 
-<div class="button-group">
-  <button onclick="generate()">Generate</button>
-  <button onclick="download()">Download ZIP</button>
-</div>
+<button onclick="generate()">Generate</button> <button onclick="download()">Download ZIP</button>
 
-</div>
 </div>
 
 <div id="preview"></div>
+
 </div>
 
 <script>
@@ -150,10 +138,12 @@ let images = [];
 let mode = "2";
 let color = "white";
 
+/* BACK */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
+/* PILLS */
 document.querySelectorAll(".pill-group").forEach(group => {
   group.querySelectorAll(".pill").forEach(pill => {
     pill.onclick = () => {
@@ -166,6 +156,7 @@ document.querySelectorAll(".pill-group").forEach(group => {
   });
 });
 
+/* LOAD */
 function loadImages(files){
   return Promise.all([...files].map(f=>{
     return new Promise(res=>{
@@ -180,6 +171,7 @@ function loadImages(files){
   }));
 }
 
+/* DRAW */
 function draw(ctx,img,W,H){
   ctx.drawImage(img,0,0,W,H);
 
@@ -200,6 +192,7 @@ function draw(ctx,img,W,H){
   ctx.fillText(text,W/2,H*0.97);
 }
 
+/* GENERATE */
 async function generate(){
   const files=document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -224,6 +217,7 @@ async function generate(){
   });
 }
 
+/* SINGLE DOWNLOAD */
 function downloadSingle(img,i){
   const c=document.createElement("canvas");
   c.width=img.width;
@@ -236,6 +230,7 @@ function downloadSingle(img,i){
   a.click();
 }
 
+/* ZIP */
 async function download(){
   if (!images.length) return alert("Generate first");
 
