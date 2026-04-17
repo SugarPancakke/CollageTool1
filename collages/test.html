@@ -119,20 +119,34 @@ function drawContain(img, x, y, w) {
   return h;
 }
 
-/* ROW WATERMARK */
+/* TRUE FULL-WIDTH ROW WATERMARK */
 function drawRowWatermark(xStart, y, rowWidth) {
-  const text = "@eidams_secrets   @eidams_secrets";
+  const baseText = "@eidams_secrets   ";
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
-  ctx.textAlign = "center";
+  ctx.textAlign = "left";
 
-  // fixed font size (consistent)
   const fontSize = 60;
   ctx.font = `bold ${fontSize}px "Comic Sans MS"`;
 
   const paddingTop = 70;
 
-  ctx.fillText(text, xStart + rowWidth / 2, y + paddingTop);
+  let text = baseText;
+
+  // build text until it fills full width
+  while (ctx.measureText(text).width < rowWidth) {
+    text += baseText;
+  }
+
+  // clip to exact row width (perfect edges)
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(xStart, y, rowWidth, 120);
+  ctx.clip();
+
+  ctx.fillText(text, xStart, y + paddingTop);
+
+  ctx.restore();
 }
 
 function draw() {
@@ -228,7 +242,7 @@ function draw() {
       drawContain(img, x, yCursor, colW);
     }
 
-    // ✅ ROW WATERMARK
+    // PERFECT full-width watermark
     drawRowWatermark(rowStartX, yCursor, rowWidth);
 
     yCursor += rowH + gap;
