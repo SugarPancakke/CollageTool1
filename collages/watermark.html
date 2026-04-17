@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -15,15 +16,13 @@ body {
   color: white;
 }
 
-/* MATCH COLLAGE TOOL WIDTH */
 .container {
-  width: 700px;
+  width: 900px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* CARD */
 .tool {
   background: #643545;
   padding: 15px;
@@ -33,28 +32,16 @@ body {
   box-sizing: border-box;
 }
 
-/* BACK BUTTON */
+/* ONLY BACK BUTTON SPACING */
 .tool > button:first-child {
-  margin-top: 5px;
+  margin-top: 10px;
 }
 
-/* TITLE */
-h2 {
-  margin: 10px 0 15px;
-}
-
-/* 🔥 CONTROLS - SINGLE CLEAN ROW */
 .controls {
   display: flex;
-  align-items: center;
   gap: 10px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-
-/* FILE INPUT ALIGNMENT */
-input[type="file"] {
-  font-size: 13px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 /* BUTTONS */
@@ -67,14 +54,12 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
-  white-space: nowrap;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-/* BUTTON GROUP */
 .button-group {
   display: flex;
   gap: 10px;
@@ -89,14 +74,13 @@ button:hover {
 }
 
 .pill {
-  padding: 5px 11px;
+  padding: 6px 12px;
   cursor: pointer;
   background: transparent;
   color: white;
-  font-size: 13px;
+  font-size: 14px;
   display: flex;
   align-items: center;
-  white-space: nowrap;
 }
 
 .pill.active {
@@ -120,39 +104,44 @@ button:hover {
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 </head>
 
 <body>
 
 <div class="container">
-  <div class="tool">
+<div class="tool">
 
-    <button onclick="goBack()">← Back</button>
+<button onclick="goBack()">← Back</button>
 
-    <h2>Watermark Tool</h2>
+<h2>Watermark Tool</h2>
 
-    <div class="controls">
-      <input type="file" id="upload" multiple>
+<div class="controls">
+<input type="file" id="upload" multiple>
 
-      <div class="pill-group" id="modeGroup">
-        <div class="pill active" data-value="2">2 Lines</div>
-        <div class="pill" data-value="3">3 Lines</div>
-      </div>
+<!-- LINE MODE -->
 
-      <div class="pill-group" id="colorGroup">
-        <div class="pill active" data-value="white">White</div>
-        <div class="pill" data-value="dark">Dark</div>
-      </div>
+<div class="pill-group" id="modeGroup">
+  <div class="pill active" data-value="2">2 Lines</div>
+  <div class="pill" data-value="3">3 Lines</div>
+</div>
 
-      <div class="button-group">
-        <button onclick="generate()">Generate</button>
-        <button onclick="download()">Download ZIP</button>
-      </div>
-    </div>
+<!-- COLOR MODE -->
 
-  </div>
+<div class="pill-group" id="colorGroup">
+  <div class="pill active" data-value="white">White</div>
+  <div class="pill" data-value="dark">Dark</div>
+</div>
 
-  <div id="preview"></div>
+<div class="button-group">
+  <button onclick="generate()">Generate</button>
+  <button onclick="download()">Download ZIP</button>
+</div>
+
+</div>
+</div>
+
+<div id="preview"></div>
 </div>
 
 <script>
