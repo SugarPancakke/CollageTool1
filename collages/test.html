@@ -30,14 +30,44 @@ body {
   width: 100%;
 }
 
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 button {
-  margin-top: 10px;
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
   background: #db8b9a;
   color: white;
   cursor: pointer;
+}
+
+button:hover {
+  background: #c06f7f;
+}
+
+/* PILLS */
+.pill-group {
+  display: flex;
+  background: #b06a7a;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pill {
+  padding: 6px 12px;
+  cursor: pointer;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+}
+
+.pill.active {
+  background: #db8b9a;
 }
 
 canvas {
@@ -56,9 +86,19 @@ canvas {
   <div class="tool">
     <button onclick="goBack()">← Back</button>
     <h2>Flex Collage Tool</h2>
-    <input type="file" id="upload" multiple accept="image/*">
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
+
+      <!-- COLOR PILLS -->
+      <div class="pill-group" id="colorGroup">
+        <div class="pill active" data-value="white">White</div>
+        <div class="pill" data-value="dark">Dark</div>
+      </div>
+
+      <button onclick="generate()">Generate</button>
+      <button onclick="download()">Download PNG</button>
+    </div>
   </div>
 
 <canvas id="canvas" width="1450" height="1000"></canvas>
@@ -78,6 +118,23 @@ const outerSide = 6 * mm;
 const outerBottom = 18 * mm;
 
 let images = [];
+let color = "white";
+
+/* BACK */
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
+
+/* PILLS */
+document.querySelectorAll("#colorGroup .pill").forEach(pill => {
+  pill.onclick = () => {
+    document.querySelectorAll("#colorGroup .pill")
+      .forEach(p => p.classList.remove("active"));
+
+    pill.classList.add("active");
+    color = pill.dataset.value;
+  };
+});
 
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
@@ -86,10 +143,6 @@ let placeholderReady = false;
 placeholder.onload = () => {
   placeholderReady = true;
 };
-
-function goBack() {
-  window.location.href = "/CollageTool/";
-}
 
 function loadImages(files) {
   return Promise.all([...files].map(file => {
@@ -123,12 +176,21 @@ function drawContain(img, x, y, w) {
   return h;
 }
 
-/* AUTO-SCALED WATERMARK (NO CUT, NO OVERFLOW) */
+/* WATERMARK */
 function drawRowWatermark(xStart, y, rowWidth) {
   const text = "@eidams_secrets  @eidams_secrets";
 
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "left";
+
+  if (color === "white") {
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.shadowColor = "rgba(0,0,0,0.4)";
+  } else {
+    ctx.fillStyle = "rgba(40,40,40,0.35)";
+    ctx.shadowColor = "rgba(255,255,255,0.3)";
+  }
+
+  ctx.shadowBlur = 4;
 
   const paddingTop = 85;
   const sidePadding = 25;
@@ -150,6 +212,8 @@ function drawRowWatermark(xStart, y, rowWidth) {
     xStart + sidePadding,
     y + paddingTop
   );
+
+  ctx.shadowBlur = 0;
 }
 
 function draw() {
