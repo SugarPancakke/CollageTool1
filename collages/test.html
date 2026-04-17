@@ -87,6 +87,10 @@ placeholder.onload = () => {
   placeholderReady = true;
 };
 
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
+
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
