@@ -119,7 +119,7 @@ function drawContain(img, x, y, w) {
   return h;
 }
 
-/* EXACT SAME FONT AS ORIGINAL */
+/* WATERMARK (TOP + BOTTOM, CLEAN PADDING) */
 function drawImageWatermark(x, y, w, h) {
   const text = "@eidams_secrets";
 
@@ -127,13 +127,15 @@ function drawImageWatermark(x, y, w, h) {
   ctx.textAlign = "center";
 
   const fontSize = Math.max(22, w * 0.11);
-
-  // ✅ EXACT original font
   ctx.font = `bold ${fontSize}px "Comic Sans MS"`;
 
-  const topPadding = 78;
-
+  // 🔼 top watermark (reduced padding)
+  const topPadding = 50;
   ctx.fillText(text, x + w / 2, y + topPadding);
+
+  // 🔽 bottom watermark
+  const bottomPadding = 25;
+  ctx.fillText(text, x + w / 2, y + h - bottomPadding);
 }
 
 function draw() {
@@ -162,7 +164,7 @@ function draw() {
   let index = 0;
   let rowHeights = [];
 
-  /* PASS 1 → CALCULATE ROW HEIGHTS */
+  /* PASS 1 → calculate row heights */
   layout.forEach(count => {
     const totalGap = gap * (count - 1);
     const colW = (frameW - totalGap) / count;
@@ -178,7 +180,7 @@ function draw() {
     rowHeights.push(maxH);
   });
 
-  /* SET CANVAS HEIGHT */
+  /* dynamic canvas height */
   const totalHeight =
     rowHeights.reduce((a, b) => a + b, 0) +
     gap * (rows - 1) +
@@ -188,7 +190,7 @@ function draw() {
 
   canvas.height = totalHeight;
 
-  /* BACKGROUND */
+  /* background */
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -203,7 +205,7 @@ function draw() {
   const frameX = outerSide + whiteFrame;
   let yCursor = outerTop + whiteFrame;
 
-  /* PASS 2 → DRAW */
+  /* PASS 2 → draw */
   index = 0;
 
   layout.forEach((count, rowIndex) => {
@@ -231,7 +233,7 @@ function draw() {
     yCursor += rowH + gap;
   });
 
-  /* BOTTOM WATERMARK */
+  /* bottom strip watermark */
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = 'bold 40px "Comic Sans MS"';
   ctx.textAlign = "center";
