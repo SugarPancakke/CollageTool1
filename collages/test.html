@@ -28,7 +28,6 @@ body {
   border-radius: 12px;
   margin-bottom: 15px;
   width: 100%;
-  box-sizing: border-box;
 }
 
 button {
@@ -55,14 +54,13 @@ canvas {
 <div class="container">
 
   <div class="tool">
-    <button onclick="goBack()">← Back</button>
     <h2>Flex Collage Tool</h2>
     <input type="file" id="upload" multiple accept="image/*">
     <button onclick="generate()">Generate</button>
     <button onclick="download()">Download PNG</button>
   </div>
 
-<canvas id="canvas" width="1450" height="1510"></canvas>
+<canvas id="canvas" width="1450" height="1000"></canvas>
 
 </div>
 
@@ -86,12 +84,7 @@ placeholder.src = "../image/T_showpic_clothes_blank.png";
 let placeholderReady = false;
 placeholder.onload = () => {
   placeholderReady = true;
-  draw();
 };
-
-function goBack() {
-  window.location.href = "/CollageTool/";
-}
 
 function loadImages(files) {
   return Promise.all([...files].map(file => {
@@ -107,17 +100,6 @@ function loadImages(files) {
   }));
 }
 
-function drawCover(img, x, y, w, h) {
-  const scale = Math.max(w / img.width, h / img.height);
-  const sw = w / scale;
-  const sh = h / scale;
-
-  const sx = (img.width - sw) / 2;
-  const sy = (img.height - sh) / 2;
-
-  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-}
-
 function safe(img) {
   return img ? img : placeholder;
 }
@@ -130,7 +112,14 @@ async function generate() {
   draw();
 }
 
-/* PER IMAGE WATERMARK WITH FIXED PADDING */
+/* KEEP ASPECT RATIO */
+function drawContain(img, x, y, w) {
+  const h = w * (img.height / img.width);
+  ctx.drawImage(img, x, y, w, h);
+  return h;
+}
+
+/* EXACT SAME FONT AS ORIGINAL */
 function drawImageWatermark(x, y, w, h) {
   const text = "@eidams_secrets";
 
@@ -138,9 +127,11 @@ function drawImageWatermark(x, y, w, h) {
   ctx.textAlign = "center";
 
   const fontSize = Math.max(22, w * 0.11);
-  ctx.font = `bold ${fontSize}px Arial`;
 
-  const topPadding = 78; // matches your original alignment
+  // ✅ EXACT original font
+  ctx.font = `bold ${fontSize}px "Comic Sans MS"`;
+
+  const topPadding = 78;
 
   ctx.fillText(text, x + w / 2, y + topPadding);
 }
@@ -149,24 +140,6 @@ function draw() {
   if (!placeholderReady) return;
 
   const W = canvas.width;
-  const H = canvas.height;
-
-  ctx.fillStyle = "#16161d";
-  ctx.fillRect(0, 0, W, H);
-
-  const innerX = outerSide;
-  const innerY = outerTop;
-  const innerW = W - outerSide * 2;
-  const innerH = H - outerTop - outerBottom;
-
-  ctx.fillStyle = "white";
-  ctx.fillRect(innerX, innerY, innerW, innerH);
-
-  const frameX = innerX + whiteFrame;
-  const frameY = innerY + whiteFrame;
-  const frameW = innerW - whiteFrame * 2;
-  const frameH = innerH - whiteFrame * 2;
-
   const total = images.length;
   if (total === 0) return;
 
@@ -177,49 +150,97 @@ function draw() {
   let remainder = total % rows;
 
   let layout = [];
-
   for (let i = 0; i < rows; i++) {
     layout.push(i < remainder ? base + 1 : base);
   }
 
   layout = layout.map(n => Math.min(n, maxPerRow));
 
-  const rowHeight = (frameH - gap * (rows - 1)) / rows;
+  const innerW = W - outerSide * 2;
+  const frameW = innerW - whiteFrame * 2;
 
   let index = 0;
+  let rowHeights = [];
+
+  /* PASS 1 → CALCULATE ROW HEIGHTS */
+  layout.forEach(count => {
+    const totalGap = gap * (count - 1);
+    const colW = (frameW - totalGap) / count;
+
+    let maxH = 0;
+
+    for (let i = 0; i < count; i++) {
+      const img = safe(images[index++]);
+      const h = colW * (img.height / img.width);
+      if (h > maxH) maxH = h;
+    }
+
+    rowHeights.push(maxH);
+  });
+
+  /* SET CANVAS HEIGHT */
+  const totalHeight =
+    rowHeights.reduce((a, b) => a + b, 0) +
+    gap * (rows - 1) +
+    outerTop +
+    outerBottom +
+    whiteFrame * 2;
+
+  canvas.height = totalHeight;
+
+  /* BACKGROUND */
+  ctx.fillStyle = "#16161d";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(
+    outerSide,
+    outerTop,
+    canvas.width - outerSide * 2,
+    canvas.height - outerTop - outerBottom
+  );
+
+  const frameX = outerSide + whiteFrame;
+  let yCursor = outerTop + whiteFrame;
+
+  /* PASS 2 → DRAW */
+  index = 0;
 
   layout.forEach((count, rowIndex) => {
-    const y = frameY + rowIndex * (rowHeight + gap);
+    const rowH = rowHeights[rowIndex];
 
     const totalGap = gap * (count - 1);
-    const colWidth = (frameW - totalGap) / count;
+    const colW = (frameW - totalGap) / count;
 
     let offsetX = 0;
 
-    // center last row if uneven
     if (count < maxPerRow) {
-      const used = colWidth * count + totalGap;
+      const used = colW * count + totalGap;
       offsetX = (frameW - used) / 2;
     }
 
     for (let i = 0; i < count; i++) {
-      const x = frameX + offsetX + i * (colWidth + gap);
-
+      const x = frameX + offsetX + i * (colW + gap);
       const img = safe(images[index++]);
 
-      drawCover(img, x, y, colWidth, rowHeight);
+      const h = drawContain(img, x, yCursor, colW);
 
-      // watermark per image
-      drawImageWatermark(x, y, colWidth, rowHeight);
+      drawImageWatermark(x, yCursor, colW, h);
     }
+
+    yCursor += rowH + gap;
   });
 
-  /* bottom watermark (unchanged) */
+  /* BOTTOM WATERMARK */
   ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Arial";
+  ctx.font = 'bold 40px "Comic Sans MS"';
   ctx.textAlign = "center";
 
-  ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
+  ctx.fillText(
+    "@eidams_secrets  @eidams_secrets",
+    canvas.width / 2,
+    canvas.height - (outerBottom / 2) + 15
+  );
 }
 
 function download() {
