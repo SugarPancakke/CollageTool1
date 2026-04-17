@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -47,7 +46,6 @@ h2 {
   align-items: center;
 }
 
-/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -68,7 +66,6 @@ button:hover {
   gap: 10px;
 }
 
-/* PILLS */
 .pill-group {
   display: flex;
   background: #b06a7a;
@@ -90,7 +87,6 @@ button:hover {
   background: #db8b9a;
 }
 
-/* PREVIEW */
 #preview {
   display: flex;
   flex-wrap: wrap;
@@ -122,14 +118,10 @@ button:hover {
 <div class="controls">
 <input type="file" id="upload" multiple>
 
-<!-- LINE MODE -->
-
 <div class="pill-group" id="modeGroup">
   <div class="pill active" data-value="2">2 Lines</div>
   <div class="pill" data-value="3">3 Lines</div>
 </div>
-
-<!-- COLOR MODE -->
 
 <div class="pill-group" id="colorGroup">
   <div class="pill active" data-value="white">White</div>
@@ -152,12 +144,10 @@ let images = [];
 let mode = "2";
 let color = "white";
 
-/* BACK BUTTON */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
-/* PILLS */
 document.querySelectorAll(".pill-group").forEach(group => {
   group.querySelectorAll(".pill").forEach(pill => {
     pill.onclick = () => {
@@ -170,7 +160,6 @@ document.querySelectorAll(".pill-group").forEach(group => {
   });
 });
 
-/* LOAD */
 function loadImages(files){
   return Promise.all([...files].map(f=>{
     return new Promise(res=>{
@@ -185,8 +174,13 @@ function loadImages(files){
   }));
 }
 
-/* DRAW */
+/* ✅ FIXED DRAW FUNCTION */
 function draw(ctx,img,W,H){
+  // 🔹 Force white background (fix transparency)
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
+
+  // 🔹 Draw image on top
   ctx.drawImage(img,0,0,W,H);
 
   const text="@eidams_secrets   @eidams_secrets   @eidams_secrets";
@@ -206,7 +200,6 @@ function draw(ctx,img,W,H){
   ctx.fillText(text,W/2,H*0.97);
 }
 
-/* PREVIEW */
 async function generate(){
   const files=document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -231,7 +224,6 @@ async function generate(){
   });
 }
 
-/* SINGLE DOWNLOAD */
 function downloadSingle(img,i){
   const c=document.createElement("canvas");
   c.width=img.width;
@@ -244,7 +236,6 @@ function downloadSingle(img,i){
   a.click();
 }
 
-/* ZIP */
 async function download(){
   if (!images.length) return alert("Generate first");
 
