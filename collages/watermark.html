@@ -31,7 +31,7 @@ body {
   box-sizing: border-box;
 }
 
-/* BUTTONS (same as collage tool) */
+/* EXACT SAME BUTTON BEHAVIOR AS COLLAGE TOOL */
 button {
   margin-top: 10px;
   padding: 10px 14px;
@@ -48,13 +48,13 @@ button:hover {
   background: #c06f7f;
 }
 
-/* PILLS (unchanged style) */
+/* PILLS */
 .pill-group {
   display: flex;
   background: #b06a7a;
   border-radius: 999px;
   overflow: hidden;
-  margin-top: 10px;
+  margin-top: 10px; /* MATCH SPACING */
 }
 
 .pill {
@@ -63,6 +63,8 @@ button:hover {
   background: transparent;
   color: white;
   font-size: 14px;
+  display: flex;
+  align-items: center;
 }
 
 .pill.active {
