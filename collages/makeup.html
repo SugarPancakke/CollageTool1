@@ -70,9 +70,11 @@ canvas {
 
     <input type="file" id="upload" multiple accept="image/*">
 
-  <button onclick="generate()">Generate</button>
-  <button onclick="download()">Download PNG</button>
-    
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
+  </div>
+
+  <!-- CANVAS MOVED OUTSIDE TOOL -->
   <canvas id="canvas" width="1500" height="2100"></canvas>
 
 </div>
@@ -231,35 +233,39 @@ function draw() {
 
   drawCover(safe(bigImage), bx, by, bw, bh);
 
+  /* RESET ANY SHADOW (prevents halo) */
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = "transparent";
+
   /* ROW WATERMARK */
-const overlayText = "@eidams_secrets  @eidams_secrets";
+  const overlayText = "@eidams_secrets  @eidams_secrets";
 
-ctx.fillStyle = "rgba(255,255,255,0.35)";
-ctx.textAlign = "center";
-ctx.font = "bold 79px Comic Sans MS";
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "center";
+  ctx.font = "bold 79px Comic Sans MS";
 
-const offset = 78;
+  const offset = 78;
 
-const positions = [
-  frameY + offset,                          
-  frameY + rowH + gap + offset,           
-  frameY + (rowH + gap) * 2 + offset      
-];
+  const positions = [
+    frameY + offset,
+    frameY + rowH + gap + offset,
+    frameY + (rowH + gap) * 2 + offset
+  ];
 
-positions.forEach(y => {
-  ctx.fillText(overlayText, frameX + frameW / 2, y);
-});
+  positions.forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
+  });
   
   /* BOTTOM WATERMARK */
-const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
-ctx.fillStyle = "rgba(84,84,84,0.75)";
-ctx.font = "bold 40px Comic Sans MS";
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
 
-ctx.textAlign = "center";
-ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
 
-ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
+  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
 /* DOWNLOAD */
