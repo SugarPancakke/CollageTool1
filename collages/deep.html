@@ -47,17 +47,9 @@ button:hover {
   background: #c06f7f;
 }
 
-/* row layout */
-.row {
-  display: flex;
-  align-items: center;
-  gap: 20px; /* space between upload and buttons */
-}
-
-/* buttons spacing */
 .button-group {
   display: flex;
-  gap: 10px; /* EXACT gap between Generate & Download */
+  gap: 10px; 
 }
 
 canvas {
@@ -78,7 +70,6 @@ canvas {
   <button onclick="goBack()">← Back</button>
   <h2>Deep Echoes Collage</h2>
 
-  <div class="row">
     <input type="file" id="upload" multiple accept="image/*">
 
     <div class="button-group">
