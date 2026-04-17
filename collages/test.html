@@ -121,12 +121,12 @@ function drawContain(img, x, y, w) {
 
 /* ROW WATERMARK */
 function drawRowWatermark(xStart, y, rowWidth) {
-  const text = "@eidams_secrets   @eidams_secrets   @eidams_secrets";
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
 
-  // ✅ fixed font size (consistent)
+  // fixed font size (consistent)
   const fontSize = 60;
   ctx.font = `bold ${fontSize}px "Comic Sans MS"`;
 
