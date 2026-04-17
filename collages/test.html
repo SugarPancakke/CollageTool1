@@ -1,1 +1,234 @@
-test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flex Collage Tool</title>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+}
+
+canvas {
+  display: block;
+  transform: scale(0.43);
+  transform-origin: center top;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="tool">
+    <button onclick="goBack()">← Back</button>
+    <h2>Flex Collage Tool</h2>
+    <input type="file" id="upload" multiple accept="image/*">
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
+  </div>
+
+<canvas id="canvas" width="1450" height="1510"></canvas>
+
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const mm = 3.78;
+const gap = 2.5 * mm;
+const whiteFrame = 3.5 * mm;
+
+const outerTop = 6 * mm;
+const outerSide = 6 * mm;
+const outerBottom = 18 * mm;
+
+let images = [];
+
+const placeholder = new Image();
+placeholder.src = "../image/T_showpic_clothes_blank.png";
+
+let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw();
+};
+
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
+
+function loadImages(files) {
+  return Promise.all([...files].map(file => {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => res(img);
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }));
+}
+
+function drawCover(img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
+
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
+
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+function safe(img) {
+  return img ? img : placeholder;
+}
+
+async function generate() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
+
+  images = await loadImages(files);
+  draw();
+}
+
+/* PER IMAGE WATERMARK WITH FIXED PADDING */
+function drawImageWatermark(x, y, w, h) {
+  const text = "@eidams_secrets";
+
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "center";
+
+  const fontSize = Math.max(22, w * 0.11);
+  ctx.font = `bold ${fontSize}px Arial`;
+
+  const topPadding = 78; // matches your original alignment
+
+  ctx.fillText(text, x + w / 2, y + topPadding);
+}
+
+function draw() {
+  if (!placeholderReady) return;
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.fillStyle = "#16161d";
+  ctx.fillRect(0, 0, W, H);
+
+  const innerX = outerSide;
+  const innerY = outerTop;
+  const innerW = W - outerSide * 2;
+  const innerH = H - outerTop - outerBottom;
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(innerX, innerY, innerW, innerH);
+
+  const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+  const frameW = innerW - whiteFrame * 2;
+  const frameH = innerH - whiteFrame * 2;
+
+  const total = images.length;
+  if (total === 0) return;
+
+  const maxPerRow = 6;
+
+  let rows = Math.ceil(total / maxPerRow);
+  let base = Math.floor(total / rows);
+  let remainder = total % rows;
+
+  let layout = [];
+
+  for (let i = 0; i < rows; i++) {
+    layout.push(i < remainder ? base + 1 : base);
+  }
+
+  layout = layout.map(n => Math.min(n, maxPerRow));
+
+  const rowHeight = (frameH - gap * (rows - 1)) / rows;
+
+  let index = 0;
+
+  layout.forEach((count, rowIndex) => {
+    const y = frameY + rowIndex * (rowHeight + gap);
+
+    const totalGap = gap * (count - 1);
+    const colWidth = (frameW - totalGap) / count;
+
+    let offsetX = 0;
+
+    // center last row if uneven
+    if (count < maxPerRow) {
+      const used = colWidth * count + totalGap;
+      offsetX = (frameW - used) / 2;
+    }
+
+    for (let i = 0; i < count; i++) {
+      const x = frameX + offsetX + i * (colWidth + gap);
+
+      const img = safe(images[index++]);
+
+      drawCover(img, x, y, colWidth, rowHeight);
+
+      // ✅ watermark per image
+      drawImageWatermark(x, y, colWidth, rowHeight);
+    }
+  });
+
+  /* bottom watermark (unchanged) */
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Arial";
+  ctx.textAlign = "center";
+
+  ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
+}
+
+function download() {
+  const link = document.createElement("a");
+  link.download = "collage.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+</script>
+
+</body>
+</html>
