@@ -17,7 +17,7 @@ body {
 }
 
 .container {
-  width: 900px; /* MATCHED */
+  width: 900px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -32,9 +32,14 @@ body {
   box-sizing: border-box;
 }
 
-/* ONLY BACK BUTTON SPACING */
+/* BACK BUTTON GAP */
 .tool > button:first-child {
   margin-top: 10px;
+}
+
+/* TITLE SPACING */
+h2 {
+  margin-bottom: 15px;
 }
 
 .controls {
@@ -119,14 +124,10 @@ button:hover {
 <div class="controls">
 <input type="file" id="upload" multiple>
 
-<!-- LINE MODE -->
-
 <div class="pill-group" id="modeGroup">
   <div class="pill active" data-value="2">2 Lines</div>
   <div class="pill" data-value="3">3 Lines</div>
 </div>
-
-<!-- COLOR MODE -->
 
 <div class="pill-group" id="colorGroup">
   <div class="pill active" data-value="white">White</div>
@@ -149,12 +150,10 @@ let images = [];
 let mode = "2";
 let color = "white";
 
-/* BACK BUTTON */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
-/* PILLS */
 document.querySelectorAll(".pill-group").forEach(group => {
   group.querySelectorAll(".pill").forEach(pill => {
     pill.onclick = () => {
@@ -167,7 +166,6 @@ document.querySelectorAll(".pill-group").forEach(group => {
   });
 });
 
-/* LOAD */
 function loadImages(files){
   return Promise.all([...files].map(f=>{
     return new Promise(res=>{
@@ -182,7 +180,6 @@ function loadImages(files){
   }));
 }
 
-/* DRAW */
 function draw(ctx,img,W,H){
   ctx.drawImage(img,0,0,W,H);
 
@@ -203,7 +200,6 @@ function draw(ctx,img,W,H){
   ctx.fillText(text,W/2,H*0.97);
 }
 
-/* PREVIEW */
 async function generate(){
   const files=document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -228,7 +224,6 @@ async function generate(){
   });
 }
 
-/* SINGLE DOWNLOAD */
 function downloadSingle(img,i){
   const c=document.createElement("canvas");
   c.width=img.width;
@@ -241,7 +236,6 @@ function downloadSingle(img,i){
   a.click();
 }
 
-/* ZIP */
 async function download(){
   if (!images.length) return alert("Generate first");
 
