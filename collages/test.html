@@ -118,47 +118,33 @@ function drawContain(img, x, y, w) {
   return h;
 }
 
-/* PERFECT SYMMETRICAL WATERMARK */
+/* AUTO-SCALED WATERMARK (NO CUT, NO OVERFLOW) */
 function drawRowWatermark(xStart, y, rowWidth) {
-  const baseText = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+  const text = "@eidams_secrets   @eidams_secrets   @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "left";
 
-  const fontSize = 60;
-  ctx.font = `bold ${fontSize}px "Comic Sans MS"`;
-
   const paddingTop = 70;
-  const sidePadding = 25;
+  const sidePadding = 40;
 
   const usableWidth = rowWidth - sidePadding * 2;
 
-  let text = baseText;
+  let baseFontSize = 60;
+  ctx.font = `bold ${baseFontSize}px "Comic Sans MS"`;
 
-  // build text to fill usable width
-  while (ctx.measureText(text).width < usableWidth) {
-    text += baseText;
-  }
+  const textWidth = ctx.measureText(text).width;
 
-  // clip to padded area
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(
-    xStart + sidePadding,
-    y,
-    usableWidth,
-    120
-  );
-  ctx.clip();
+  const scale = usableWidth / textWidth;
+  const finalFontSize = baseFontSize * scale;
 
-  // draw inside padded area
+  ctx.font = `bold ${finalFontSize}px "Comic Sans MS"`;
+
   ctx.fillText(
     text,
     xStart + sidePadding,
     y + paddingTop
   );
-
-  ctx.restore();
 }
 
 function draw() {
