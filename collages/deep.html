@@ -31,9 +31,8 @@ body {
   box-sizing: border-box;
 }
 
-/* BUTTONS */
 button {
-  margin-top: 10px; /* keeps spacing above Back button */
+  margin-top: 10px;
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
@@ -48,10 +47,9 @@ button:hover {
   background: #c06f7f;
 }
 
-/* GROUP ONLY GENERATE + DOWNLOAD */
-.button-group {
-  display: flex;
-  gap: 10px; /* exact spacing between buttons */
+/* ONLY THIS WAS ADDED */
+.generate-btn {
+  margin-right: 10px;
 }
 
 canvas {
@@ -72,11 +70,9 @@ canvas {
     <button onclick="goBack()">← Back</button>
     <h2>Deep Echoes Collage</h2>
     <input type="file" id="upload" multiple accept="image/*">
-
-    <div class="button-group">
-      <button onclick="generate()">Generate</button>
-      <button onclick="download()">Download PNG</button>
-    </div>
+    
+    <button class="generate-btn" onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
   </div>
 
 <canvas id="canvas" width="2500" height="1220"></canvas>
