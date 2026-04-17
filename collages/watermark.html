@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -31,9 +32,20 @@ body {
   box-sizing: border-box;
 }
 
-/* COLLAGE-LIKE SPACING */
-button {
+/* ONLY BACK BUTTON SPACING */
+.tool > button:first-child {
   margin-top: 10px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* BUTTONS */
+button {
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
@@ -48,17 +60,9 @@ button:hover {
   background: #c06f7f;
 }
 
-h2 {
-  margin: 10px 0 0 0;
-}
-
-/* 🔥 ONE LINE LAYOUT */
-.row {
+.button-group {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: 10px;
 }
 
 /* PILLS */
@@ -112,24 +116,29 @@ h2 {
 
 <h2>Watermark Tool</h2>
 
-<!-- 🔥 EVERYTHING IN ONE ROW -->
-<div class="row">
-  <input type="file" id="upload" multiple>
+<div class="controls">
+<input type="file" id="upload" multiple>
 
-  <div class="pill-group" id="modeGroup">
-    <div class="pill active" data-value="2">2 Lines</div>
-    <div class="pill" data-value="3">3 Lines</div>
-  </div>
+<!-- LINE MODE -->
 
-  <div class="pill-group" id="colorGroup">
-    <div class="pill active" data-value="white">White</div>
-    <div class="pill" data-value="dark">Dark</div>
-  </div>
+<div class="pill-group" id="modeGroup">
+  <div class="pill active" data-value="2">2 Lines</div>
+  <div class="pill" data-value="3">3 Lines</div>
+</div>
 
+<!-- COLOR MODE -->
+
+<div class="pill-group" id="colorGroup">
+  <div class="pill active" data-value="white">White</div>
+  <div class="pill" data-value="dark">Dark</div>
+</div>
+
+<div class="button-group">
   <button onclick="generate()">Generate</button>
   <button onclick="download()">Download ZIP</button>
 </div>
 
+</div>
 </div>
 
 <div id="preview"></div>
@@ -140,10 +149,12 @@ let images = [];
 let mode = "2";
 let color = "white";
 
+/* BACK BUTTON */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
+/* PILLS */
 document.querySelectorAll(".pill-group").forEach(group => {
   group.querySelectorAll(".pill").forEach(pill => {
     pill.onclick = () => {
@@ -156,6 +167,7 @@ document.querySelectorAll(".pill-group").forEach(group => {
   });
 });
 
+/* LOAD */
 function loadImages(files){
   return Promise.all([...files].map(f=>{
     return new Promise(res=>{
@@ -170,6 +182,7 @@ function loadImages(files){
   }));
 }
 
+/* DRAW */
 function draw(ctx,img,W,H){
   ctx.drawImage(img,0,0,W,H);
 
@@ -190,6 +203,7 @@ function draw(ctx,img,W,H){
   ctx.fillText(text,W/2,H*0.97);
 }
 
+/* PREVIEW */
 async function generate(){
   const files=document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -214,6 +228,7 @@ async function generate(){
   });
 }
 
+/* SINGLE DOWNLOAD */
 function downloadSingle(img,i){
   const c=document.createElement("canvas");
   c.width=img.width;
@@ -226,6 +241,7 @@ function downloadSingle(img,i){
   a.click();
 }
 
+/* ZIP */
 async function download(){
   if (!images.length) return alert("Generate first");
 
