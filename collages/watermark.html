@@ -32,8 +32,20 @@ body {
   box-sizing: border-box;
 }
 
-button {
+/* ONLY BACK BUTTON SPACING */
+.tool > button:first-child {
   margin-top: 10px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* BUTTONS */
+button {
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
@@ -48,12 +60,9 @@ button:hover {
   background: #c06f7f;
 }
 
-h2 {
-  margin: 10px 0;
-}
-
-input[type="file"] {
-  margin-top: 10px;
+.button-group {
+  display: flex;
+  gap: 10px;
 }
 
 /* PILLS */
@@ -62,8 +71,6 @@ input[type="file"] {
   background: #b06a7a;
   border-radius: 999px;
   overflow: hidden;
-  margin-top: 10px;
-  width: fit-content;
 }
 
 .pill {
@@ -103,31 +110,38 @@ input[type="file"] {
 <body>
 
 <div class="container">
-
 <div class="tool">
 
 <button onclick="goBack()">← Back</button>
 
 <h2>Watermark Tool</h2>
 
+<div class="controls">
 <input type="file" id="upload" multiple>
+
+<!-- LINE MODE -->
 
 <div class="pill-group" id="modeGroup">
   <div class="pill active" data-value="2">2 Lines</div>
   <div class="pill" data-value="3">3 Lines</div>
 </div>
 
+<!-- COLOR MODE -->
+
 <div class="pill-group" id="colorGroup">
   <div class="pill active" data-value="white">White</div>
   <div class="pill" data-value="dark">Dark</div>
 </div>
 
-<button onclick="generate()">Generate</button> <button onclick="download()">Download ZIP</button>
+<div class="button-group">
+  <button onclick="generate()">Generate</button>
+  <button onclick="download()">Download ZIP</button>
+</div>
 
+</div>
 </div>
 
 <div id="preview"></div>
-
 </div>
 
 <script>
@@ -135,7 +149,7 @@ let images = [];
 let mode = "2";
 let color = "white";
 
-/* BACK */
+/* BACK BUTTON */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
@@ -189,7 +203,7 @@ function draw(ctx,img,W,H){
   ctx.fillText(text,W/2,H*0.97);
 }
 
-/* GENERATE */
+/* PREVIEW */
 async function generate(){
   const files=document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
