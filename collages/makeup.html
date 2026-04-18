@@ -32,9 +32,24 @@ body {
   box-sizing: border-box;
 }
 
+.tool > button:first-child {
+  margin-top: 10px;
+}
+
+h2 {
+  margin-bottom: 30px;
+}
+
+/* CONTROLS ROW */
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
 /* BUTTONS */
 button {
-  margin-top: 10px;
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
@@ -43,10 +58,17 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 button:hover {
   background: #c06f7f;
+}
+
+/* GROUP BUTTONS */
+.button-group {
+  display: flex;
+  gap: 10px;
 }
 
 /* CANVAS */
@@ -68,13 +90,16 @@ canvas {
 
     <h2>Make-Up Collage</h2>
 
-    <input type="file" id="upload" multiple accept="image/*">
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
 
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+      <div class="button-group">
+        <button onclick="generate()">Generate</button>
+        <button onclick="download()">Download PNG</button>
+      </div>
+    </div>
   </div>
 
-  <!-- CANVAS MOVED OUTSIDE TOOL -->
   <canvas id="canvas" width="1500" height="2100"></canvas>
 
 </div>
@@ -198,7 +223,6 @@ function draw() {
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
-  /* 3x3 GRID */
   const colW = (frameW - gap * 2) / 3;
   const rowH = (frameH - gap * 2) / 3;
 
@@ -212,16 +236,13 @@ function draw() {
 
   let i = 0;
 
-  /* LEFT COLUMN */
   drawCover(safe(images[i++]), x1, y1, colW, rowH);
   drawCover(safe(images[i++]), x1, y2, colW, rowH);
   drawCover(safe(images[i++]), x1, y3, colW, rowH);
 
-  /* BOTTOM ROW (middle + right) */
   drawCover(safe(images[i++]), x2, y3, colW, rowH);
   drawCover(safe(images[i++]), x3, y3, colW, rowH);
 
-  /* BIG BLOCK (top-right 2x2) */
   const bx = x2;
   const by = y1;
   const bw = colW * 2 + gap;
@@ -233,11 +254,9 @@ function draw() {
 
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  /* RESET ANY SHADOW (prevents halo) */
   ctx.shadowBlur = 0;
   ctx.shadowColor = "transparent";
 
-  /* ROW WATERMARK */
   const overlayText = "@eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
@@ -255,13 +274,11 @@ function draw() {
   positions.forEach(y => {
     ctx.fillText(overlayText, frameX + frameW / 2, y);
   });
-  
-  /* BOTTOM WATERMARK */
+
   const text = "@eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
-
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
