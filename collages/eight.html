@@ -31,8 +31,24 @@ body {
   box-sizing: border-box;
 }
 
-button {
+.tool > button:first-child {
   margin-top: 10px;
+}
+
+h2 {
+  margin-bottom: 30px;
+}
+
+/* ONE CLEAN ROW */
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+/* BUTTON STYLE */
+button {
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
@@ -41,10 +57,17 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 button:hover {
   background: #c06f7f;
+}
+
+/* KEEP BUTTONS TOGETHER */
+.button-group {
+  display: flex;
+  gap: 10px;
 }
 
 canvas {
@@ -64,9 +87,17 @@ canvas {
   <div class="tool">
     <button onclick="goBack()">← Back</button>
     <h2>8 Pieces Collage</h2>
-    <input type="file" id="upload" multiple accept="image/*">
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+
+    <!-- FIXED LAYOUT -->
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
+
+      <div class="button-group">
+        <button onclick="generate()">Generate</button>
+        <button onclick="download()">Download PNG</button>
+      </div>
+    </div>
+
   </div>
 
 <canvas id="canvas" width="1450" height="1510"></canvas>
@@ -213,34 +244,32 @@ function draw() {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  /* DRAW BIG IMAGE FIRST */
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-/* ROW WATERMARK */
-const overlayText = "@eidams_secrets @eidams_secrets";
+  /* ROW WATERMARK */
+  const overlayText = "@eidams_secrets @eidams_secrets";
 
-ctx.fillStyle = "rgba(255,255,255,0.35)";
-ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "center";
+  ctx.font = "bold 79px Comic Sans MS";
 
-ctx.font = "bold 79px Comic Sans MS";
+  const positions = [
+    frameY + 78,
+    frameY + rowH + gap + 78,
+    frameY + (rowH + gap) * 2 + 78
+  ];
 
-const positions = [
-  frameY + 78,
-  frameY + rowH + gap + 78,
-  frameY + (rowH + gap) * 2 + 78
-];
+  positions.forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
+  });
 
-positions.forEach(y => {
-  ctx.fillText(overlayText, frameX + frameW / 2, y);
-});
+  /* BOTTOM WATERMARK */
+  const text = "@eidams_secrets  @eidams_secrets";
 
-/* BOTTOM WATERMARK */
-const text = "@eidams_secrets  @eidams_secrets";
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
 
-ctx.fillStyle = "rgba(84,84,84,0.75)";
-ctx.font = "bold 40px Comic Sans MS";
-
-ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
+  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
 function download() {
