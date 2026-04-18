@@ -2,12 +2,12 @@
 <html>
 <body style="background:#222;color:white;text-align:center">
 
-<h2>Video Watermark (Browser Only)</h2>
+<h2>Video Watermark</h2>
 
 <input type="file" id="file"><br><br>
-<button onclick="start()">Start</button><br><br>
+<button onclick="start()">Start</button>
 
-<video id="video" controls style="max-width:400px"></video>
+<video id="video" controls style="max-width:500px;margin-top:15px"></video>
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
@@ -17,7 +17,6 @@ async function start(){
 
   const video = document.getElementById("video");
   video.src = URL.createObjectURL(file);
-
   await video.play();
 
   const canvas = document.getElementById("canvas");
@@ -27,18 +26,28 @@ async function start(){
   canvas.height = video.videoHeight;
 
   const stream = canvas.captureStream();
-  const recorder = new MediaRecorder(stream);
+
+  let recorder;
+
+  // Try MP4 first
+  if (MediaRecorder.isTypeSupported("video/mp4")) {
+    recorder = new MediaRecorder(stream, { mimeType: "video/mp4" });
+  } else {
+    recorder = new MediaRecorder(stream); // fallback webm
+  }
 
   let chunks = [];
   recorder.ondataavailable = e => chunks.push(e.data);
 
   recorder.onstop = () => {
-    const blob = new Blob(chunks, { type: "video/webm" });
+    const blob = new Blob(chunks, { type: recorder.mimeType });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "watermarked.webm";
+    a.download = recorder.mimeType.includes("mp4")
+      ? "watermarked.mp4"
+      : "watermarked.webm";
     a.click();
   };
 
@@ -47,11 +56,23 @@ async function start(){
   function draw(){
     ctx.drawImage(video,0,0);
 
-    // WATERMARK
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
-    ctx.font = "40px Arial";
+    // WATERMARK SETTINGS
+    ctx.fillStyle = "rgba(255,255,255,0.3)";
+    ctx.font = "bold 40px Comic Sans MS";
     ctx.textAlign = "center";
-    ctx.fillText("@eidams_secrets", canvas.width/2, canvas.height*0.9);
+
+    const text = "@eidams_secrets";
+
+    const rows = 3;
+    const cols = 3;
+
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols;x++){
+        const posX = (canvas.width/(cols))*(x+0.5);
+        const posY = (canvas.height/(rows))*(y+0.5);
+        ctx.fillText(text,posX,posY);
+      }
+    }
 
     if(!video.ended){
       requestAnimationFrame(draw);
