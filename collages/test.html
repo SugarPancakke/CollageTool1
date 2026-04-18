@@ -39,15 +39,15 @@ h2 {
   margin-bottom: 30px;
 }
 
-/* ✅ MATCHES WATERMARK TOOL */
+/* ✅ CLEAN SINGLE ROW */
 .controls {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* 🔥 keep everything on ONE LINE */
   align-items: center;
 }
 
-/* BUTTON STYLE (no margin-top anymore) */
+/* BUTTON STYLE */
 button {
   padding: 10px 14px;
   border: none;
@@ -57,17 +57,17 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
+  white-space: nowrap; /* 🔥 prevent text wrapping */
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-/* ✅ BUTTON GROUP RIGHT SIDE */
+/* ✅ KEEP BUTTONS TOGETHER (but NOT pushed right) */
 .button-group {
   display: flex;
   gap: 10px;
-  margin-left: auto;
 }
 
 canvas {
@@ -91,8 +91,6 @@ canvas {
     <div class="controls">
 
       <input type="file" id="upload" multiple accept="image/*">
-
-      <!-- FUTURE PILLS CAN GO HERE -->
 
       <div class="button-group">
         <button onclick="generate()">Generate</button>
@@ -243,11 +241,9 @@ function draw() {
     }
   }
 
-  /* LABELS */
   drawLabel("Base:", frameX + 15, frameY + 15);
   drawLabel("Glow-up:", frameX + 15, frameY + rowH + gap + 15);
 
-  /* ROW WATERMARK */
   const overlayText = "@eidams_secrets @eidams_secrets @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.35)";
@@ -265,7 +261,6 @@ function draw() {
     ctx.fillText(overlayText, frameX + frameW / 2, y);
   });
 
-  /* BOTTOM WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
@@ -275,16 +270,12 @@ function draw() {
 
   let yText = H - (outerBottom / 2) + 15;
 
-  const minY = 40;
-  const maxY = H - 10;
-
-  if (yText > maxY) yText = maxY;
-  if (yText < minY) yText = minY;
+  if (yText > H - 10) yText = H - 10;
+  if (yText < 40) yText = 40;
 
   ctx.fillText(text, W / 2, yText);
 }
 
-/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
