@@ -39,18 +39,11 @@ h2 {
   margin-bottom: 30px;
 }
 
-/* ✅ FORCE ONE LINE + NO SHRINK */
 .controls {
   display: flex;
   gap: 10px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  overflow-x: auto;
-}
-
-/* prevent ALL children from shrinking */
-.controls > * {
-  flex-shrink: 0;
 }
 
 button {
@@ -62,21 +55,17 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
-  white-space: nowrap;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-/* BUTTON GROUP RIGHT SIDE */
 .button-group {
   display: flex;
   gap: 10px;
-  margin-left: auto; /* push to right */
 }
 
-/* PILLS */
 .pill-group {
   display: flex;
   background: #b06a7a;
@@ -92,7 +81,6 @@ button:hover {
   font-size: 14px;
   display: flex;
   align-items: center;
-  white-space: nowrap;
 }
 
 .pill.active {
@@ -128,7 +116,6 @@ button:hover {
 <h2>Watermark Tool</h2>
 
 <div class="controls">
-
 <input type="file" id="upload" multiple>
 
 <!-- MODE -->
@@ -143,14 +130,13 @@ button:hover {
   <div class="pill" data-value="dark">Dark</div>
 </div>
 
-<!-- OPACITY -->
+<!-- ✅ OPACITY -->
 <div class="pill-group" id="opacityGroup">
   <div class="pill active" data-value="0.1">10%</div>
   <div class="pill" data-value="0.2">20%</div>
   <div class="pill" data-value="0.3">30%</div>
 </div>
 
-<!-- BUTTONS -->
 <div class="button-group">
   <button onclick="generate()">Generate</button>
   <button onclick="download()">Download ZIP</button>
@@ -166,7 +152,7 @@ button:hover {
 let images = [];
 let mode = "2";
 let color = "white";
-let opacity = "0.1";
+let opacity = "0.1"; // ✅ NEW
 
 function goBack() {
   window.location.href = "/CollageTool/";
@@ -181,7 +167,7 @@ document.querySelectorAll(".pill-group").forEach(group => {
 
       if (group.id === "modeGroup") mode = pill.dataset.value;
       if (group.id === "colorGroup") color = pill.dataset.value;
-      if (group.id === "opacityGroup") opacity = pill.dataset.value;
+      if (group.id === "opacityGroup") opacity = pill.dataset.value; // ✅ NEW
     };
   });
 });
@@ -200,7 +186,9 @@ function loadImages(files){
   }));
 }
 
+/* DRAW */
 function draw(ctx,img,W,H){
+  // white background (fix transparency)
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
@@ -209,7 +197,7 @@ function draw(ctx,img,W,H){
   const text="@eidams_secrets   @eidams_secrets   @eidams_secrets";
   const size=H*0.08;
 
-  let alpha = parseFloat(opacity);
+  let alpha = parseFloat(opacity); // ✅ NEW
 
   if(color==="white"){
     ctx.fillStyle=`rgba(255,255,255,${alpha})`;
