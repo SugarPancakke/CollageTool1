@@ -1,31 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Video Watermark</title>
+<title>Video Watermark Tool</title>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #c06f7f;
+}
+
+.pill-group {
+  display: flex;
+  background: #b06a7a;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pill {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.pill.active {
+  background: #db8b9a;
+}
+
+#preview video {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+</style>
+
 </head>
 
-<body style="background:#222;color:white;text-align:center;font-family:Arial">
+<body>
 
-<h2>Video Watermark</h2>
+<div class="container">
+<div class="tool">
 
-<input type="file" id="file" accept="video/*"><br><br>
-<button onclick="start()">Start</button>
+<h2>Video Watermark Tool</h2>
 
-<video id="video" controls style="max-width:500px;margin-top:15px"></video>
-<canvas id="canvas" style="display:none"></canvas>
+<div class="controls">
+<input type="file" id="upload" accept="video/*">
+
+<!-- COLOR ONLY -->
+<div class="pill-group">
+  <div class="pill active" data-value="white">White</div>
+  <div class="pill" data-value="dark">Dark</div>
+</div>
+
+<button onclick="generate()">Generate</button>
+</div>
+
+</div>
+
+<div id="preview"></div>
+</div>
 
 <script>
-async function start(){
-  const file = document.getElementById("file").files[0];
-  if(!file) return alert("Upload video");
+let color = "white";
 
-  const video = document.getElementById("video");
+/* pill toggle */
+document.querySelectorAll(".pill").forEach(pill => {
+  pill.onclick = () => {
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    color = pill.dataset.value;
+  };
+});
+
+async function generate(){
+  const file = document.getElementById("upload").files[0];
+  if (!file) return alert("Upload a video");
+
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+
+  const video = document.createElement("video");
   video.src = URL.createObjectURL(file);
 
   await video.play();
 
-  const canvas = document.getElementById("canvas");
+  // FIX: ensure first frame loads (no black screen)
+  await new Promise(res => {
+    if (video.readyState >= 2) return res();
+    video.onloadeddata = res;
+  });
+
+  video.currentTime = 0;
+
+  await new Promise(res => {
+    video.onseeked = res;
+  });
+
+  const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
   canvas.width = video.videoWidth;
@@ -34,12 +145,10 @@ async function start(){
   const stream = canvas.captureStream();
 
   let recorder;
-
-  // Try MP4 first
   if (MediaRecorder.isTypeSupported("video/mp4")) {
     recorder = new MediaRecorder(stream, { mimeType: "video/mp4" });
   } else {
-    recorder = new MediaRecorder(stream); // fallback webm
+    recorder = new MediaRecorder(stream);
   }
 
   let chunks = [];
@@ -49,6 +158,13 @@ async function start(){
     const blob = new Blob(chunks, { type: recorder.mimeType });
     const url = URL.createObjectURL(blob);
 
+    const vid = document.createElement("video");
+    vid.src = url;
+    vid.controls = true;
+
+    preview.appendChild(vid);
+
+    // direct download
     const a = document.createElement("a");
     a.href = url;
     a.download = recorder.mimeType.includes("mp4")
@@ -63,14 +179,17 @@ async function start(){
     ctx.drawImage(video,0,0);
 
     const text = "@eidams_secrets";
-
-    // responsive font
     const fontSize = canvas.height * 0.06;
+
     ctx.font = `bold ${fontSize}px Comic Sans MS`;
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
     ctx.textAlign = "center";
 
-    // EDGE POSITIONS (tuned to match your image)
+    if(color==="white"){
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+    } else {
+      ctx.fillStyle = "rgba(40,40,40,0.3)";
+    }
+
     const topY = fontSize * 1.0;
     const midY = canvas.height * 0.52;
     const bottomY = canvas.height - fontSize * 0.3;
@@ -78,9 +197,9 @@ async function start(){
     const cols = 3;
 
     function drawRow(y){
-      for(let i = 0; i < cols; i++){
-        const x = (canvas.width / cols) * (i + 0.5);
-        ctx.fillText(text, x, y);
+      for(let i=0;i<cols;i++){
+        const x = (canvas.width/cols)*(i+0.5);
+        ctx.fillText(text,x,y);
       }
     }
 
