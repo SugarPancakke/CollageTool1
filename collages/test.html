@@ -1,78 +1,273 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Video Watermark Tool</title>
+<meta charset="UTF-8">
+<title>Deep Echoes Collage</title>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+  
+button {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-size: 14px;
+}
+
+button:hover {
+  background: #c06f7f;
+}
+
+canvas {
+  display: block;
+  transform: scale(0.43);
+  transform-origin: center top;
+  margin-top: 10px;
+}
+</style>
+
 </head>
 
-<body style="background:#391823;color:white;text-align:center;font-family:Arial;padding:20px">
+<body>
 
-<h2>Video Watermark Tool</h2>
+<div class="container">
 
-<input type="file" id="videoInput"><br><br>
+  <div class="tool">
+    <button onclick="goBack()">← Back</button>
+    <h2>Deep Echoes Collage</h2>
 
-<label>Opacity:</label>
-<select id="opacity">
-  <option value="0.1">10%</option>
-  <option value="0.2">20%</option>
-  <option value="0.3">30%</option>
-</select>
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
+    
+       <button class="generate-btn" onclick="generate()">Generate</button>
+       <button onclick="download()">Download PNG</button>
+  </div>
+     </div>
 
-<br><br>
+<canvas id="canvas" width="2500" height="1220"></canvas>
 
-<button onclick="process()">Generate</button>
-
-<p id="status"></p>
-
-<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
+</div>
 
 <script>
-const { createFFmpeg, fetchFile } = FFmpeg;
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-const ffmpeg = createFFmpeg({
-  log: true,
-  corePath: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js"
-});
+const mm = 3.78;
 
-async function process() {
-  const file = document.getElementById("videoInput").files[0];
-  const opacity = document.getElementById("opacity").value;
+const gap = 2.5 * mm;
+const whiteFrame = 3.5 * mm;
 
-  if (!file) return alert("Upload video first");
+const outerTop = 6 * mm;
+const outerSide = 6 * mm;
+const outerBottom = 18 * mm;
 
-  const status = document.getElementById("status");
+let images = [];
 
-  status.innerText = "Loading engine (first time ~10s)...";
+/* IMAGE ORDER */
+const getImageIndex = (r, c) => {
+  return r === 0 ? c * 2 : c * 2 + 1;
+};
 
-  if (!ffmpeg.isLoaded()) await ffmpeg.load();
+/* PLACEHOLDER */
+const placeholder = new Image();
+placeholder.src = "../image/T_showpic_clothes_blank.png";
 
-  status.innerText = "Processing video...";
+let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw();
+};
 
-  ffmpeg.FS('writeFile', 'input.avi', await fetchFile(file));
+/* BACK */
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
 
-  await ffmpeg.run(
-    '-i', 'input.avi',
+/* LOAD */
+function loadImages(files) {
+  return Promise.all([...files].map(file => {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => res(img);
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }));
+}
 
-    '-vf',
-    `scale=1280:-1,drawtext=text='@eidams_secrets':fontcolor=white@${opacity}:fontsize=32:x=(w-text_w)/2:y=h*0.1`,
+/* DRAW IMAGE */
+function drawCover(img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
 
-    '-c:v', 'libx264',
-    '-preset', 'ultrafast',
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
 
-    '-c:a', 'copy',
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
 
-    'output.mp4'
-  );
+/* SAFE */
+function safe(img) {
+  return img ? img : placeholder;
+}
 
-  const data = ffmpeg.FS('readFile', 'output.mp4');
+/* LABEL */
+function drawLabel(text, x, y) {
+  ctx.fillStyle = "rgba(22, 22, 29, 0.7)";
+  ctx.font = "bold 50px Comic Sans MS";
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  ctx.fillText(text, x + 12, y + 12);
+}
 
-  const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+/* GENERATE */
+async function generate() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "watermarked.mp4";
-  a.click();
+  images = await loadImages(files);
 
-  status.innerText = "Done!";
+  while (images.length < 12) {
+    images.push(null);
+  }
+
+  draw();
+}
+
+/* DRAW */
+function draw() {
+  if (!placeholderReady) return;
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.fillStyle = "#16161d";
+  ctx.fillRect(0, 0, W, H);
+
+  const innerX = outerSide;
+  const innerY = outerTop;
+  const innerW = W - outerSide * 2;
+  const innerH = H - outerTop - outerBottom;
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(innerX, innerY, innerW, innerH);
+
+  const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+  const frameW = innerW - whiteFrame * 2;
+  const frameH = innerH - whiteFrame * 2;
+
+  const cols = 6;
+  const rows = 2;
+
+  const colW = (frameW - gap * (cols - 1)) / cols;
+  const rowH = (frameH - gap * (rows - 1)) / rows;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+
+      const imgIndex = getImageIndex(r, c);
+
+      const x = frameX + c * (colW + gap);
+      const y = frameY + r * (rowH + gap);
+
+      drawCover(
+        safe(images[imgIndex]),
+        x,
+        y,
+        colW,
+        rowH
+      );
+    }
+  }
+
+  /* LABELS */
+  drawLabel("Base:", frameX + 15, frameY + 15);
+  drawLabel("Glow-up:", frameX + 15, frameY + rowH + gap + 15);
+
+  /* ROW WATERMARK */
+  const overlayText = "@eidams_secrets @eidams_secrets @eidams_secrets";
+
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "center";
+  ctx.font = "bold 79px Comic Sans MS";
+
+  const offset = 85;
+
+  const positions = [
+    frameY + rowH - offset,
+    frameY + rowH + gap + rowH - offset
+  ];
+
+  positions.forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
+  });
+
+  /* BOTTOM WATERMARK */
+  const text = "@eidams_secrets  @eidams_secrets  @eidams_secrets";
+
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+
+  let yText = H - (outerBottom / 2) + 15;
+
+  const minY = 40;
+  const maxY = H - 10;
+
+  if (yText > maxY) yText = maxY;
+  if (yText < minY) yText = minY;
+
+  ctx.fillText(text, W / 2, yText);
+}
+
+/* DOWNLOAD */
+function download() {
+  const link = document.createElement("a");
+  link.download = "collage.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 }
 </script>
 
