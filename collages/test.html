@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Watermark Tool</title>
+</head>
+
+<body style="background:#391823;color:white;text-align:center;font-family:Arial;padding:20px">
+
+<h2>Video Watermark Tool</h2>
+
+<input type="file" id="videoInput"><br><br>
+
+<label>Opacity:</label>
+<select id="opacity">
+  <option value="0.1">10%</option>
+  <option value="0.2">20%</option>
+  <option value="0.3">30%</option>
+</select>
+
+<br><br>
+
+<button onclick="process()">Generate</button>
+
+<p id="status"></p>
+
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
+
+<script>
+const { createFFmpeg, fetchFile } = FFmpeg;
+
+const ffmpeg = createFFmpeg({
+  log: true,
+  corePath: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js"
+});
+
+async function process() {
+  const file = document.getElementById("videoInput").files[0];
+  const opacity = document.getElementById("opacity").value;
+
+  if (!file) return alert("Upload video first");
+
+  const status = document.getElementById("status");
+
+  status.innerText = "Loading engine (first time ~10s)...";
+
+  if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+  status.innerText = "Processing video...";
+
+  ffmpeg.FS('writeFile', 'input.avi', await fetchFile(file));
+
+  await ffmpeg.run(
+    '-i', 'input.avi',
+
+    '-vf',
+    `scale=1280:-1,drawtext=text='@eidams_secrets':fontcolor=white@${opacity}:fontsize=32:x=(w-text_w)/2:y=h*0.1`,
+
+    '-c:v', 'libx264',
+    '-preset', 'ultrafast',
+
+    '-c:a', 'copy',
+
+    'output.mp4'
+  );
+
+  const data = ffmpeg.FS('readFile', 'output.mp4');
+
+  const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "watermarked.mp4";
+  a.click();
+
+  status.innerText = "Done!";
+}
+</script>
+
+</body>
+</html>
