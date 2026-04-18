@@ -26,20 +26,20 @@ body {
   background: #643545;
   padding: 15px;
   border-radius: 12px;
-  margin-bottom: 15px;
   width: 100%;
 }
 
 .controls {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 button {
   padding: 10px 14px;
   border: none;
+  font-size: 14px;
   border-radius: 8px;
   background: #db8b9a;
   color: white;
@@ -55,6 +55,7 @@ button:hover {
   background: #b06a7a;
   border-radius: 999px;
   overflow: hidden;
+  font-size: 13px;
 }
 
 .pill {
@@ -66,14 +67,30 @@ button:hover {
   background: #db8b9a;
 }
 
+/* ✅ progress layout */
+.progress-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;              /* bar + % tight */
+  margin-left: 20px;     /* ← EXACTLY what you asked */
+}
+
+progress {
+  width: 120px;
+  height: 6px;
+}
+
+#percent {
+  font-size: 13px;
+  min-width: 35px;
+}
+
 #preview video {
   max-width: 100%;
-  height: auto;
   border-radius: 8px;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 </style>
-
 </head>
 
 <body>
@@ -84,15 +101,22 @@ button:hover {
 <h2>Video Watermark Tool</h2>
 
 <div class="controls">
+
 <input type="file" id="upload" accept="video/*">
 
-<!-- COLOR ONLY -->
 <div class="pill-group">
   <div class="pill active" data-value="white">White</div>
   <div class="pill" data-value="dark">Dark</div>
 </div>
 
 <button onclick="generate()">Generate</button>
+
+<!-- ✅ progress EXACT placement -->
+<div class="progress-inline">
+  <progress id="bar" value="0" max="1"></progress>
+  <span id="percent">0%</span>
+</div>
+
 </div>
 
 </div>
@@ -103,7 +127,6 @@ button:hover {
 <script>
 let color = "white";
 
-/* pill toggle */
 document.querySelectorAll(".pill").forEach(pill => {
   pill.onclick = () => {
     document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
@@ -119,22 +142,25 @@ async function generate(){
   const preview = document.getElementById("preview");
   preview.innerHTML = "";
 
+  const bar = document.getElementById("bar");
+  const percent = document.getElementById("percent");
+
+  bar.value = 0;
+  percent.innerText = "0%";
+
   const video = document.createElement("video");
   video.src = URL.createObjectURL(file);
+  video.muted = true;
 
   await video.play();
 
-  // FIX: ensure first frame loads (no black screen)
   await new Promise(res => {
     if (video.readyState >= 2) return res();
     video.onloadeddata = res;
   });
 
   video.currentTime = 0;
-
-  await new Promise(res => {
-    video.onseeked = res;
-  });
+  await new Promise(res => video.onseeked = res);
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -164,13 +190,14 @@ async function generate(){
 
     preview.appendChild(vid);
 
-    // direct download
     const a = document.createElement("a");
     a.href = url;
     a.download = recorder.mimeType.includes("mp4")
       ? "watermarked.mp4"
       : "watermarked.webm";
     a.click();
+
+    percent.innerText = "Done";
   };
 
   recorder.start();
@@ -184,15 +211,15 @@ async function generate(){
     ctx.font = `bold ${fontSize}px Comic Sans MS`;
     ctx.textAlign = "center";
 
-    if(color==="white"){
-      ctx.fillStyle = "rgba(255,255,255,0.2)";
-    } else {
-      ctx.fillStyle = "rgba(40,40,40,0.1)";
-    }
+    ctx.fillStyle = color === "white"
+      ? "rgba(255,255,255,0.2)"
+      : "rgba(40,40,40,0.1)";
 
-    const topY = fontSize * 1.0;
+    const padding = canvas.height * 0.035;
+
+    const topY = padding + fontSize;
     const midY = canvas.height * 0.52;
-    const bottomY = canvas.height - fontSize * 0.3;
+    const bottomY = canvas.height - padding;
 
     const cols = 3;
 
@@ -206,6 +233,13 @@ async function generate(){
     drawRow(topY);
     drawRow(midY);
     drawRow(bottomY);
+
+    // progress
+    if(video.duration){
+      const prog = video.currentTime / video.duration;
+      bar.value = prog;
+      percent.innerText = Math.floor(prog * 100) + "%";
+    }
 
     if(!video.ended){
       requestAnimationFrame(draw);
