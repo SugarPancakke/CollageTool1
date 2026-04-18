@@ -130,7 +130,7 @@ button:hover {
   <div class="pill" data-value="dark">Dark</div>
 </div>
 
-<!-- ✅ OPACITY -->
+<!-- OPACITY -->
 <div class="pill-group" id="opacityGroup">
   <div class="pill active" data-value="0.1">10%</div>
   <div class="pill" data-value="0.3">30%</div>
@@ -151,7 +151,7 @@ button:hover {
 let images = [];
 let mode = "2";
 let color = "white";
-let opacity = "0.1"; // ✅ NEW
+let opacity = "0.1"; 
 
 function goBack() {
   window.location.href = "/CollageTool/";
@@ -166,7 +166,7 @@ document.querySelectorAll(".pill-group").forEach(group => {
 
       if (group.id === "modeGroup") mode = pill.dataset.value;
       if (group.id === "colorGroup") color = pill.dataset.value;
-      if (group.id === "opacityGroup") opacity = pill.dataset.value; // ✅ NEW
+      if (group.id === "opacityGroup") opacity = pill.dataset.value; 
     };
   });
 });
@@ -196,7 +196,7 @@ function draw(ctx,img,W,H){
   const text="@eidams_secrets   @eidams_secrets   @eidams_secrets";
   const size=H*0.08;
 
-  let alpha = parseFloat(opacity); // ✅ NEW
+  let alpha = parseFloat(opacity); 
 
   if(color==="white"){
     ctx.fillStyle=`rgba(255,255,255,${alpha})`;
