@@ -52,7 +52,7 @@ video {
 
 <progress id="progress" value="0" max="1"></progress>
 
-<div id="preview"></div>
+<div id="out"></div>
 
 </div>
 
@@ -66,29 +66,11 @@ const ffmpeg = createFFmpeg({
   }
 });
 
-/* 🎬 INSTANT PREVIEW */
-document.getElementById("file").onchange = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const url = URL.createObjectURL(file);
-
-  const video = document.createElement("video");
-  video.src = url;
-  video.controls = true;
-
-  const preview = document.getElementById("preview");
-  preview.innerHTML = "<p>Original Video:</p>";
-  preview.appendChild(video);
-};
-
 async function run(){
   const file = document.getElementById("file").files[0];
   if(!file) return alert("Upload video");
 
   if(!ffmpeg.isLoaded()) await ffmpeg.load();
-
-  document.getElementById("progress").value = 0;
 
   ffmpeg.FS('writeFile','in.mp4',await fetchFile(file));
 
@@ -112,9 +94,8 @@ async function run(){
   video.src = url;
   video.controls = true;
 
-  const preview = document.getElementById("preview");
-  preview.innerHTML = "<p>Watermarked Video:</p>";
-  preview.appendChild(video);
+  document.getElementById("out").innerHTML = "";
+  document.getElementById("out").appendChild(video);
 
   const a = document.createElement("a");
   a.href = url;
