@@ -32,9 +32,21 @@ body {
   box-sizing: border-box;
 }
 
+/* CONTROLS ROW */
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* BUTTON GROUP */
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
 /* BUTTONS */
 button {
-  margin-top: 10px;
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
@@ -68,10 +80,14 @@ canvas {
 
     <h2>10 Pieces Collage</h2>
 
-    <input type="file" id="upload" multiple accept="image/*">
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
 
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+      <div class="button-group">
+        <button onclick="generate()">Generate</button>
+        <button onclick="download()">Download PNG</button>
+      </div>
+    </div>
   </div>
 
   <canvas id="canvas" width="1500" height="2100"></canvas>
@@ -210,8 +226,6 @@ function draw() {
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
-  
-
 
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
@@ -227,30 +241,29 @@ function draw() {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  /* WATERMARK */
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-/* ROW WATERMARK (4 ROWS) */
-const overlayText = "@eidams_secrets @eidams_secrets";
+  /* ROW WATERMARK */
+  const overlayText = "@eidams_secrets @eidams_secrets";
 
-ctx.fillStyle = "rgba(255,255,255,0.35)";
-ctx.textAlign = "center";
-ctx.font = "bold 81px Comic Sans MS";
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "center";
+  ctx.font = "bold 81px Comic Sans MS";
 
-const offset = 82;
+  const offset = 82;
 
-const positions = [
-  frameY + offset,                          
-  frameY + rowH + gap + offset,            
-  frameY + (rowH + gap) * 2 + offset,     
-  frameY + (rowH + gap) * 3 + offset       
-];
+  const positions = [
+    frameY + offset,
+    frameY + rowH + gap + offset,
+    frameY + (rowH + gap) * 2 + offset,
+    frameY + (rowH + gap) * 3 + offset
+  ];
 
-positions.forEach(y => {
-  ctx.fillText(overlayText, frameX + frameW / 2, y);
-});
+  positions.forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
+  });
 
-/* BOTTOM WATERMARK */
+  /* BOTTOM WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
