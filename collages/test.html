@@ -43,6 +43,7 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
+  font-size: 14px;
 }
 
 button:hover {
@@ -59,6 +60,7 @@ button:hover {
 .pill {
   padding: 6px 12px;
   cursor: pointer;
+  font-size: 13px;
 }
 
 .pill.active {
@@ -226,8 +228,8 @@ async function generate(){
     ctx.textAlign = "center";
 
     ctx.fillStyle = color === "white"
-      ? "rgba(255,255,255,0.3)"
-      : "rgba(40,40,40,0.3)";
+      ? "rgba(255,255,255,0.2)"
+      : "rgba(40,40,40,0.1)";
 
     const padding = canvas.height * 0.035;
 
