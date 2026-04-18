@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#222;color:white;text-align:center">
+<head>
+<meta charset="UTF-8">
+<title>Video Watermark</title>
+</head>
+
+<body style="background:#222;color:white;text-align:center;font-family:Arial">
 
 <h2>Video Watermark</h2>
 
-<input type="file" id="file"><br><br>
+<input type="file" id="file" accept="video/*"><br><br>
 <button onclick="start()">Start</button>
 
 <video id="video" controls style="max-width:500px;margin-top:15px"></video>
@@ -17,6 +22,7 @@ async function start(){
 
   const video = document.getElementById("video");
   video.src = URL.createObjectURL(file);
+
   await video.play();
 
   const canvas = document.getElementById("canvas");
@@ -56,23 +62,31 @@ async function start(){
   function draw(){
     ctx.drawImage(video,0,0);
 
-    // WATERMARK SETTINGS
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
-    ctx.font = "bold 40px Comic Sans MS";
-    ctx.textAlign = "center";
-
     const text = "@eidams_secrets";
 
-    const rows = 3;
+    // responsive font
+    const fontSize = canvas.height * 0.06;
+    ctx.font = `bold ${fontSize}px Comic Sans MS`;
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.textAlign = "center";
+
+    // EDGE POSITIONS (tuned to match your image)
+    const topY = fontSize * 1.0;
+    const midY = canvas.height * 0.52;
+    const bottomY = canvas.height - fontSize * 0.3;
+
     const cols = 3;
 
-    for(let y=0;y<rows;y++){
-      for(let x=0;x<cols;x++){
-        const posX = (canvas.width/(cols))*(x+0.5);
-        const posY = (canvas.height/(rows))*(y+0.5);
-        ctx.fillText(text,posX,posY);
+    function drawRow(y){
+      for(let i = 0; i < cols; i++){
+        const x = (canvas.width / cols) * (i + 0.5);
+        ctx.fillText(text, x, y);
       }
     }
+
+    drawRow(topY);
+    drawRow(midY);
+    drawRow(bottomY);
 
     if(!video.ended){
       requestAnimationFrame(draw);
