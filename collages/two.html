@@ -16,7 +16,7 @@ body {
 }
 
 .container {
-  width: 1100px;
+  width: 900px; /* back to original */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -35,15 +35,14 @@ h2 {
   margin-bottom: 20px;
 }
 
-/* CONTROLS ROW */
+/* ✅ SAME LAYOUT STYLE AS YOUR WATERMARK TOOL */
 .controls {
   display: flex;
   gap: 10px;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
-/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -53,20 +52,17 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
-  white-space: nowrap;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-/* KEEP BUTTONS NEXT TO INPUT */
 .button-group {
   display: flex;
   gap: 10px;
 }
 
-/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.43);
@@ -85,6 +81,7 @@ canvas {
     <button onclick="goBack()">← Back</button>
     <h2>2 Pieces Collage</h2>
 
+    <!-- ✅ FIXED ROW -->
     <div class="controls">
       <input type="file" id="upload" multiple accept="image/*">
 
