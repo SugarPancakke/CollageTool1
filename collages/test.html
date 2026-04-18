@@ -1,101 +1,252 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Video Watermark</title>
+<title>Video Watermark Tool</title>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #c06f7f;
+}
+
+.pill-group {
+  display: flex;
+  background: #b06a7a;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pill {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.pill.active {
+  background: #db8b9a;
+}
+
+#preview video {
+  width: 300px;
+  border-radius: 8px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 
-<body style="background:#222;color:white;text-align:center;font-family:Arial">
+<body>
 
-<h2>Video Watermark</h2>
+<div class="container">
+<div class="tool">
 
-<input type="file" id="file" accept="video/*"><br><br>
-<button onclick="start()">Start</button>
+<h2>Video Watermark Tool</h2>
 
-<video id="video" controls style="max-width:500px;margin-top:15px"></video>
-<canvas id="canvas" style="display:none"></canvas>
+<div class="controls">
+<input type="file" id="upload" multiple accept="video/*">
+
+<!-- COLOR ONLY -->
+<div class="pill-group" id="colorGroup">
+  <div class="pill active" data-value="white">White</div>
+  <div class="pill" data-value="dark">Dark</div>
+</div>
+
+<button onclick="generate()">Generate</button>
+<button onclick="download()">Download ZIP</button>
+
+</div>
+</div>
+
+<div id="preview"></div>
+</div>
 
 <script>
-async function start(){
-  const file = document.getElementById("file").files[0];
-  if(!file) return alert("Upload video");
+let videos = [];
+let outputs = [];
+let color = "white";
 
-  const video = document.getElementById("video");
-  video.src = URL.createObjectURL(file);
-
-  await video.play();
-
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-
-  const stream = canvas.captureStream();
-
-  let recorder;
-
-  // Try MP4 first
-  if (MediaRecorder.isTypeSupported("video/mp4")) {
-    recorder = new MediaRecorder(stream, { mimeType: "video/mp4" });
-  } else {
-    recorder = new MediaRecorder(stream); // fallback webm
-  }
-
-  let chunks = [];
-  recorder.ondataavailable = e => chunks.push(e.data);
-
-  recorder.onstop = () => {
-    const blob = new Blob(chunks, { type: recorder.mimeType });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = recorder.mimeType.includes("mp4")
-      ? "watermarked.mp4"
-      : "watermarked.webm";
-    a.click();
+/* pills */
+document.querySelectorAll(".pill").forEach(pill => {
+  pill.onclick = () => {
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    color = pill.dataset.value;
   };
+});
 
-  recorder.start();
+function loadVideos(files){
+  return Promise.all([...files].map(f=>{
+    return new Promise(res=>{
+      const video = document.createElement("video");
+      video.src = URL.createObjectURL(f);
+      video.onloadeddata = ()=>res(video);
+    });
+  }));
+}
 
-  function draw(){
-    ctx.drawImage(video,0,0);
+async function processVideo(video){
+  return new Promise(resolve => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-    const text = "@eidams_secrets";
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-    // responsive font
-    const fontSize = canvas.height * 0.06;
-    ctx.font = `bold ${fontSize}px Comic Sans MS`;
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
-    ctx.textAlign = "center";
+    const stream = canvas.captureStream();
 
-    // EDGE POSITIONS (tuned to match your image)
-    const topY = fontSize * 1.0;
-    const midY = canvas.height * 0.52;
-    const bottomY = canvas.height - fontSize * 0.3;
+    let recorder;
+    if (MediaRecorder.isTypeSupported("video/mp4")) {
+      recorder = new MediaRecorder(stream, { mimeType: "video/mp4" });
+    } else {
+      recorder = new MediaRecorder(stream);
+    }
 
-    const cols = 3;
+    let chunks = [];
+    recorder.ondataavailable = e => chunks.push(e.data);
 
-    function drawRow(y){
-      for(let i = 0; i < cols; i++){
-        const x = (canvas.width / cols) * (i + 0.5);
-        ctx.fillText(text, x, y);
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: recorder.mimeType });
+      resolve({ blob, type: recorder.mimeType });
+    };
+
+    video.currentTime = 0;
+    video.play();
+    recorder.start();
+
+    function draw(){
+      ctx.drawImage(video,0,0);
+
+      const text = "@eidams_secrets";
+      const fontSize = canvas.height * 0.06;
+
+      ctx.font = `bold ${fontSize}px Comic Sans MS`;
+      ctx.textAlign = "center";
+
+      if(color==="white"){
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+      } else {
+        ctx.fillStyle = "rgba(40,40,40,0.1)";
+      }
+
+      const topY = fontSize * 1.0;
+      const midY = canvas.height * 0.52;
+      const bottomY = canvas.height - fontSize * 0.3;
+
+      const cols = 3;
+
+      function drawRow(y){
+        for(let i=0;i<cols;i++){
+          const x = (canvas.width/cols)*(i+0.5);
+          ctx.fillText(text,x,y);
+        }
+      }
+
+      drawRow(topY);
+      drawRow(midY);
+      drawRow(bottomY);
+
+      if(!video.ended){
+        requestAnimationFrame(draw);
+      } else {
+        recorder.stop();
       }
     }
 
-    drawRow(topY);
-    drawRow(midY);
-    drawRow(bottomY);
+    draw();
+  });
+}
 
-    if(!video.ended){
-      requestAnimationFrame(draw);
-    } else {
-      recorder.stop();
-    }
+async function generate(){
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload videos first");
+
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+  outputs = [];
+
+  videos = await loadVideos(files);
+
+  for(let i=0;i<videos.length;i++){
+    const result = await processVideo(videos[i]);
+
+    const url = URL.createObjectURL(result.blob);
+    outputs.push({ blob: result.blob, type: result.type });
+
+    const vid = document.createElement("video");
+    vid.src = url;
+    vid.controls = true;
+
+    vid.onclick = () => {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `video_${i+1}.${result.type.includes("mp4")?"mp4":"webm"}`;
+      a.click();
+    };
+
+    preview.appendChild(vid);
   }
+}
 
-  draw();
+async function download(){
+  if (!outputs.length) return alert("Generate first");
+
+  const zip = new JSZip();
+
+  outputs.forEach((o,i)=>{
+    zip.file(
+      `video_${i+1}.${o.type.includes("mp4")?"mp4":"webm"}`,
+      o.blob
+    );
+  });
+
+  const blob = await zip.generateAsync({type:"blob"});
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "videos.zip";
+  a.click();
 }
 </script>
 
