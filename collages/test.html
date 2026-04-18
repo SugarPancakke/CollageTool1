@@ -1,1 +1,228 @@
-test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Video Watermark Tool</title>
+
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #c06f7f;
+}
+
+.pill-group {
+  display: flex;
+  background: #b06a7a;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pill {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.pill.active {
+  background: #db8b9a;
+}
+
+progress {
+  width: 100%;
+  height: 20px;
+  margin-top: 10px;
+}
+
+#preview video {
+  max-width: 100%;
+  margin-top: 15px;
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<div class="tool">
+
+<h2>Video Watermark Tool</h2>
+
+<div class="controls">
+<input type="file" id="upload" multiple accept="video/*">
+
+<div class="pill-group" id="modeGroup">
+  <div class="pill active" data-value="2">2 Lines</div>
+  <div class="pill" data-value="3">3 Lines</div>
+</div>
+
+<div class="pill-group" id="colorGroup">
+  <div class="pill active" data-value="white">White</div>
+  <div class="pill" data-value="dark">Dark</div>
+</div>
+
+<div class="pill-group" id="opacityGroup">
+  <div class="pill active" data-value="0.1">10%</div>
+  <div class="pill" data-value="0.3">30%</div>
+</div>
+
+<button onclick="generate()">Generate</button>
+
+</div>
+
+<progress id="progress" value="0" max="1"></progress>
+
+<div id="preview"></div>
+
+</div>
+</div>
+
+<script>
+const { createFFmpeg, fetchFile } = FFmpeg;
+
+const ffmpeg = createFFmpeg({
+  log: true,
+  progress: ({ ratio }) => {
+    document.getElementById("progress").value = ratio;
+  }
+});
+
+let mode = "2";
+let color = "white";
+let opacity = "0.1";
+
+/* pills */
+document.querySelectorAll(".pill-group").forEach(group => {
+  group.querySelectorAll(".pill").forEach(pill => {
+    pill.onclick = () => {
+      group.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+
+      if (group.id === "modeGroup") mode = pill.dataset.value;
+      if (group.id === "colorGroup") color = pill.dataset.value;
+      if (group.id === "opacityGroup") opacity = pill.dataset.value;
+    };
+  });
+});
+
+function buildFilter() {
+  const text = "@eidams_secrets";
+  const alpha = opacity;
+  const fontColor = color === "white"
+    ? `white@${alpha}`
+    : `black@${alpha}`;
+
+  let filters = [];
+
+  // top
+  filters.push(
+    `drawtext=text='${text}':x=(w-text_w)/2:y=h*0.1:fontsize=40:fontcolor=${fontColor}`
+  );
+
+  // middle (optional)
+  if (mode === "3") {
+    filters.push(
+      `drawtext=text='${text}':x=(w-text_w)/2:y=h/2:fontsize=40:fontcolor=${fontColor}`
+    );
+  }
+
+  // bottom
+  filters.push(
+    `drawtext=text='${text}':x=(w-text_w)/2:y=h*0.9:fontsize=40:fontcolor=${fontColor}`
+  );
+
+  return filters.join(",");
+}
+
+async function generate() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload videos first");
+
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+
+  if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+
+    document.getElementById("progress").value = 0;
+
+    ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
+
+    const filter = buildFilter();
+
+    await ffmpeg.run(
+      '-i', 'input.mp4',
+      '-vf', filter,
+      '-codec:a', 'copy',
+      'output.mp4'
+    );
+
+    const data = ffmpeg.FS('readFile', 'output.mp4');
+
+    const url = URL.createObjectURL(
+      new Blob([data.buffer], { type: 'video/mp4' })
+    );
+
+    // preview
+    const video = document.createElement("video");
+    video.src = url;
+    video.controls = true;
+    preview.appendChild(video);
+
+    // auto download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `video_${i+1}.mp4`;
+    a.click();
+
+    ffmpeg.FS('unlink', 'input.mp4');
+    ffmpeg.FS('unlink', 'output.mp4');
+  }
+}
+</script>
+
+</body>
+</html>
