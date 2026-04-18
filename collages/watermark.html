@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Watermark Tool</title>
+<title>Video Watermark Tool</title>
 
 <style>
 body {
@@ -26,17 +26,7 @@ body {
   background: #643545;
   padding: 15px;
   border-radius: 12px;
-  margin-bottom: 15px;
   width: 100%;
-  box-sizing: border-box;
-}
-
-.tool > button:first-child {
-  margin-top: 10px;
-}
-
-h2 {
-  margin-bottom: 30px;
 }
 
 .controls {
@@ -53,17 +43,10 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s ease;
-  font-size: 14px;
 }
 
 button:hover {
   background: #c06f7f;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
 }
 
 .pill-group {
@@ -76,34 +59,33 @@ button:hover {
 .pill {
   padding: 6px 12px;
   cursor: pointer;
-  background: transparent;
-  color: white;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
 }
 
 .pill.active {
   background: #db8b9a;
 }
 
-#preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
+#preview video {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 15px;
 }
 
-#preview canvas {
-  height: 300px;
-  width: auto;
-  border-radius: 8px;
-  cursor: pointer;
+.progress-container {
+  width: 100%;
+  margin-top: 10px;
+}
+
+progress {
+  width: 100%;
+  height: 10px;
+}
+
+#percent {
+  font-size: 14px;
+  margin-top: 5px;
 }
 </style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
 </head>
 
 <body>
@@ -111,164 +93,156 @@ button:hover {
 <div class="container">
 <div class="tool">
 
-<button onclick="goBack()">← Back</button>
-
-<h2>Watermark Tool</h2>
+<h2>Video Watermark Tool</h2>
 
 <div class="controls">
-<input type="file" id="upload" multiple>
+<input type="file" id="upload" accept="video/*">
 
-<!-- MODE -->
-<div class="pill-group" id="modeGroup">
-  <div class="pill active" data-value="2">2 Lines</div>
-  <div class="pill" data-value="3">3 Lines</div>
-</div>
-
-<!-- COLOR -->
-<div class="pill-group" id="colorGroup">
+<div class="pill-group">
   <div class="pill active" data-value="white">White</div>
   <div class="pill" data-value="dark">Dark</div>
 </div>
 
-<!-- OPACITY -->
-<div class="pill-group" id="opacityGroup">
-  <div class="pill active" data-value="0.1">10%</div>
-  <div class="pill" data-value="0.3">30%</div>
+<button onclick="generate()">Generate</button>
 </div>
 
-<div class="button-group">
-  <button onclick="generate()">Generate</button>
-  <button onclick="download()">Download ZIP</button>
+<div class="progress-container">
+  <progress id="bar" value="0" max="1"></progress>
+  <div id="percent">0%</div>
 </div>
 
-</div>
 </div>
 
 <div id="preview"></div>
 </div>
 
 <script>
-let images = [];
-let mode = "2";
 let color = "white";
-let opacity = "0.1"; 
 
-function goBack() {
-  window.location.href = "/CollageTool/";
-}
-
-/* PILLS */
-document.querySelectorAll(".pill-group").forEach(group => {
-  group.querySelectorAll(".pill").forEach(pill => {
-    pill.onclick = () => {
-      group.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
-      pill.classList.add("active");
-
-      if (group.id === "modeGroup") mode = pill.dataset.value;
-      if (group.id === "colorGroup") color = pill.dataset.value;
-      if (group.id === "opacityGroup") opacity = pill.dataset.value; 
-    };
-  });
+document.querySelectorAll(".pill").forEach(pill => {
+  pill.onclick = () => {
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    color = pill.dataset.value;
+  };
 });
 
-function loadImages(files){
-  return Promise.all([...files].map(f=>{
-    return new Promise(res=>{
-      const r=new FileReader();
-      r.onload=e=>{
-        const img=new Image();
-        img.onload=()=>res(img);
-        img.src=e.target.result;
-      };
-      r.readAsDataURL(f);
-    });
-  }));
-}
-
-/* DRAW */
-function draw(ctx,img,W,H){
-  // white background (fix transparency)
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.drawImage(img,0,0,W,H);
-
-  const text="@eidams_secrets   @eidams_secrets   @eidams_secrets";
-  const size=H*0.08;
-
-  let alpha = parseFloat(opacity); 
-
-  if(color==="white"){
-    ctx.fillStyle=`rgba(255,255,255,${alpha})`;
-  } else {
-    ctx.fillStyle=`rgba(40,40,40,${alpha})`;
-  }
-
-  ctx.textAlign="center";
-  ctx.font=`bold ${size}px Comic Sans MS`;
-
-  ctx.fillText(text,W/2,H*0.08);
-  if(mode==="3") ctx.fillText(text,W/2,H*0.52);
-  ctx.fillText(text,W/2,H*0.97);
-}
-
 async function generate(){
-  const files=document.getElementById("upload").files;
-  if (!files.length) return alert("Upload images first");
+  const file = document.getElementById("upload").files[0];
+  if (!file) return alert("Upload a video");
 
-  const preview=document.getElementById("preview");
-  preview.innerHTML="";
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
 
-  images=await loadImages(files);
+  const bar = document.getElementById("bar");
+  const percent = document.getElementById("percent");
 
-  images.forEach((img,i)=>{
-    const c=document.createElement("canvas");
-    const ctx=c.getContext("2d");
+  bar.value = 0;
+  percent.innerText = "0%";
 
-    const h=500;
-    c.height=h;
-    c.width=img.width*(h/img.height);
+  const video = document.createElement("video");
+  video.src = URL.createObjectURL(file);
+  video.muted = true;
 
-    draw(ctx,img,c.width,c.height);
+  await video.play();
 
-    c.onclick=()=>downloadSingle(img,i);
-    preview.appendChild(c);
+  // ensure first frame loads
+  await new Promise(res => {
+    if (video.readyState >= 2) return res();
+    video.onloadeddata = res;
   });
-}
 
-function downloadSingle(img,i){
-  const c=document.createElement("canvas");
-  c.width=img.width;
-  c.height=img.height;
-  draw(c.getContext("2d"),img,c.width,c.height);
+  video.currentTime = 0;
+  await new Promise(res => video.onseeked = res);
 
-  const a=document.createElement("a");
-  a.download=`img_${i+1}.png`;
-  a.href=c.toDataURL();
-  a.click();
-}
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
-async function download(){
-  if (!images.length) return alert("Generate first");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
 
-  const zip=new JSZip();
+  const stream = canvas.captureStream();
 
-  for(let i=0;i<images.length;i++){
-    const img=images[i];
-    const c=document.createElement("canvas");
-    c.width=img.width;
-    c.height=img.height;
-
-    draw(c.getContext("2d"),img,c.width,c.height);
-
-    zip.file(`img_${i+1}.png`,c.toDataURL().split(",")[1],{base64:true});
+  let recorder;
+  if (MediaRecorder.isTypeSupported("video/mp4")) {
+    recorder = new MediaRecorder(stream, { mimeType: "video/mp4" });
+  } else {
+    recorder = new MediaRecorder(stream);
   }
 
-  const blob=await zip.generateAsync({type:"blob"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="images.zip";
-  a.click();
+  let chunks = [];
+  recorder.ondataavailable = e => chunks.push(e.data);
+
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: recorder.mimeType });
+    const url = URL.createObjectURL(blob);
+
+    const vid = document.createElement("video");
+    vid.src = url;
+    vid.controls = true;
+
+    preview.appendChild(vid);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = recorder.mimeType.includes("mp4")
+      ? "watermarked.mp4"
+      : "watermarked.webm";
+    a.click();
+
+    percent.innerText = "Done ✅";
+  };
+
+  recorder.start();
+
+  function draw(){
+    ctx.drawImage(video,0,0);
+
+    const text = "@eidams_secrets";
+    const fontSize = canvas.height * 0.06;
+
+    ctx.font = `bold ${fontSize}px Comic Sans MS`;
+    ctx.textAlign = "center";
+
+    ctx.fillStyle = color === "white"
+      ? "rgba(255,255,255,0.3)"
+      : "rgba(40,40,40,0.3)";
+
+    // padding from edges
+    const padding = canvas.height * 0.035;
+
+    const topY = padding + fontSize;
+    const midY = canvas.height * 0.52;
+    const bottomY = canvas.height - padding;
+
+    const cols = 3;
+
+    function drawRow(y){
+      for(let i=0;i<cols;i++){
+        const x = (canvas.width/cols)*(i+0.5);
+        ctx.fillText(text,x,y);
+      }
+    }
+
+    drawRow(topY);
+    drawRow(midY);
+    drawRow(bottomY);
+
+    // progress
+    if(video.duration){
+      const prog = video.currentTime / video.duration;
+      bar.value = prog;
+      percent.innerText = Math.floor(prog * 100) + "%";
+    }
+
+    if(!video.ended){
+      requestAnimationFrame(draw);
+    } else {
+      recorder.stop();
+    }
+  }
+
+  draw();
 }
 </script>
 
