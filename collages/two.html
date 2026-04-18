@@ -16,7 +16,7 @@ body {
 }
 
 .container {
-  width: 900px; /* back to original */
+  width: 900px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,18 +34,19 @@ body {
 .tool > button:first-child {
   margin-top: 10px;
 }
-  
+
 h2 {
-  margin-bottom: 20px;
+  margin-bottom: 30px; 
 }
 
 .controls {
   display: flex;
   gap: 10px;
+  flex-wrap: nowrap; 
   align-items: center;
-  flex-wrap: wrap;
 }
 
+/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -55,6 +56,7 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
+  white-space: nowrap; 
 }
 
 button:hover {
@@ -84,7 +86,6 @@ canvas {
     <button onclick="goBack()">← Back</button>
     <h2>2 Pieces Collage</h2>
 
-    <!-- ✅ FIXED ROW -->
     <div class="controls">
       <input type="file" id="upload" multiple accept="image/*">
 
