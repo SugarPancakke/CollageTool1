@@ -39,7 +39,6 @@ body {
 button {
   padding: 10px 14px;
   border: none;
-  font-size: 14px;
   border-radius: 8px;
   background: #db8b9a;
   color: white;
@@ -55,7 +54,6 @@ button:hover {
   background: #b06a7a;
   border-radius: 999px;
   overflow: hidden;
-  font-size: 13px;
 }
 
 .pill {
@@ -67,17 +65,34 @@ button:hover {
   background: #db8b9a;
 }
 
-/* ✅ progress layout */
+/* progress + spacing */
 .progress-inline {
   display: flex;
   align-items: center;
-  gap: 6px;              /* bar + % tight */
-  margin-left: 20px;     /* ← EXACTLY what you asked */
+  gap: 6px;
+  margin-left: 10px; /* ✅ now 10px */
 }
 
 progress {
   width: 120px;
   height: 6px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+progress::-webkit-progress-bar {
+  background-color: #16161d;
+  border-radius: 10px;
+}
+
+progress::-webkit-progress-value {
+  background-color: #db8b9a;
+  border-radius: 10px;
+}
+
+progress::-moz-progress-bar {
+  background-color: #db8b9a;
+  border-radius: 10px;
 }
 
 #percent {
@@ -110,8 +125,8 @@ progress {
 </div>
 
 <button onclick="generate()">Generate</button>
+<button id="downloadBtn" onclick="downloadVideo()" disabled>Download</button>
 
-<!-- ✅ progress EXACT placement -->
 <div class="progress-inline">
   <progress id="bar" value="0" max="1"></progress>
   <span id="percent">0%</span>
@@ -126,6 +141,7 @@ progress {
 
 <script>
 let color = "white";
+let finalBlob = null;
 
 document.querySelectorAll(".pill").forEach(pill => {
   pill.onclick = () => {
@@ -138,6 +154,9 @@ document.querySelectorAll(".pill").forEach(pill => {
 async function generate(){
   const file = document.getElementById("upload").files[0];
   if (!file) return alert("Upload a video");
+
+  document.getElementById("downloadBtn").disabled = true;
+  finalBlob = null;
 
   const preview = document.getElementById("preview");
   preview.innerHTML = "";
@@ -181,8 +200,9 @@ async function generate(){
   recorder.ondataavailable = e => chunks.push(e.data);
 
   recorder.onstop = () => {
-    const blob = new Blob(chunks, { type: recorder.mimeType });
-    const url = URL.createObjectURL(blob);
+    finalBlob = new Blob(chunks, { type: recorder.mimeType });
+
+    const url = URL.createObjectURL(finalBlob);
 
     const vid = document.createElement("video");
     vid.src = url;
@@ -190,13 +210,7 @@ async function generate(){
 
     preview.appendChild(vid);
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = recorder.mimeType.includes("mp4")
-      ? "watermarked.mp4"
-      : "watermarked.webm";
-    a.click();
-
+    document.getElementById("downloadBtn").disabled = false;
     percent.innerText = "Done";
   };
 
@@ -212,14 +226,14 @@ async function generate(){
     ctx.textAlign = "center";
 
     ctx.fillStyle = color === "white"
-      ? "rgba(255,255,255,0.2)"
-      : "rgba(40,40,40,0.1)";
+      ? "rgba(255,255,255,0.3)"
+      : "rgba(40,40,40,0.3)";
 
     const padding = canvas.height * 0.035;
 
     const topY = padding + fontSize;
     const midY = canvas.height * 0.52;
-    const bottomY = canvas.height - padding;
+    const bottomY = canvas.height - padding - fontSize * 0.3;
 
     const cols = 3;
 
@@ -234,7 +248,6 @@ async function generate(){
     drawRow(midY);
     drawRow(bottomY);
 
-    // progress
     if(video.duration){
       const prog = video.currentTime / video.duration;
       bar.value = prog;
@@ -249,6 +262,17 @@ async function generate(){
   }
 
   draw();
+}
+
+function downloadVideo(){
+  if (!finalBlob) return;
+
+  const url = URL.createObjectURL(finalBlob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "watermarked.mp4";
+  a.click();
 }
 </script>
 
