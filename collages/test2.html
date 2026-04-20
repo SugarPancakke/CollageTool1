@@ -1,1 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Outfit Parser</title>
+</head>
+<body>
 
+<h2>Upload Images</h2>
+<input type="file" id="fileInput" multiple>
+<button onclick="generateList()">Generate List</button>
+
+<h3>Result:</h3>
+<p id="output"></p>
+
+<script>
+const idMap = {
+  "S": "Socks",
+  "H": "Hair",
+  "D": "Dress",
+  "BB": "Shoes",
+  "PP": "Pants",
+  "PT": "Top",
+  "G": "Gloves",
+  "ARM": "Armband",
+  "AXS": "Chest Accessory",
+  "AXQ": "Choker",
+  "AJZ": "Rings",
+  "AEA": "Earrings",
+  "AHA": "Bracelet",
+  "AFA": "Glasses",
+  "AHC": "Hat",
+  "ALE": "Garter",
+  "AHE": "Hair Clips",
+  "ANE": "Necklace",
+  "ABA": "Handheld",
+  "ABS": "Backpiece",
+  "AGL": "Face Accessory"
+};
+
+function generateList() {
+  const files = document.getElementById("fileInput").files;
+  let foundItems = new Set();
+
+  for (let file of files) {
+    let name = file.name.toUpperCase();
+
+    for (let id in idMap) {
+      if (name.includes(id)) {
+        foundItems.add(idMap[id]);
+      }
+    }
+  }
+
+  document.getElementById("output").textContent =
+    Array.from(foundItems).join(", ");
+}
+</script>
+
+</body>
+</html>
