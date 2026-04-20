@@ -58,15 +58,16 @@ function generateList() {
   for (let file of files) {
     let name = file.name.toUpperCase();
 
-    // 🔥 FIX START (only real change)
-    name = name.split(".")[0];                 // remove extension
-    let lastPart = name.split("_").pop();      // get last section
-    let clean = lastPart.replace(/[0-9]/g, "");// remove numbers
+    // 🔥 FIX START
+    name = name.split(".")[0];
+    let lastPart = name.split("_").pop();
+    let clean = lastPart.replace(/[0-9]/g, "");
 
+    // ✅ ONLY match the FINAL ID
     for (let id of detectionIDs) {
-      if (clean.includes(id)) {
+      if (clean.endsWith(id)) {
         found.add(id);
-        clean = clean.replace(id, ""); // prevent overlap
+        break; // stop after finding the correct one
       }
     }
     // 🔥 FIX END
