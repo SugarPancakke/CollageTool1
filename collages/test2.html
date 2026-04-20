@@ -15,28 +15,29 @@
 
 <script>
 const idMap = {
-  "S": "Socks",
   "H": "Hair",
   "D": "Dress",
-  "BB": "Shoes",
-  "PP": "Pants",
-  "T": "Top",
   "C": "Outerwear",
-  "G": "Gloves",
-  "ARM": "Armband",
-  "AXS": "Chest Accessory",
-  "AXQ": "Choker",
-  "AJZ": "Rings",
+  "T": "Top",
+  "PP": "Bottom",
+  "S": "Socks",
+  "BB": "Shoes",
+
+  "AHE": "Hair Accessory",
+  "AHC": "Headwear",
   "AEA": "Earrings",
+  "ANE": "Neckwear",
   "AHA": "Bracelet",
-  "AFA": "Glasses",
-  "AHC": "Hat",
-  "ALE": "Garter",
-  "AHE": "Hair Clips",
-  "ANE": "Necklace",
-  "ABA": "Handheld",
+  "AXQ": "Choker",
+  "G": "Gloves",
+  "AGL": "Face Decoration",
+  "AXS": "Chest Accessory",
+  "ALE": "Pendant",
   "ABS": "Backpiece",
-  "AGL": "Face Accessory"
+  "AJZ": "Rings",
+  "ARM": "Arm Decoration",
+  "ABA": "Handheld",
+  "ABK": "Body Paint"
 };
 
 function generateList() {
@@ -46,9 +47,13 @@ function generateList() {
   for (let file of files) {
     let name = file.name.toUpperCase();
 
-    for (let id in idMap) {
-      if (name.includes(id)) {
-        foundItems.add(idMap[id]);
+    name = name.split(".")[0];
+
+    let parts = name.split(/[_\-\s]+/);
+
+    for (let part of parts) {
+      if (idMap[part]) {
+        foundItems.add(idMap[part]);
       }
     }
   }
