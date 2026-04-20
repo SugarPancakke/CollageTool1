@@ -14,6 +14,7 @@
 <p id="output"></p>
 
 <script>
+/*NAMES*/
 const idMap = {
   "H": "Hair",
   "D": "Dress",
@@ -40,26 +41,34 @@ const idMap = {
   "ABK": "Body Paint"
 };
 
+/*ORDER*/
+const orderedIDs = [
+  "H","D","C","T","PP","S","BB",
+  "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL",
+  "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
+];
+
+const detectionIDs = [...orderedIDs].sort((a,b) => b.length - a.length);
+
 function generateList() {
   const files = document.getElementById("fileInput").files;
-  let foundItems = new Set();
+  let found = new Set();
 
   for (let file of files) {
     let name = file.name.toUpperCase();
 
-    name = name.split(".")[0];
-
-    let parts = name.split(/[_\-\s]+/);
-
-    for (let part of parts) {
-      if (idMap[part]) {
-        foundItems.add(idMap[part]);
+    for (let id of detectionIDs) {
+      if (name.includes(id)) {
+        found.add(id);
       }
     }
   }
 
-  document.getElementById("output").textContent =
-    Array.from(foundItems).join(", ");
+  let result = orderedIDs
+    .filter(id => found.has(id))
+    .map(id => idMap[id]);
+
+  document.getElementById("output").textContent = result.join(", ");
 }
 </script>
 
