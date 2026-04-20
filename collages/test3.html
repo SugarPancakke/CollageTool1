@@ -31,18 +31,9 @@ body {
   box-sizing: border-box;
 }
 
-.tool > button:first-child {
-  margin-top: 10px;
-}
-
-h2 {
-  margin-bottom: 30px;
-}
-
 .controls {
   display: flex;
   gap: 10px;
-  flex-wrap: nowrap;
   align-items: center;
 }
 
@@ -53,18 +44,6 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s ease;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-button:hover {
-  background: #c06f7f;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
 }
 
 canvas {
@@ -74,7 +53,6 @@ canvas {
   margin-top: 10px;
 }
 </style>
-
 </head>
 
 <body>
@@ -82,16 +60,12 @@ canvas {
 <div class="container">
 
   <div class="tool">
-    <button onclick="goBack()">← Back</button>
     <h2>8 Pieces Collage</h2>
 
     <div class="controls">
       <input type="file" id="upload" multiple accept="image/*">
-
-      <div class="button-group">
-        <button onclick="generate()">Generate</button>
-        <button onclick="download()">Download PNG</button>
-      </div>
+      <button onclick="generate()">Generate</button>
+      <button onclick="download()">Download PNG</button>
     </div>
 
   </div>
@@ -105,7 +79,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-
 const gap = 2.5 * mm;
 const whiteFrame = 3.5 * mm;
 
@@ -114,6 +87,7 @@ const outerSide = 6 * mm;
 const outerBottom = 18 * mm;
 
 let images = [];
+let imageIDs = []; // 🔥 store IDs for debug
 let bigImage = null;
 
 const placeholder = new Image();
@@ -125,40 +99,9 @@ placeholder.onload = () => {
   draw();
 };
 
-const slotBackground = new Image();
-slotBackground.src = "../image/T_showpic_clothes_blank.png";
-
 /* =======================
    ID SYSTEM
 ======================= */
-const idMap = {
-  "AHE": "Hair Accessory",
-  "AHC": "Headwear",
-  "AEA": "Earrings",
-  "ANE": "Neckwear",
-  "AHA": "Bracelet",
-  "AXQ": "Choker",
-  "AGL": "Face Decoration",
-  "AFA": "Face Decoration",
-  "AXS": "Chest Accessory",
-  "ALE": "Pendant",
-  "ABS": "Backpiece",
-  "AJZ": "Rings",
-  "ARM": "Arm Decoration",
-  "ABA": "Handheld",
-  "ABK": "Body Paint",
-
-  "PP": "Bottom",
-  "BB": "Shoes",
-
-  "H": "Hair",
-  "D": "Dress",
-  "C": "Outerwear",
-  "T": "Top",
-  "S": "Socks",
-  "G": "Gloves"
-};
-
 const orderedIDs = [
   "H","D","C","T","PP","S","BB",
   "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
@@ -167,7 +110,6 @@ const orderedIDs = [
 
 const detectionIDs = [...orderedIDs].sort((a,b) => b.length - a.length);
 
-/* 🔥 FIXED ID DETECTION */
 function getID(name) {
   name = name.toUpperCase().split(".")[0];
   let parts = name.split("_");
@@ -181,14 +123,9 @@ function getID(name) {
       }
     }
   }
-
   return null;
 }
 /* ======================= */
-
-function goBack() {
-  window.location.href = "/CollageTool/";
-}
 
 function loadImages(files) {
   return Promise.all([...files].map(file => {
@@ -204,23 +141,8 @@ function loadImages(files) {
   }));
 }
 
-function drawCover(img, x, y, w, h) {
-  const scale = Math.max(w / img.width, h / img.height);
-  const sw = w / scale;
-  const sh = h / scale;
-
-  const sx = (img.width - sw) / 2;
-  const sy = (img.height - sh) / 2;
-
-  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-}
-
-function safe(img) {
-  return img ? img : placeholder;
-}
-
 /* =======================
-   GENERATE (SORTED)
+   GENERATE
 ======================= */
 async function generate() {
   const files = document.getElementById("upload").files;
@@ -228,36 +150,38 @@ async function generate() {
 
   const loaded = await loadImages(files);
 
-  images = [];
-  bigImage = null;
-
   let normalImages = [];
 
   for (const item of loaded) {
-    if (item.name.startsWith("T_showpic_suit_")) {
-      bigImage = item.img;
-    } else {
-      const id = getID(item.name);
-      normalImages.push({ img: item.img, id });
+    const id = getID(item.name);
+
+    if (!id) {
+      console.warn("No ID:", item.name);
     }
+
+    normalImages.push({ img: item.img, id });
   }
 
-  if (!bigImage && normalImages.length > 0) {
-    bigImage = normalImages.shift().img;
-  }
-
+  // 🔥 SORT CORRECTLY
   normalImages.sort((a, b) => {
     const ai = orderedIDs.indexOf(a.id);
     const bi = orderedIDs.indexOf(b.id);
     return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi);
   });
 
+  // 🔥 KEEP ORDER
   images = normalImages.map(i => i.img);
+  imageIDs = normalImages.map(i => i.id);
+
+  // 🔥 DO NOT REMOVE FIRST ITEM
+  bigImage = images[0] || null;
 
   draw();
 }
-/* ======================= */
 
+/* =======================
+   DRAW
+======================= */
 function draw() {
   if (!placeholderReady) return;
 
@@ -285,54 +209,59 @@ function draw() {
 
   let i = 0;
 
+  function drawSlot(img, id, x, y, w, h) {
+    drawCover(img || placeholder, x, y, w, h);
+
+    // 🔥 DEBUG LABEL
+    if (id) {
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(x, y, 60, 28);
+
+      ctx.fillStyle = "white";
+      ctx.font = "bold 18px Arial";
+      ctx.fillText(id, x + 6, y + 20);
+    }
+  }
+
+  // Top row
   for (let c = 0; c < 4; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
+    drawSlot(images[i], imageIDs[i], frameX + c * (colW + gap), frameY, colW, rowH);
+    i++;
   }
 
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
+  // middle left
   for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
+    drawSlot(images[i], imageIDs[i], frameX + c * (colW + gap), y2, colW, rowH);
+    i++;
   }
 
+  // bottom left
   for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
+    drawSlot(images[i], imageIDs[i], frameX + c * (colW + gap), y3, colW, rowH);
+    i++;
   }
 
+  // big image
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  if (slotBackground.complete) {
-    ctx.drawImage(slotBackground, bx, by, bw, bh);
-  }
+  drawCover(bigImage || placeholder, bx, by, bw, bh);
+}
 
-  drawCover(safe(bigImage), bx, by, bw, bh);
+function drawCover(img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
 
-  const overlayText = "@eidams_secrets @eidams_secrets";
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
 
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
-  ctx.textAlign = "center";
-  ctx.font = "bold 79px Comic Sans MS";
-
-  const positions = [
-    frameY + 78,
-    frameY + rowH + gap + 78,
-    frameY + (rowH + gap) * 2 + 78
-  ];
-
-  positions.forEach(y => {
-    ctx.fillText(overlayText, frameX + frameW / 2, y);
-  });
-
-  const text = "@eidams_secrets  @eidams_secrets";
-
-  ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Comic Sans MS";
-
-  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
 function download() {
