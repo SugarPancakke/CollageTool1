@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>10 Pieces Collage</title>
+<title>12 Pieces Collage</title>
 
 <style>
 body {
@@ -32,18 +32,18 @@ body {
   box-sizing: border-box;
 }
 
-.controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
 .tool > button:first-child {
   margin-top: 10px;
 }
 
 h2 {
   margin-bottom: 30px; 
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .button-group {
@@ -83,7 +83,8 @@ canvas {
   <div class="tool">
     <button onclick="goBack()">← Back</button>
 
-<h2>10 Pieces Collage</h2>
+```
+<h2>12 Pieces Collage</h2>
 
 <div class="controls">
   <input type="file" id="upload" multiple accept="image/*">
@@ -93,6 +94,7 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 </div>
+```
 
   </div>
 
@@ -105,7 +107,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-
 const gap = 3 * mm;
 const whiteFrame = 4 * mm;
 
@@ -116,7 +117,7 @@ const outerBottom = 18.5 * mm;
 let images = [];
 let bigImage = null;
 
-/* ORDER (same as parser) */
+/* ORDER */
 const orderedIDs = [
   "H","D","C","T","PP","S","BB",
   "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
@@ -179,7 +180,7 @@ async function generate() {
   bigImage = null;
 
   let mapped = [];
-  let normalImages = [];
+  let normal = [];
 
   for (const item of loaded) {
     const name = item.name.toUpperCase();
@@ -192,14 +193,12 @@ async function generate() {
     let match = name.match(/S\d+([A-Z]+)/);
 
     if (match) {
-      let id = match[1];
-
       mapped.push({
-        id,
+        id: match[1],
         img: item.img
       });
     } else {
-      normalImages.push(item.img);
+      normal.push(item.img);
     }
   }
 
@@ -208,8 +207,7 @@ async function generate() {
   });
 
   images = mapped.map(m => m.img);
-
-  images.push(...normalImages);
+  images.push(...normal);
 
   if (!bigImage && images.length > 0) {
     bigImage = images.pop();
@@ -237,39 +235,36 @@ function draw() {
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
+
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
   const colW = (frameW - gap * 3) / 4;
   const rowH = (frameH - gap * 3) / 4;
 
+  const stepX = colW + gap;
+  const stepY = rowH + gap;
+
   let i = 0;
 
   for (let c = 0; c < 4; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
+    drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
-  const y2 = frameY + rowH + gap;
-  const y3 = y2 + rowH + gap;
-  const y4 = y3 + rowH + gap;
+  for (let c = 0; c < 4; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
+  }
+  
+  const y3 = frameY + stepY * 2;
 
   for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
+    drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
   }
 
-  for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
-  }
-
-  for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
-  }
-
-  const bx = frameX + 2 * (colW + gap);
-  const by = y2;
-
+  const bx = frameX + 2 * stepX;
+  const by = y3;
   const bw = colW * 2 + gap;
-  const bh = rowH * 3 + gap * 2;
+  const bh = rowH * 2 + gap;
 
   if (slotBackground.complete) {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
@@ -277,10 +272,18 @@ function draw() {
 
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  /* ROW WATERMARK */
+  i += 2;
+
+  const y4 = frameY + stepY * 3;
+
+  for (let c = 0; c < 2; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
+  }
+
+  /* WATERMARKS (unchanged) */
   const overlayText = "@eidams_secrets @eidams_secrets";
 
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
   ctx.font = "bold 81px Comic Sans MS";
 
@@ -297,7 +300,6 @@ function draw() {
     ctx.fillText(overlayText, frameX + frameW / 2, y);
   });
 
-  /* BOTTOM WATERMARK */
   const text = "@eidams_secrets  @eidams_secrets";
 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
