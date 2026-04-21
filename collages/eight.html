@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -63,7 +64,6 @@ button:hover {
   background: #c06f7f;
 }
 
-
 .button-group {
   display: flex;
   gap: 10px;
@@ -87,14 +87,14 @@ canvas {
     <button onclick="goBack()">← Back</button>
     <h2>8 Pieces Collage</h2>
 
-    <div class="controls">
-      <input type="file" id="upload" multiple accept="image/*">
+<div class="controls">
+  <input type="file" id="upload" multiple accept="image/*">
 
-      <div class="button-group">
-        <button onclick="generate()">Generate</button>
-        <button onclick="download()">Download PNG</button>
-      </div>
-    </div>
+  <div class="button-group">
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
+  </div>
+</div>
 
   </div>
 
@@ -117,6 +117,13 @@ const outerBottom = 18 * mm;
 
 let images = [];
 let bigImage = null;
+
+/* ORDER (same as parser) */
+const orderedIDs = [
+  "H","D","C","T","PP","S","BB",
+  "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
+  "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
+];
 
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
@@ -172,21 +179,47 @@ async function generate() {
   images = [];
   bigImage = null;
 
+  let mapped = [];
   let normalImages = [];
 
   for (const item of loaded) {
-    if (item.name.startsWith("T_showpic_suit_")) {
+    const name = item.name.toUpperCase();
+
+    // detect BIG image
+    if (name.startsWith("T_SHOWPIC_SUIT_")) {
       bigImage = item.img;
+      continue;
+    }
+
+    // extract ID from S####XXX
+    let match = name.match(/S\d+([A-Z]+)/);
+
+    if (match) {
+      let id = match[1];
+
+      mapped.push({
+        id,
+        img: item.img
+      });
     } else {
       normalImages.push(item.img);
     }
   }
 
-  if (!bigImage && normalImages.length > 0) {
-    bigImage = normalImages.shift();
-  }
+  // sort by outfit order
+  mapped.sort((a, b) => {
+    return orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id);
+  });
 
-  images = normalImages;
+  images = mapped.map(m => m.img);
+
+  // add any unmatched images at end
+  images.push(...normalImages);
+
+  // fallback big image
+  if (!bigImage && images.length > 0) {
+    bigImage = images.pop();
+  }
 
   draw();
 }
@@ -247,7 +280,7 @@ function draw() {
   /* ROW WATERMARK */
   const overlayText = "@eidams_secrets @eidams_secrets";
 
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
   ctx.textAlign = "center";
   ctx.font = "bold 79px Comic Sans MS";
 
