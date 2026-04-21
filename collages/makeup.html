@@ -181,13 +181,17 @@ async function generate() {
   let normalImages = [];
 
   for (const item of loaded) {
-    if (item.name.startsWith("T_showpic_suit_")) {
+    const name = item.name.toUpperCase();
+
+    /* PRIORITY: FU IMAGE */
+    if (/S\d+FU/.test(name) && !bigImage) {
       bigImage = item.img;
     } else {
       normalImages.push(item.img);
     }
   }
 
+  /* FALLBACK */
   if (!bigImage && normalImages.length > 0) {
     bigImage = normalImages.shift();
   }
