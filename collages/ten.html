@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>10 Pieces Collage</title>
-  
+
 <style>
 body {
   margin: 0;
@@ -50,7 +51,6 @@ h2 {
   gap: 10px;
 }
 
-/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -66,7 +66,6 @@ button:hover {
   background: #c06f7f;
 }
 
-/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.33);
@@ -74,6 +73,7 @@ canvas {
   margin-top: 10px;
 }
 </style>
+
 </head>
 
 <body>
@@ -83,19 +83,20 @@ canvas {
   <div class="tool">
     <button onclick="goBack()">← Back</button>
 
-    <h2>10 Pieces Collage</h2>
+<h2>10 Pieces Collage</h2>
 
-    <div class="controls">
-      <input type="file" id="upload" multiple accept="image/*">
+<div class="controls">
+  <input type="file" id="upload" multiple accept="image/*">
 
-      <div class="button-group">
-        <button onclick="generate()">Generate</button>
-        <button onclick="download()">Download PNG</button>
-      </div>
-    </div>
+  <div class="button-group">
+    <button onclick="generate()">Generate</button>
+    <button onclick="download()">Download PNG</button>
+  </div>
+</div>
+
   </div>
 
-  <canvas id="canvas" width="1500" height="2100"></canvas>
+<canvas id="canvas" width="1500" height="2100"></canvas>
 
 </div>
 
@@ -115,7 +116,14 @@ const outerBottom = 18.5 * mm;
 let images = [];
 let bigImage = null;
 
-/* PLACEHOLDER PATH */
+/* ORDER (same as parser) */
+const orderedIDs = [
+  "H","D","C","T","PP","S","BB",
+  "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
+  "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
+];
+
+/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -170,21 +178,42 @@ async function generate() {
   images = [];
   bigImage = null;
 
+  let mapped = [];
   let normalImages = [];
 
   for (const item of loaded) {
-    if (item.name.startsWith("T_showpic_suit_")) {
+    const name = item.name.toUpperCase();
+
+    if (name.startsWith("T_SHOWPIC_SUIT_")) {
       bigImage = item.img;
+      continue;
+    }
+
+    let match = name.match(/S\d+([A-Z]+)/);
+
+    if (match) {
+      let id = match[1];
+
+      mapped.push({
+        id,
+        img: item.img
+      });
     } else {
       normalImages.push(item.img);
     }
   }
 
-  if (!bigImage && normalImages.length > 0) {
-    bigImage = normalImages.shift();
-  }
+  mapped.sort((a, b) => {
+    return orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id);
+  });
 
-  images = normalImages;
+  images = mapped.map(m => m.img);
+
+  images.push(...normalImages);
+
+  if (!bigImage && images.length > 0) {
+    bigImage = images.pop();
+  }
 
   draw();
 }
@@ -251,7 +280,7 @@ function draw() {
   /* ROW WATERMARK */
   const overlayText = "@eidams_secrets @eidams_secrets";
 
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
   ctx.textAlign = "center";
   ctx.font = "bold 81px Comic Sans MS";
 
@@ -277,7 +306,6 @@ function draw() {
   ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
-/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
