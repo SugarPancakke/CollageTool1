@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>8 Piece Collage</title>
+<title>10 Pieces Collage</title>
 
 <style>
 body {
@@ -32,22 +32,25 @@ body {
   box-sizing: border-box;
 }
 
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .tool > button:first-child {
   margin-top: 10px;
 }
 
 h2 {
-  margin-bottom: 30px;
+  margin-bottom: 30px; 
 }
 
-.controls {
+.button-group {
   display: flex;
   gap: 10px;
-  flex-wrap: nowrap;
-  align-items: center;
 }
 
-/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -57,21 +60,15 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
-  white-space: nowrap;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-.button-group {
-  display: flex;
-  gap: 10px;
-}
-
 canvas {
   display: block;
-  transform: scale(0.43);
+  transform: scale(0.33);
   transform-origin: center top;
   margin-top: 10px;
 }
@@ -85,7 +82,9 @@ canvas {
 
   <div class="tool">
     <button onclick="goBack()">← Back</button>
-    <h2>8 Pieces Collage</h2>
+
+```
+<h2>10 Pieces Collage</h2>
 
 <div class="controls">
   <input type="file" id="upload" multiple accept="image/*">
@@ -95,10 +94,11 @@ canvas {
     <button onclick="download()">Download PNG</button>
   </div>
 </div>
+```
 
   </div>
 
-<canvas id="canvas" width="1450" height="1510"></canvas>
+<canvas id="canvas" width="1500" height="2100"></canvas>
 
 </div>
 
@@ -108,12 +108,12 @@ const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
 
-const gap = 2.5 * mm;
-const whiteFrame = 3.5 * mm;
+const gap = 3 * mm;
+const whiteFrame = 4 * mm;
 
-const outerTop = 6 * mm;
-const outerSide = 6 * mm;
-const outerBottom = 18 * mm;
+const outerTop = 6.5 * mm;
+const outerSide = 6.5 * mm;
+const outerBottom = 18.5 * mm;
 
 let images = [];
 let bigImage = null;
@@ -125,6 +125,7 @@ const orderedIDs = [
   "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
 ];
 
+/* PLACEHOLDER */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -185,13 +186,11 @@ async function generate() {
   for (const item of loaded) {
     const name = item.name.toUpperCase();
 
-    // detect BIG image
     if (name.startsWith("T_SHOWPIC_SUIT_")) {
       bigImage = item.img;
       continue;
     }
 
-    // extract ID from S####XXX
     let match = name.match(/S\d+([A-Z]+)/);
 
     if (match) {
@@ -206,17 +205,14 @@ async function generate() {
     }
   }
 
-  // sort by outfit order
   mapped.sort((a, b) => {
     return orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id);
   });
 
   images = mapped.map(m => m.img);
 
-  // add any unmatched images at end
   images.push(...normalImages);
 
-  // fallback big image
   if (!bigImage && images.length > 0) {
     bigImage = images.pop();
   }
@@ -247,7 +243,7 @@ function draw() {
   const frameH = innerH - whiteFrame * 2;
 
   const colW = (frameW - gap * 3) / 4;
-  const rowH = (frameH - gap * 2) / 3;
+  const rowH = (frameH - gap * 3) / 4;
 
   let i = 0;
 
@@ -257,6 +253,7 @@ function draw() {
 
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
+  const y4 = y3 + rowH + gap;
 
   for (let c = 0; c < 2; c++) {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
@@ -266,10 +263,15 @@ function draw() {
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
   }
 
+  for (let c = 0; c < 2; c++) {
+    drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
+  }
+
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
+
   const bw = colW * 2 + gap;
-  const bh = rowH * 2 + gap;
+  const bh = rowH * 3 + gap * 2;
 
   if (slotBackground.complete) {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
@@ -280,14 +282,17 @@ function draw() {
   /* ROW WATERMARK */
   const overlayText = "@eidams_secrets @eidams_secrets";
 
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
-  ctx.font = "bold 79px Comic Sans MS";
+  ctx.font = "bold 81px Comic Sans MS";
+
+  const offset = 82;
 
   const positions = [
-    frameY + 78,
-    frameY + rowH + gap + 78,
-    frameY + (rowH + gap) * 2 + 78
+    frameY + offset,
+    frameY + rowH + gap + offset,
+    frameY + (rowH + gap) * 2 + offset,
+    frameY + (rowH + gap) * 3 + offset
   ];
 
   positions.forEach(y => {
