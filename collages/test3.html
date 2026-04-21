@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Flex Collage Tool</title>
-
+<title>Make-Up Collage</title>
+  
 <style>
 body {
   margin: 0;
@@ -34,7 +34,7 @@ body {
 .tool > button:first-child {
   margin-top: 10px;
 }
-  
+
 h2 {
   margin-bottom: 30px;
 }
@@ -42,10 +42,11 @@ h2 {
 .controls {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
 }
 
+/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -55,6 +56,7 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 button:hover {
@@ -66,28 +68,10 @@ button:hover {
   gap: 10px;
 }
 
-.pill-group {
-  display: flex;
-  background: #b06a7a;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.pill {
-  padding: 6px 12px;
-  cursor: pointer;
-  background: transparent;
-  color: white;
-  font-size: 14px;
-}
-
-.pill.active {
-  background: #db8b9a;
-}
-
+/* CANVAS */
 canvas {
   display: block;
-  transform: scale(0.43);
+  transform: scale(0.33);
   transform-origin: center top;
   margin-top: 10px;
 }
@@ -100,22 +84,11 @@ canvas {
 
   <div class="tool">
     <button onclick="goBack()">← Back</button>
-    <h2>Flex Collage Tool</h2>
+
+    <h2>Make-Up Collage</h2>
 
     <div class="controls">
       <input type="file" id="upload" multiple accept="image/*">
-
-      <!-- COLOR -->
-      <div class="pill-group" id="colorGroup">
-        <div class="pill active" data-value="white">White</div>
-        <div class="pill" data-value="dark">Dark</div>
-      </div>
-
-      <!-- OPACITY -->
-      <div class="pill-group" id="opacityGroup">
-        <div class="pill active" data-value="0.1">10%</div>
-        <div class="pill" data-value="0.2">20%</div>
-      </div>
 
       <div class="button-group">
         <button onclick="generate()">Generate</button>
@@ -124,7 +97,7 @@ canvas {
     </div>
   </div>
 
-<canvas id="canvas" width="1450" height="1000"></canvas>
+  <canvas id="canvas" width="1500" height="2100"></canvas>
 
 </div>
 
@@ -133,42 +106,16 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-const gap = 2.5 * mm;
-const whiteFrame = 3.5 * mm;
 
-const outerTop = 6 * mm;
-const outerSide = 6 * mm;
-const outerBottom = 18 * mm;
+const gap = 3.3 * mm;
+const whiteFrame = 4 * mm;
+
+const outerTop = 6.5 * mm;
+const outerSide = 6.5 * mm;
+const outerBottom = 18.5 * mm;
 
 let images = [];
-let color = "white";
-let opacity = "0.1"; 
-
-function goBack() {
-  window.location.href = "/CollageTool/";
-}
-
-/* COLOR */
-document.querySelectorAll("#colorGroup .pill").forEach(pill => {
-  pill.onclick = () => {
-    document.querySelectorAll("#colorGroup .pill")
-      .forEach(p => p.classList.remove("active"));
-
-    pill.classList.add("active");
-    color = pill.dataset.value;
-  };
-});
-
-/* OPACITY */
-document.querySelectorAll("#opacityGroup .pill").forEach(pill => {
-  pill.onclick = () => {
-    document.querySelectorAll("#opacityGroup .pill")
-      .forEach(p => p.classList.remove("active"));
-
-    pill.classList.add("active");
-    opacity = pill.dataset.value;
-  };
-});
+let bigImage = null;
 
 /* PLACEHOLDER */
 const placeholder = new Image();
@@ -177,19 +124,26 @@ placeholder.src = "../image/T_showpic_clothes_blank.png";
 let placeholderReady = false;
 placeholder.onload = () => {
   placeholderReady = true;
+  draw();
 };
 
-/* LOAD IMAGES (WITH NAME!) */
+/* BIG SLOT BACKGROUND */
+const slotBackground = new Image();
+slotBackground.src = "../image/T_showpic_clothes_blank.png";
+
+/* BACK BUTTON */
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
+
+/* LOAD IMAGES */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
       const r = new FileReader();
       r.onload = e => {
         const img = new Image();
-        img.onload = () => res({
-          img: img,
-          name: file.name
-        });
+        img.onload = () => res({ img, name: file.name });
         img.src = e.target.result;
       };
       r.readAsDataURL(file);
@@ -197,69 +151,54 @@ function loadImages(files) {
   }));
 }
 
-/* PICK FU IMAGE */
-function prioritizeFU(images) {
-  const index = images.findIndex(item =>
-    /S\d+FU/i.test(item.name)
-  );
+/* DRAW COVER */
+function drawCover(img, x, y, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale;
+  const sh = h / scale;
 
-  if (index > -1) {
-    const [fuItem] = images.splice(index, 1);
-    images.unshift(fuItem);
-  }
+  const sx = (img.width - sw) / 2;
+  const sy = (img.height - sh) / 2;
 
-  return images;
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-function safe(item) {
-  return item ? item.img : placeholder;
+/* SAFE IMAGE */
+function safe(img) {
+  return img ? img : placeholder;
 }
 
+/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
-  images = await loadImages(files);
+  const loaded = await loadImages(files);
 
-  // 🔥 PRIORITIZE FU IMAGE
-  images = prioritizeFU(images);
+  images = [];
+  bigImage = null;
 
-  draw();
-}
+  let normalImages = [];
 
-/* KEEP RATIO */
-function drawContain(img, x, y, w) {
-  const h = w * (img.height / img.width);
-  ctx.drawImage(img, x, y, w, h);
-  return h;
-}
+  for (const item of loaded) {
+    const name = item.name.toUpperCase();
 
-/* WATERMARK */
-function drawRowWatermark(xStart, y, rowWidth) {
-  const text = "@eidams_secrets  @eidams_secrets";
-
-  let alpha = parseFloat(opacity);
-
-  if (color === "white") {
-    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-  } else {
-    ctx.fillStyle = `rgba(84,84,84,${alpha})`;
+    /* PRIORITY: FU IMAGE */
+    if (/S\d+FU/.test(name) && !bigImage) {
+      bigImage = item.img;
+    } else {
+      normalImages.push(item.img);
+    }
   }
 
-  const paddingTop = 85;
-  const sidePadding = 25;
+  /* FALLBACK */
+  if (!bigImage && normalImages.length > 0) {
+    bigImage = normalImages.shift();
+  }
 
-  const usableWidth = rowWidth - sidePadding * 2;
+  images = normalImages;
 
-  let baseFontSize = 60;
-  ctx.font = `bold ${baseFontSize}px "Comic Sans MS"`;
-
-  const textWidth = ctx.measureText(text).width;
-  const scale = usableWidth / textWidth;
-
-  ctx.font = `bold ${baseFontSize * scale}px "Comic Sans MS"`;
-
-  ctx.fillText(text, xStart + sidePadding, y + paddingTop);
+  draw();
 }
 
 /* DRAW */
@@ -267,113 +206,84 @@ function draw() {
   if (!placeholderReady) return;
 
   const W = canvas.width;
-  const total = images.length;
-  if (total === 0) return;
-
-  const maxPerRow = 6;
-
-  let rows = Math.ceil(total / maxPerRow);
-  let base = Math.floor(total / rows);
-  let remainder = total % rows;
-
-  let layout = [];
-  for (let i = 0; i < rows; i++) {
-    layout.push(i < remainder ? base + 1 : base);
-  }
-
-  layout = layout.map(n => Math.min(n, maxPerRow));
-
-  const innerW = W - outerSide * 2;
-  const frameW = innerW - whiteFrame * 2;
-
-  let index = 0;
-  let rowHeights = [];
-
-  layout.forEach(count => {
-    const totalGap = gap * (count - 1);
-    const colW = (frameW - totalGap) / count;
-
-    let maxH = 0;
-
-    for (let i = 0; i < count; i++) {
-      const item = images[index++];
-      const img = safe(item);
-      const h = colW * (img.height / img.width);
-      if (h > maxH) maxH = h;
-    }
-
-    rowHeights.push(maxH);
-  });
-
-  const totalHeight =
-    rowHeights.reduce((a, b) => a + b, 0) +
-    gap * (rows - 1) +
-    outerTop +
-    outerBottom +
-    whiteFrame * 2;
-
-  canvas.height = totalHeight;
+  const H = canvas.height;
 
   ctx.fillStyle = "#16161d";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, W, H);
+
+  const innerX = outerSide;
+  const innerY = outerTop;
+  const innerW = W - outerSide * 2;
+  const innerH = H - outerTop - outerBottom;
 
   ctx.fillStyle = "white";
-  ctx.fillRect(
-    outerSide,
-    outerTop,
-    canvas.width - outerSide * 2,
-    canvas.height - outerTop - outerBottom
-  );
+  ctx.fillRect(innerX, innerY, innerW, innerH);
 
-  const frameX = outerSide + whiteFrame;
-  let yCursor = outerTop + whiteFrame;
+  const frameX = innerX + whiteFrame;
+  const frameY = innerY + whiteFrame;
+  const frameW = innerW - whiteFrame * 2;
+  const frameH = innerH - whiteFrame * 2;
 
-  index = 0;
+  const colW = (frameW - gap * 2) / 3;
+  const rowH = (frameH - gap * 2) / 3;
 
-  layout.forEach((count, rowIndex) => {
-    const rowH = rowHeights[rowIndex];
+  const x1 = frameX;
+  const x2 = frameX + colW + gap;
+  const x3 = frameX + (colW + gap) * 2;
 
-    const totalGap = gap * (count - 1);
-    const colW = (frameW - totalGap) / count;
+  const y1 = frameY;
+  const y2 = frameY + rowH + gap;
+  const y3 = frameY + (rowH + gap) * 2;
 
-    let offsetX = 0;
+  let i = 0;
 
-    if (count < maxPerRow) {
-      const used = colW * count + totalGap;
-      offsetX = (frameW - used) / 2;
-    }
+  drawCover(safe(images[i++]), x1, y1, colW, rowH);
+  drawCover(safe(images[i++]), x1, y2, colW, rowH);
+  drawCover(safe(images[i++]), x1, y3, colW, rowH);
 
-    const rowStartX = frameX + offsetX;
-    const rowWidth = colW * count + gap * (count - 1);
+  drawCover(safe(images[i++]), x2, y3, colW, rowH);
+  drawCover(safe(images[i++]), x3, y3, colW, rowH);
 
-    for (let i = 0; i < count; i++) {
-      const x = frameX + offsetX + i * (colW + gap);
-      const item = images[index++];
-      drawContain(safe(item), x, yCursor, colW);
-    }
+  const bx = x2;
+  const by = y1;
+  const bw = colW * 2 + gap;
+  const bh = rowH * 2 + gap;
 
-    drawRowWatermark(rowStartX, yCursor, rowWidth);
-
-    yCursor += rowH + gap;
-  });
-
-  /* BOTTOM WATERMARK */
-  let alpha = parseFloat(opacity);
-
-  if (color === "white") {
-    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-  } else {
-    ctx.fillStyle = `rgba(84,84,84,${alpha})`;
+  if (slotBackground.complete) {
+    ctx.drawImage(slotBackground, bx, by, bw, bh);
   }
 
-  ctx.font = 'bold 40px "Comic Sans MS"';
-  ctx.textAlign = "center";
+  drawCover(safe(bigImage), bx, by, bw, bh);
 
-  ctx.fillText(
-    "@eidams_secrets  @eidams_secrets",
-    canvas.width / 2,
-    canvas.height - (outerBottom / 2) + 15
-  );
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = "transparent";
+
+  const overlayText = "@eidams_secrets  @eidams_secrets";
+
+  ctx.fillStyle = "rgba(255,255,255,0.20)";
+  ctx.textAlign = "center";
+  ctx.font = "bold 79px Comic Sans MS";
+
+  const offset = 78;
+
+  const positions = [
+    frameY + offset,
+    frameY + rowH + gap + offset,
+    frameY + (rowH + gap) * 2 + offset
+  ];
+
+  positions.forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
+  });
+
+  const text = "@eidams_secrets  @eidams_secrets";
+
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+
+  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
 /* DOWNLOAD */
