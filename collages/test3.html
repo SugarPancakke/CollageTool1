@@ -1,7 +1,389 @@
-test3
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flex Collage Tool</title>
 
 <style>
 body {
-  background: #322d2d;
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
   color: white;
 }
+
+.container {
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool {
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tool > button:first-child {
+  margin-top: 10px;
+}
+  
+h2 {
+  margin-bottom: 30px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #db8b9a;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-size: 14px;
+}
+
+button:hover {
+  background: #c06f7f;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.pill-group {
+  display: flex;
+  background: #b06a7a;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pill {
+  padding: 6px 12px;
+  cursor: pointer;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+}
+
+.pill.active {
+  background: #db8b9a;
+}
+
+canvas {
+  display: block;
+  transform: scale(0.43);
+  transform-origin: center top;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="tool">
+    <button onclick="goBack()">← Back</button>
+    <h2>Flex Collage Tool</h2>
+
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
+
+      <!-- COLOR -->
+      <div class="pill-group" id="colorGroup">
+        <div class="pill active" data-value="white">White</div>
+        <div class="pill" data-value="dark">Dark</div>
+      </div>
+
+      <!-- OPACITY -->
+      <div class="pill-group" id="opacityGroup">
+        <div class="pill active" data-value="0.1">10%</div>
+        <div class="pill" data-value="0.2">20%</div>
+      </div>
+
+      <div class="button-group">
+        <button onclick="generate()">Generate</button>
+        <button onclick="download()">Download PNG</button>
+      </div>
+    </div>
+  </div>
+
+<canvas id="canvas" width="1450" height="1000"></canvas>
+
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const mm = 3.78;
+const gap = 2.5 * mm;
+const whiteFrame = 3.5 * mm;
+
+const outerTop = 6 * mm;
+const outerSide = 6 * mm;
+const outerBottom = 18 * mm;
+
+let images = [];
+let color = "white";
+let opacity = "0.1"; 
+
+function goBack() {
+  window.location.href = "/CollageTool/";
+}
+
+/* COLOR */
+document.querySelectorAll("#colorGroup .pill").forEach(pill => {
+  pill.onclick = () => {
+    document.querySelectorAll("#colorGroup .pill")
+      .forEach(p => p.classList.remove("active"));
+
+    pill.classList.add("active");
+    color = pill.dataset.value;
+  };
+});
+
+/* OPACITY */
+document.querySelectorAll("#opacityGroup .pill").forEach(pill => {
+  pill.onclick = () => {
+    document.querySelectorAll("#opacityGroup .pill")
+      .forEach(p => p.classList.remove("active"));
+
+    pill.classList.add("active");
+    opacity = pill.dataset.value;
+  };
+});
+
+/* PLACEHOLDER */
+const placeholder = new Image();
+placeholder.src = "../image/T_showpic_clothes_blank.png";
+
+let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+};
+
+/* LOAD IMAGES (WITH NAME!) */
+function loadImages(files) {
+  return Promise.all([...files].map(file => {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => res({
+          img: img,
+          name: file.name
+        });
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }));
+}
+
+/* PICK FU IMAGE */
+function prioritizeFU(images) {
+  const index = images.findIndex(item =>
+    /S\d+FU/i.test(item.name)
+  );
+
+  if (index > -1) {
+    const [fuItem] = images.splice(index, 1);
+    images.unshift(fuItem);
+  }
+
+  return images;
+}
+
+function safe(item) {
+  return item ? item.img : placeholder;
+}
+
+async function generate() {
+  const files = document.getElementById("upload").files;
+  if (!files.length) return alert("Upload images first");
+
+  images = await loadImages(files);
+
+  // 🔥 PRIORITIZE FU IMAGE
+  images = prioritizeFU(images);
+
+  draw();
+}
+
+/* KEEP RATIO */
+function drawContain(img, x, y, w) {
+  const h = w * (img.height / img.width);
+  ctx.drawImage(img, x, y, w, h);
+  return h;
+}
+
+/* WATERMARK */
+function drawRowWatermark(xStart, y, rowWidth) {
+  const text = "@eidams_secrets  @eidams_secrets";
+
+  let alpha = parseFloat(opacity);
+
+  if (color === "white") {
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+  } else {
+    ctx.fillStyle = `rgba(84,84,84,${alpha})`;
+  }
+
+  const paddingTop = 85;
+  const sidePadding = 25;
+
+  const usableWidth = rowWidth - sidePadding * 2;
+
+  let baseFontSize = 60;
+  ctx.font = `bold ${baseFontSize}px "Comic Sans MS"`;
+
+  const textWidth = ctx.measureText(text).width;
+  const scale = usableWidth / textWidth;
+
+  ctx.font = `bold ${baseFontSize * scale}px "Comic Sans MS"`;
+
+  ctx.fillText(text, xStart + sidePadding, y + paddingTop);
+}
+
+/* DRAW */
+function draw() {
+  if (!placeholderReady) return;
+
+  const W = canvas.width;
+  const total = images.length;
+  if (total === 0) return;
+
+  const maxPerRow = 6;
+
+  let rows = Math.ceil(total / maxPerRow);
+  let base = Math.floor(total / rows);
+  let remainder = total % rows;
+
+  let layout = [];
+  for (let i = 0; i < rows; i++) {
+    layout.push(i < remainder ? base + 1 : base);
+  }
+
+  layout = layout.map(n => Math.min(n, maxPerRow));
+
+  const innerW = W - outerSide * 2;
+  const frameW = innerW - whiteFrame * 2;
+
+  let index = 0;
+  let rowHeights = [];
+
+  layout.forEach(count => {
+    const totalGap = gap * (count - 1);
+    const colW = (frameW - totalGap) / count;
+
+    let maxH = 0;
+
+    for (let i = 0; i < count; i++) {
+      const item = images[index++];
+      const img = safe(item);
+      const h = colW * (img.height / img.width);
+      if (h > maxH) maxH = h;
+    }
+
+    rowHeights.push(maxH);
+  });
+
+  const totalHeight =
+    rowHeights.reduce((a, b) => a + b, 0) +
+    gap * (rows - 1) +
+    outerTop +
+    outerBottom +
+    whiteFrame * 2;
+
+  canvas.height = totalHeight;
+
+  ctx.fillStyle = "#16161d";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(
+    outerSide,
+    outerTop,
+    canvas.width - outerSide * 2,
+    canvas.height - outerTop - outerBottom
+  );
+
+  const frameX = outerSide + whiteFrame;
+  let yCursor = outerTop + whiteFrame;
+
+  index = 0;
+
+  layout.forEach((count, rowIndex) => {
+    const rowH = rowHeights[rowIndex];
+
+    const totalGap = gap * (count - 1);
+    const colW = (frameW - totalGap) / count;
+
+    let offsetX = 0;
+
+    if (count < maxPerRow) {
+      const used = colW * count + totalGap;
+      offsetX = (frameW - used) / 2;
+    }
+
+    const rowStartX = frameX + offsetX;
+    const rowWidth = colW * count + gap * (count - 1);
+
+    for (let i = 0; i < count; i++) {
+      const x = frameX + offsetX + i * (colW + gap);
+      const item = images[index++];
+      drawContain(safe(item), x, yCursor, colW);
+    }
+
+    drawRowWatermark(rowStartX, yCursor, rowWidth);
+
+    yCursor += rowH + gap;
+  });
+
+  /* BOTTOM WATERMARK */
+  let alpha = parseFloat(opacity);
+
+  if (color === "white") {
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+  } else {
+    ctx.fillStyle = `rgba(84,84,84,${alpha})`;
+  }
+
+  ctx.font = 'bold 40px "Comic Sans MS"';
+  ctx.textAlign = "center";
+
+  ctx.fillText(
+    "@eidams_secrets  @eidams_secrets",
+    canvas.width / 2,
+    canvas.height - (outerBottom / 2) + 15
+  );
+}
+
+/* DOWNLOAD */
+function download() {
+  const link = document.createElement("a");
+  link.download = "collage.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+</script>
+
+</body>
+</html>
