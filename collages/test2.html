@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -50,8 +51,6 @@ const orderedIDs = [
   "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
 ];
 
-const detectionIDs = [...orderedIDs].sort((a,b) => b.length - a.length);
-
 function generateList() {
   const files = document.getElementById("fileInput").files;
   let found = new Set();
@@ -59,19 +58,16 @@ function generateList() {
   for (let file of files) {
     let name = file.name.toUpperCase();
 
-    // 🔥 FIX START
-    name = name.split(".")[0];
-    let lastPart = name.split("_").pop();
-    let clean = lastPart.replace(/[0-9]/g, "");
+    // ✅ Extract ID from pattern S####XXX
+    let match = name.match(/S\d+([A-Z]+)/);
 
-    // ✅ ONLY match the FINAL ID
-    for (let id of detectionIDs) {
-      if (clean.endsWith(id)) {
+    if (match) {
+      let id = match[1];
+
+      if (idMap[id]) {
         found.add(id);
-        break; // stop after finding the correct one
       }
     }
-    // 🔥 FIX END
   }
 
   let result = orderedIDs
