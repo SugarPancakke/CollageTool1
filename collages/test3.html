@@ -1,8 +1,91 @@
-test3
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Outfit Parser</title>
+</head>
+<body>
+                                                                                      
 <style>
 body {
   background: #322d2d;
   color: white;
 }
 </style>
+
+  
+<h2>Upload Images</h2>
+<input type="file" id="fileInput" multiple>
+<button onclick="generateList()">Generate List</button>
+
+<h3>Result:</h3>
+<p id="output"></p>
+
+<script>
+/*NAMES*/
+const idMap = {
+  "AHE": "Hair Accessory",
+  "AHC": "Headwear",
+  "AEA": "Earrings",
+  "ANE": "Neckwear",
+  "AHA": "Bracelet",
+  "AXQ": "Choker",
+  "AGL": "Face Decoration",
+  "AFA": "Face Decoration",
+  "AXS": "Chest Accessory",
+  "ALE": "Pendant",
+  "ABS": "Backpiece",
+  "AJZ": "Rings",
+  "ARM": "Arm Decoration",
+  "ABA": "Handheld",
+  "ABK": "Body Paint",
+
+  "PP": "Bottom",
+  "BB": "Shoes",
+
+  "H": "Hair",
+  "D": "Dress",
+  "C": "Outerwear",
+  "T": "Top",
+  "S": "Socks",
+  "G": "Gloves"
+};
+
+/*ORDER*/
+const orderedIDs = [
+  "H","D","C","T","PP","S","BB",
+  "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
+  "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
+];
+
+function generateList() {
+  const files = document.getElementById("fileInput").files;
+  let found = new Set();
+
+  for (let file of files) {
+    let name = file.name.toUpperCase();
+
+    // ✅ Extract ID from pattern S####XXX
+    let match = name.match(/S\d+([A-Z]+)/);
+
+    if (match) {
+      let id = match[1];
+
+      if (idMap[id]) {
+        found.add(id);
+      }
+    }
+  }
+
+  let result = orderedIDs
+    .filter(id => found.has(id))
+    .map(id => idMap[id]);
+
+  document.getElementById("output").innerHTML =
+  result.map(item => "• " + item).join("<br>");
+}
+</script>
+
+</body>
+</html>
