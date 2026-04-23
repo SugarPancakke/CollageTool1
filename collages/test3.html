@@ -170,10 +170,21 @@ const idMap = {
 };
 
 const placeholder = new Image();
-placeholder.src = "../image/T_showpic_clothes_blank.png";
-
 const slotBackground = new Image();
+
+placeholder.src = "../image/T_showpic_clothes_blank.png";
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
+
+/* ✅ PRELOAD + INITIAL DRAW */
+let assetsReady = 0;
+
+function checkReady() {
+  assetsReady++;
+  if (assetsReady === 2) draw();
+}
+
+placeholder.onload = checkReady;
+slotBackground.onload = checkReady;
 
 function goBack() {
   window.location.href = "/CollageTool/";
@@ -247,7 +258,7 @@ async function generate() {
 
   images = usedMapped.map(m => m.img);
 
-  // ✅ LIMIT what counts as outfit items (important!)
+  /* ✅ LIMIT outfit items (clean adaptation) */
   usedIDs = usedMapped.slice(0, 10).map(m => m.id);
 
   if (images.length < 12) {
@@ -265,7 +276,7 @@ async function generate() {
 
 /* DRAW */
 function draw() {
-  if (!placeholder.complete) return;
+  if (assetsReady < 2) return;
 
   const W = canvas.width;
   const H = canvas.height;
