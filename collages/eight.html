@@ -78,6 +78,7 @@ canvas {
   margin-top: 10px;
 }
 
+/* ✅ MATCHED PARSER UI */
 #parserBox {
   position: absolute;
   left: calc(100% + 20px);
@@ -90,6 +91,7 @@ canvas {
 
 #parserBox .button-group {
   margin-bottom: 12px;
+  align-items: center; /* ✅ vertical centering */
 }
 
 .list-item {
@@ -100,8 +102,8 @@ canvas {
 
 #copyStatus {
   font-size: 12px;
-  margin-top: 6px;
   opacity: 0.8;
+  line-height: 1;
 }
 </style>
 </head>
@@ -130,15 +132,16 @@ canvas {
 
   </div>
 
+  <!-- ✅ FIXED LIST UI -->
   <div id="parserBox">
     <h3>Outfit List</h3>
 
     <div class="button-group">
       <button onclick="copyList()">Copy</button>
+      <span id="copyStatus"></span>
     </div>
 
     <div id="output"></div>
-    <div id="copyStatus"></div>
   </div>
 
 </div>
@@ -175,7 +178,6 @@ const idMap = {
   "AJZ":"Rings","ARM":"Arm Decoration","ABA":"Handheld","ABK":"Body Paint"
 };
 
-/* ✅ NEW: placeholder load handling */
 let placeholderReady = false;
 
 const placeholder = new Image();
@@ -183,7 +185,7 @@ placeholder.src = "../image/T_showpic_clothes_blank.png";
 
 placeholder.onload = () => {
   placeholderReady = true;
-  draw(); // 👈 draw template immediately
+  draw();
 };
 
 const slotBackground = new Image();
@@ -270,7 +272,7 @@ async function generate() {
 }
 
 function draw() {
-  if (!placeholderReady) return; // ✅ prevents early draw issues
+  if (!placeholderReady) return;
 
   const W = canvas.width;
   const H = canvas.height;
@@ -354,7 +356,7 @@ function copyList() {
     setTimeout(() => status.innerText = "", 1200);
   });
 }
-  
+
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
