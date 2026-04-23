@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>10 Pieces Collage</title>
+<title>12 Pieces Collage</title>
 
 <style>
 body {
@@ -32,12 +31,6 @@ body {
   box-sizing: border-box;
 }
 
-.controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
 .tool > button:first-child {
   margin-top: 10px;
 }
@@ -46,11 +39,18 @@ h2 {
   margin-bottom: 30px; 
 }
 
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .button-group {
   display: flex;
   gap: 10px;
 }
 
+/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -66,6 +66,7 @@ button:hover {
   background: #c06f7f;
 }
 
+/* CANVAS */
 canvas {
   display: block;
   transform: scale(0.33);
@@ -73,7 +74,6 @@ canvas {
   margin-top: 10px;
 }
 </style>
-
 </head>
 
 <body>
@@ -83,20 +83,19 @@ canvas {
   <div class="tool">
     <button onclick="goBack()">← Back</button>
 
-<h2>10 Pieces Collage</h2>
+    <h2>12 Pieces Collage</h2>
 
-<div class="controls">
-  <input type="file" id="upload" multiple accept="image/*">
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
 
-  <div class="button-group">
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+      <div class="button-group">
+        <button onclick="generate()">Generate</button>
+        <button onclick="download()">Download PNG</button>
+      </div>
+    </div>
   </div>
-</div>
 
-  </div>
-
-<canvas id="canvas" width="1500" height="2100"></canvas>
+  <canvas id="canvas" width="1500" height="2100"></canvas>
 
 </div>
 
@@ -105,7 +104,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-
 const gap = 3 * mm;
 const whiteFrame = 4 * mm;
 
@@ -116,14 +114,7 @@ const outerBottom = 18.5 * mm;
 let images = [];
 let bigImage = null;
 
-/* ORDER (same as parser) */
-const orderedIDs = [
-  "H","D","C","T","PP","S","BB",
-  "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
-  "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
-];
-
-/* PLACEHOLDER */
+/* PLACEHOLDER PATH */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -178,42 +169,21 @@ async function generate() {
   images = [];
   bigImage = null;
 
-  let mapped = [];
-  let normalImages = [];
+  let normal = [];
 
   for (const item of loaded) {
-    const name = item.name.toUpperCase();
-
-    if (name.startsWith("T_SHOWPIC_SUIT_")) {
+    if (item.name.startsWith("T_showpic_suit_")) {
       bigImage = item.img;
-      continue;
-    }
-
-    let match = name.match(/S\d+([A-Z]+)/);
-
-    if (match) {
-      let id = match[1];
-
-      mapped.push({
-        id,
-        img: item.img
-      });
     } else {
-      normalImages.push(item.img);
+      normal.push(item.img);
     }
   }
 
-  mapped.sort((a, b) => {
-    return orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id);
-  });
-
-  images = mapped.map(m => m.img);
-
-  images.push(...normalImages);
-
-  if (!bigImage && images.length > 0) {
-    bigImage = images.pop();
+  if (!bigImage && normal.length > 0) {
+    bigImage = normal.shift();
   }
+
+  images = normal;
 
   draw();
 }
@@ -237,39 +207,36 @@ function draw() {
 
   const frameX = innerX + whiteFrame;
   const frameY = innerY + whiteFrame;
+
   const frameW = innerW - whiteFrame * 2;
   const frameH = innerH - whiteFrame * 2;
 
   const colW = (frameW - gap * 3) / 4;
   const rowH = (frameH - gap * 3) / 4;
 
+  const stepX = colW + gap;
+  const stepY = rowH + gap;
+
   let i = 0;
 
   for (let c = 0; c < 4; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
+    drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
   }
 
-  const y2 = frameY + rowH + gap;
-  const y3 = y2 + rowH + gap;
-  const y4 = y3 + rowH + gap;
+  for (let c = 0; c < 4; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
+  }
+  
+  const y3 = frameY + stepY * 2;
 
   for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
+    drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
   }
 
-  for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
-  }
-
-  for (let c = 0; c < 2; c++) {
-    drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
-  }
-
-  const bx = frameX + 2 * (colW + gap);
-  const by = y2;
-
+  const bx = frameX + 2 * stepX;
+  const by = y3;
   const bw = colW * 2 + gap;
-  const bh = rowH * 3 + gap * 2;
+  const bh = rowH * 2 + gap;
 
   if (slotBackground.complete) {
     ctx.drawImage(slotBackground, bx, by, bw, bh);
@@ -277,10 +244,18 @@ function draw() {
 
   drawCover(safe(bigImage), bx, by, bw, bh);
 
+  i += 2;
+
+  const y4 = frameY + stepY * 3;
+
+  for (let c = 0; c < 2; c++) {
+    drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
+  }
+
   /* ROW WATERMARK */
   const overlayText = "@eidams_secrets @eidams_secrets";
 
-  ctx.fillStyle = "rgba(255,255,255,0.20)";
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.textAlign = "center";
   ctx.font = "bold 81px Comic Sans MS";
 
@@ -306,6 +281,7 @@ function draw() {
   ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
 
+/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
