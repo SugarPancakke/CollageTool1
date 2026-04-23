@@ -15,7 +15,6 @@ body {
   color: white;
 }
 
-/* wrapper only for positioning */
 .wrapper {
   position: relative;
 }
@@ -34,6 +33,11 @@ body {
   margin-bottom: 15px;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* restored spacing */
+.tool > button:first-child {
+  margin-top: 10px;
 }
 
 h2 {
@@ -71,7 +75,7 @@ canvas {
   margin-top: 10px;
 }
 
-/* PARSER (positioned relative to container) */
+/* PARSER */
 #parserBox {
   position: absolute;
   left: calc(100% + 20px);
@@ -85,6 +89,13 @@ canvas {
 
 #parserBox .button-group {
   margin-bottom: 12px;
+}
+
+/* copy feedback */
+#copyStatus {
+  font-size: 12px;
+  margin-top: 6px;
+  opacity: 0.8;
 }
 </style>
 </head>
@@ -113,7 +124,6 @@ canvas {
 
   </div>
 
-  <!-- PARSER -->
   <div id="parserBox">
     <h3>Outfit List</h3>
 
@@ -122,6 +132,7 @@ canvas {
     </div>
 
     <div id="output"></div>
+    <div id="copyStatus"></div>
   </div>
 
 </div>
@@ -289,7 +300,6 @@ function draw() {
   ctx.drawImage(slotBackground, bx, by, bw, bh);
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  /* WATERMARK ROWS */
   const overlayText = "@eidams_secrets @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.20)";
@@ -304,7 +314,6 @@ function draw() {
     ctx.fillText(overlayText, frameX + frameW / 2, y);
   });
 
-  /* BOTTOM WATERMARK */
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
   ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
@@ -320,7 +329,14 @@ function generateList() {
 }
 
 function copyList() {
-  navigator.clipboard.writeText(document.getElementById("output").innerText);
+  const text = document.getElementById("output").innerText;
+  if (!text.trim()) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const status = document.getElementById("copyStatus");
+    status.innerText = "Copied!";
+    setTimeout(() => status.innerText = "", 1200);
+  });
 }
 
 function download() {
