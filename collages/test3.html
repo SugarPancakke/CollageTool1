@@ -15,10 +15,9 @@ body {
   color: white;
 }
 
+/* wrapper only for positioning */
 .wrapper {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
+  position: relative;
 }
 
 .container {
@@ -35,10 +34,6 @@ body {
   margin-bottom: 15px;
   width: 100%;
   box-sizing: border-box;
-}
-
-.tool > button:first-child {
-  margin-top: 10px;
 }
 
 h2 {
@@ -58,8 +53,6 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s ease;
-  font-size: 14px;
 }
 
 button:hover {
@@ -78,26 +71,20 @@ canvas {
   margin-top: 10px;
 }
 
-/* PARSER PANEL */
-
+/* PARSER (positioned relative to container) */
 #parserBox {
+  position: absolute;
+  left: calc(100% + 20px);
+  top: 0;
+
   width: 240px;
   background: #643545;
   padding: 15px;
   border-radius: 12px;
 }
 
-#parserBox h3 {
-  margin: 0 0 10px 0;
-}
-
 #parserBox .button-group {
   margin-bottom: 12px;
-}
-
-#output {
-  font-size: 14px;
-  line-height: 1.5;
 }
 </style>
 </head>
@@ -107,6 +94,7 @@ canvas {
 <div class="wrapper">
 
   <div class="container">
+
     <div class="tool">
       <button onclick="goBack()">← Back</button>
       <h2>8 Pieces Collage</h2>
@@ -122,8 +110,10 @@ canvas {
     </div>
 
     <canvas id="canvas" width="1450" height="1510"></canvas>
+
   </div>
 
+  <!-- PARSER -->
   <div id="parserBox">
     <h3>Outfit List</h3>
 
@@ -159,39 +149,17 @@ const orderedIDs = [
 ];
 
 const idMap = {
-  "AHE": "Hair Accessory",
-  "AHC": "Headwear",
-  "AEA": "Earrings",
-  "ANE": "Neckwear",
-  "AHA": "Bracelet",
-  "AXQ": "Choker",
-  "AGL": "Face Decoration",
-  "AFA": "Face Decoration",
-  "AXS": "Chest Accessory",
-  "ALE": "Pendant",
-  "ABS": "Backpiece",
-  "AJZ": "Rings",
-  "ARM": "Arm Decoration",
-  "ABA": "Handheld",
-  "ABK": "Body Paint",
-  "PP": "Bottom",
-  "BB": "Shoes",
-  "H": "Hair",
-  "D": "Dress",
-  "C": "Outerwear",
-  "T": "Top",
-  "S": "Socks",
-  "G": "Gloves"
+  "H":"Hair","D":"Dress","C":"Outerwear","T":"Top",
+  "PP":"Bottom","S":"Socks","BB":"Shoes",
+  "AHE":"Hair Accessory","AHC":"Headwear","AEA":"Earrings",
+  "ANE":"Neckwear","AHA":"Bracelet","AXQ":"Choker",
+  "G":"Gloves","AGL":"Face Decoration","AFA":"Face Decoration",
+  "AXS":"Chest Accessory","ALE":"Pendant","ABS":"Backpiece",
+  "AJZ":"Rings","ARM":"Arm Decoration","ABA":"Handheld","ABK":"Body Paint"
 };
 
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
-
-let placeholderReady = false;
-placeholder.onload = () => {
-  placeholderReady = true;
-  draw();
-};
 
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
@@ -226,7 +194,7 @@ function drawCover(img, x, y, w, h) {
 }
 
 function safe(img) {
-  return img ? img : placeholder;
+  return img || placeholder;
 }
 
 async function generate() {
@@ -235,12 +203,12 @@ async function generate() {
 
   const loaded = await loadImages(files);
 
+  let mapped = [];
+  let normalImages = [];
+
   images = [];
   bigImage = null;
   usedIDs = [];
-
-  let mapped = [];
-  let normalImages = [];
 
   for (const item of loaded) {
     const name = item.name.toUpperCase();
@@ -253,18 +221,14 @@ async function generate() {
     let match = name.match(/S\d+([A-Z]+)/);
 
     if (match) {
-      let id = match[1];
-      mapped.push({ id, img: item.img });
+      mapped.push({ id: match[1], img: item.img });
     } else {
       normalImages.push(item.img);
     }
   }
 
-  mapped.sort((a, b) => {
-    return orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id);
-  });
+  mapped.sort((a, b) => orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id));
 
-  /* ONLY TAKE WHAT ACTUALLY FITS IN COLLAGE (8 slots) */
   const usedMapped = mapped.slice(0, 8);
 
   images = usedMapped.map(m => m.img);
@@ -281,8 +245,6 @@ async function generate() {
 }
 
 function draw() {
-  if (!placeholderReady) return;
-
   const W = canvas.width;
   const H = canvas.height;
 
@@ -307,53 +269,58 @@ function draw() {
 
   let i = 0;
 
-  for (let c = 0; c < 4; c++) {
+  for (let c = 0; c < 4; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
-  }
 
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
 
-  for (let c = 0; c < 2; c++) {
+  for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
-  }
 
-  for (let c = 0; c < 2; c++) {
+  for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
-  }
 
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  if (slotBackground.complete) {
-    ctx.drawImage(slotBackground, bx, by, bw, bh);
-  }
-
+  ctx.drawImage(slotBackground, bx, by, bw, bh);
   drawCover(safe(bigImage), bx, by, bw, bh);
+
+  /* WATERMARK ROWS */
+  const overlayText = "@eidams_secrets @eidams_secrets";
+
+  ctx.fillStyle = "rgba(255,255,255,0.20)";
+  ctx.textAlign = "center";
+  ctx.font = "bold 79px Comic Sans MS";
+
+  [
+    frameY + 78,
+    frameY + rowH + gap + 78,
+    frameY + (rowH + gap) * 2 + 78
+  ].forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
+  });
+
+  /* BOTTOM WATERMARK */
+  ctx.fillStyle = "rgba(84,84,84,0.75)";
+  ctx.font = "bold 40px Comic Sans MS";
+  ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
 }
 
 function generateList() {
-  let result = orderedIDs
+  const result = orderedIDs
     .filter(id => usedIDs.includes(id))
     .map(id => idMap[id]);
 
   document.getElementById("output").innerHTML =
-    result.map(item => "• " + item).join("<br>");
+    result.map(i => "• " + i).join("<br>");
 }
 
 function copyList() {
-  const output = document.getElementById("output");
-
-  if (!output.innerText.trim()) {
-    alert("Nothing to copy!");
-    return;
-  }
-
-  navigator.clipboard.writeText(output.innerText)
-    .then(() => alert("Copied to clipboard!"))
-    .catch(() => alert("Copy failed"));
+  navigator.clipboard.writeText(document.getElementById("output").innerText);
 }
 
 function download() {
