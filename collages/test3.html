@@ -32,9 +32,7 @@ body {
   width: 100%;
 }
 
-.tool > button:first-child { margin-top: 10px; }
-
-h2 { margin-bottom: 30px; }
+h2 { margin-bottom: 20px; }
 
 .controls {
   display: flex;
@@ -59,7 +57,6 @@ canvas {
   display: block;
   transform: scale(0.33);
   transform-origin: center top;
-  margin-top: 10px;
 }
 
 #parserBox {
@@ -73,7 +70,6 @@ canvas {
 }
 
 .list-item { margin-bottom: 5px; font-size: 13px; }
-#copyStatus { font-size: 12px; margin-top: 6px; }
 </style>
 </head>
 
@@ -84,7 +80,6 @@ canvas {
 <div class="container">
 
   <div class="tool">
-    <button onclick="goBack()">← Back</button>
     <h2>12 Pieces Collage</h2>
 
     <div class="controls">
@@ -102,10 +97,7 @@ canvas {
 
 <div id="parserBox">
   <h3>Outfit List</h3>
-  <div class="button-group">
-    <button onclick="copyList()">Copy</button>
-    <span id="copyStatus"></span>
-  </div>
+  <button onclick="copyList()">Copy</button>
   <div id="output"></div>
 </div>
 
@@ -114,14 +106,6 @@ canvas {
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-
-const mm = 3.78;
-const gap = 3 * mm;
-const whiteFrame = 4 * mm;
-
-const outerTop = 6.5 * mm;
-const outerSide = 6.5 * mm;
-const outerBottom = 18.5 * mm;
 
 let images = [];
 let bigImage = null;
@@ -143,25 +127,6 @@ const idMap = {
   "AJZ":"Rings","ARM":"Arm Decoration","ABA":"Handheld","ABK":"Body Paint"
 };
 
-const placeholder = new Image();
-const slotBackground = new Image();
-
-placeholder.src = "../image/T_showpic_clothes_blank.png";
-slotBackground.src = "../image/T_showpic_clothes_blank.png";
-
-/* preload */
-let ready = 0;
-function checkReady() {
-  ready++;
-  if (ready === 2) draw();
-}
-placeholder.onload = checkReady;
-slotBackground.onload = checkReady;
-
-function goBack() {
-  window.location.href = "/CollageTool/";
-}
-
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -176,34 +141,15 @@ function loadImages(files) {
   }));
 }
 
-function drawCover(img, x, y, w, h) {
-  const scale = Math.max(w / img.width, h / img.height);
-  const sw = w / scale;
-  const sh = h / scale;
-
-  const sx = (img.width - sw) / 2;
-  const sy = (img.height - sh) / 2;
-
-  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-}
-
-function safe(img) {
-  return img || placeholder;
-}
-
-/* ✅ REAL FIXED GENERATE */
+/* ✅ TRUE 12-SLOT GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
-  if (!files.length) return alert("Upload images first");
+  if (!files.length) return;
 
   const loaded = await loadImages(files);
 
   let mapped = [];
   let normal = [];
-
-  images = [];
-  usedIDs = [];
-  bigImage = null;
 
   for (const item of loaded) {
     const name = item.name.toUpperCase();
@@ -215,102 +161,75 @@ async function generate() {
 
     const match = name.match(/S\d+([A-Z]+)/);
 
-    if (match) {
-      mapped.push({ id: match[1], img: item.img });
-    } else {
-      normal.push(item.img);
-    }
+    if (match) mapped.push({ id: match[1], img: item.img });
+    else normal.push(item.img);
   }
 
   mapped.sort((a, b) =>
     orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id)
   );
 
-  const final = [];
+  const combined = [
+    ...mapped.map(m => ({ id: m.id, img: m.img })),
+    ...normal.map(n => ({ id: null, img: n }))
+  ];
 
-  // mapped first
-  for (let m of mapped) {
-    if (final.length < 12) final.push(m);
+  /* EXACT 12 slots */
+  while (combined.length < 12) {
+    combined.push(combined[combined.length - 1]);
   }
 
-  // fill with normal
-  for (let n of normal) {
-    if (final.length < 12) final.push({ id: null, img: n });
-  }
+  images = combined.slice(0, 12).map(i => i.img);
+  usedIDs = combined.slice(0, 12).filter(i => i.id).map(i => i.id);
 
-  // 🔥 CRITICAL: if still not enough → duplicate last
-  while (final.length < 12 && final.length > 0) {
-    final.push(final[final.length - 1]);
-  }
-
-  images = final.map(f => f.img);
-  usedIDs = final.filter(f => f.id).map(f => f.id);
-
-  if (!bigImage && images.length > 0) {
-    bigImage = images[images.length - 1];
+  if (!bigImage && combined.length > 0) {
+    bigImage = combined[combined.length - 1].img;
   }
 
   draw();
   generateList();
 }
 
-/* DRAW */
+/* DRAW TRUE GRID */
 function draw() {
-  if (ready < 2) return;
-
   const W = canvas.width;
   const H = canvas.height;
 
   ctx.fillStyle = "#16161d";
   ctx.fillRect(0, 0, W, H);
 
-  const innerX = outerSide;
-  const innerY = outerTop;
-  const innerW = W - outerSide * 2;
-  const innerH = H - outerTop - outerBottom;
+  const cols = 4;
+  const rows = 3;
 
-  ctx.fillStyle = "white";
-  ctx.fillRect(innerX, innerY, innerW, innerH);
+  const gap = 20;
+  const margin = 80;
 
-  const frameX = innerX + whiteFrame;
-  const frameY = innerY + whiteFrame;
-
-  const frameW = innerW - whiteFrame * 2;
-  const frameH = innerH - whiteFrame * 2;
-
-  const colW = (frameW - gap * 3) / 4;
-  const rowH = (frameH - gap * 3) / 4;
-
-  const stepX = colW + gap;
-  const stepY = rowH + gap;
+  const cellW = (W - margin * 2 - gap * (cols - 1)) / cols;
+  const cellH = cellW;
 
   let i = 0;
 
-  for (let c = 0; c < 4; c++)
-    drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = margin + c * (cellW + gap);
+      const y = margin + r * (cellH + gap);
 
-  for (let c = 0; c < 4; c++)
-    drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
+      const img = images[i++];
+      if (!img) continue;
 
-  const y3 = frameY + stepY * 2;
+      ctx.drawImage(img, x, y, cellW, cellH);
+    }
+  }
 
-  for (let c = 0; c < 2; c++)
-    drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
+  /* BIG IMAGE BELOW */
+  if (bigImage) {
+    const bw = cellW * 2 + gap;
+    const bh = bw;
+    const bx = (W - bw) / 2;
+    const by = margin + rows * (cellH + gap) + 40;
 
-  const bx = frameX + 2 * stepX;
-  const by = y3;
-  const bw = colW * 2 + gap;
-  const bh = rowH * 2 + gap;
-
-  ctx.drawImage(slotBackground, bx, by, bw, bh);
-  drawCover(safe(bigImage), bx, by, bw, bh);
-
-  i += 2;
-
-  const y4 = frameY + stepY * 3;
-
-  for (let c = 0; c < 2; c++)
-    drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
+    ctx.drawImage(bigImage, bx, by, bw, bh);
+  }
 }
 
 /* LIST */
@@ -324,20 +243,15 @@ function generateList() {
 }
 
 function copyList() {
-  const text = document.getElementById("output").innerText;
-  if (!text.trim()) return;
-
-  navigator.clipboard.writeText(text).then(() => {
-    const status = document.getElementById("copyStatus");
-    status.innerText = "Copied!";
-    setTimeout(() => status.innerText = "", 1200);
-  });
+  navigator.clipboard.writeText(
+    document.getElementById("output").innerText
+  );
 }
 
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
-  link.href = canvas.toDataURL("image/png");
+  link.href = canvas.toDataURL();
   link.click();
 }
 </script>
