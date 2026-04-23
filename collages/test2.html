@@ -6,7 +6,7 @@
   <title>Outfit Parser</title>
 </head>
 <body>
-                                                                                      
+
 <style>
 body {
   background: #322d2d;
@@ -14,10 +14,10 @@ body {
 }
 </style>
 
-  
 <h2>Upload Images</h2>
 <input type="file" id="fileInput" multiple>
-<button onclick="generateList()">Generate List</button>
+
+<button onclick="generateList()">Generate List</button> <button onclick="copyList()">Copy</button>
 
 <h3>Result:</h3>
 <p id="output"></p>
@@ -81,7 +81,25 @@ function generateList() {
     .filter(id => found.has(id))
     .map(id => idMap[id]);
 
-  document.getElementById("output").textContent = result.join(", ");
+  document.getElementById("output").innerHTML =
+    result.map(item => "• " + item).join("<br>");
+}
+
+function copyList() {
+  const output = document.getElementById("output");
+
+  if (!output.innerText.trim()) {
+    alert("Nothing to copy!");
+    return;
+  }
+
+  navigator.clipboard.writeText(output.innerText)
+    .then(() => {
+      alert("Copied to clipboard!");
+    })
+    .catch(() => {
+      alert("Copy failed");
+    });
 }
 </script>
 
