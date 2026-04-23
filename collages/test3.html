@@ -320,13 +320,13 @@ function draw() {
   drawCover(safe(bigImage), bx, by, bw, bh);
 
   // TOP WATERMARK 
-  const overlayText = "@eidams_secrets   @eidams_secrets";
+  const overlayText = "@eidams_secrets";
 
   ctx.save();
   ctx.fillStyle = "rgba(22,22,29,0.75)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "bold 70px Comic Sans MS";
+  ctx.font = "bold 50px Comic Sans MS";
 
   const centerX = frameX + frameW / 2;
   const gapCenterY = frameY + rowH + (gap / 2);
@@ -336,13 +336,13 @@ function draw() {
 
   // BOTTOM WATERMARK 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 25px Comic Sans MS";
+  ctx.font = "bold 40px Comic Sans MS";
   ctx.textBaseline = "middle";
 
   const bottomX = frameX + frameW / 2;
   const bottomY = H - (outerBottom / 2) + 15;
 
-  ctx.fillText("@eidams_secrets", bottomX, bottomY);
+  ctx.fillText("@eidams_secrets   @eidams_secrets", bottomX, bottomY);
 }
 
 function generateList() {
