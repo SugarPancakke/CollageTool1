@@ -76,7 +76,6 @@ canvas {
   margin-top: 10px;
 }
 
-/* PARSER BOX */
 #parserBox {
   position: absolute;
   left: calc(100% + 20px);
@@ -217,22 +216,22 @@ function drawCover(img, x, y, w, h) {
 }
 
 function safe(img) {
-  return img ? img : placeholder;
+  return img || placeholder;
 }
 
-/* ✅ FIXED GENERATE */
+/* ✅ CORRECT LOGIC (matches 8-piece) */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
   const loaded = await loadImages(files);
 
+  let mapped = [];
+  let normalImages = [];
+
   images = [];
   bigImage = null;
   usedIDs = [];
-
-  let mapped = [];
-  let normalImages = [];
 
   for (const item of loaded) {
     const name = item.name.toUpperCase();
@@ -255,18 +254,21 @@ async function generate() {
     orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id)
   );
 
-  // 🔥 ONLY USE 10 ITEMS (what actually fits)
+  // 👇 EXACT same pattern as 8-piece
   const usedMapped = mapped.slice(0, 10);
 
   images = usedMapped.map(m => m.img);
   usedIDs = usedMapped.map(m => m.id);
 
-  images.push(...normalImages);
+  // fill only if needed (same behavior style)
+  if (images.length < 10) {
+    const needed = 10 - images.length;
+    images.push(...normalImages.slice(0, needed));
+  }
 
-  // 🔥 KEEP LIST PERFECTLY IN SYNC
-  if (!bigImage && images.length > 0) {
-    images.pop();
-    usedIDs.pop();
+  // big image from leftovers only
+  if (!bigImage && normalImages.length > 0) {
+    bigImage = normalImages[normalImages.length - 1];
   }
 
   draw();
