@@ -323,19 +323,19 @@ function draw() {
   ctx.drawImage(slotBackground, bx, by, bw, bh);
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  // === CORRECT TOP WATERMARK ===
+  // === CORRECT WATERMARK ===
   const overlayText = "@eidams_secrets   @eidams_secrets";
 
   ctx.save();
   ctx.fillStyle = "rgba(22,22,29,0.75)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "bold 78px Comic Sans MS";
+  ctx.font = "bold 70px Comic Sans MS";
 
-  const wmX = frameX + frameW / 2;
-  const wmY = frameY + rowH + (gap / 2);
+  const centerX = frameX + frameW / 2;
+  const gapCenterY = frameY + rowH + (gap / 2);
 
-  ctx.fillText(overlayText, wmX, wmY);
+  ctx.fillText(overlayText, centerX, gapCenterY);
   ctx.restore();
 
   // bottom watermark
