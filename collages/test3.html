@@ -15,9 +15,7 @@ body {
   color: white;
 }
 
-.wrapper {
-  position: relative;
-}
+.wrapper { position: relative; }
 
 .container {
   width: 900px;
@@ -32,16 +30,11 @@ body {
   border-radius: 12px;
   margin-bottom: 15px;
   width: 100%;
-  box-sizing: border-box;
 }
 
-.tool > button:first-child {
-  margin-top: 10px;
-}
+.tool > button:first-child { margin-top: 10px; }
 
-h2 {
-  margin-bottom: 30px;
-}
+h2 { margin-bottom: 30px; }
 
 .controls {
   display: flex;
@@ -49,10 +42,7 @@ h2 {
   align-items: center;
 }
 
-.button-group {
-  display: flex;
-  gap: 10px;
-}
+.button-group { display: flex; gap: 10px; }
 
 button {
   padding: 10px 14px;
@@ -61,13 +51,9 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
-  transition: 0.2s ease;
-  font-size: 14px;
 }
 
-button:hover {
-  background: #c06f7f;
-}
+button:hover { background: #c06f7f; }
 
 canvas {
   display: block;
@@ -76,7 +62,6 @@ canvas {
   margin-top: 10px;
 }
 
-/* PARSER */
 #parserBox {
   position: absolute;
   left: calc(100% + 20px);
@@ -87,19 +72,8 @@ canvas {
   border-radius: 12px;
 }
 
-#parserBox .button-group {
-  margin-bottom: 12px;
-}
-
-.list-item {
-  margin-bottom: 5px;
-  font-size: 13px;
-}
-
-#copyStatus {
-  font-size: 12px;
-  margin-top: 6px;
-}
+.list-item { margin-bottom: 5px; font-size: 13px; }
+#copyStatus { font-size: 12px; margin-top: 6px; }
 </style>
 </head>
 
@@ -175,14 +149,12 @@ const slotBackground = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
-/* ✅ PRELOAD + INITIAL DRAW */
-let assetsReady = 0;
-
+/* preload */
+let ready = 0;
 function checkReady() {
-  assetsReady++;
-  if (assetsReady === 2) draw();
+  ready++;
+  if (ready === 2) draw();
 }
-
 placeholder.onload = checkReady;
 slotBackground.onload = checkReady;
 
@@ -219,19 +191,19 @@ function safe(img) {
   return img || placeholder;
 }
 
-/* ✅ ADAPTED GENERATE */
+/* ✅ REAL FIXED GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
   const loaded = await loadImages(files);
 
-  images = [];
-  bigImage = null;
-  usedIDs = [];
-
   let mapped = [];
   let normal = [];
+
+  images = [];
+  usedIDs = [];
+  bigImage = null;
 
   for (const item of loaded) {
     const name = item.name.toUpperCase();
@@ -241,7 +213,7 @@ async function generate() {
       continue;
     }
 
-    let match = name.match(/S\d+([A-Z]+)/);
+    const match = name.match(/S\d+([A-Z]+)/);
 
     if (match) {
       mapped.push({ id: match[1], img: item.img });
@@ -254,20 +226,28 @@ async function generate() {
     orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id)
   );
 
-  const usedMapped = mapped.slice(0, 12);
+  const final = [];
 
-  images = usedMapped.map(m => m.img);
-
-  /* ✅ LIMIT outfit items (clean adaptation) */
-  usedIDs = usedMapped.slice(0, 10).map(m => m.id);
-
-  if (images.length < 12) {
-    const needed = 12 - images.length;
-    images.push(...normal.slice(0, needed));
+  // mapped first
+  for (let m of mapped) {
+    if (final.length < 12) final.push(m);
   }
 
-  if (!bigImage && normal.length > 0) {
-    bigImage = normal[normal.length - 1];
+  // fill with normal
+  for (let n of normal) {
+    if (final.length < 12) final.push({ id: null, img: n });
+  }
+
+  // 🔥 CRITICAL: if still not enough → duplicate last
+  while (final.length < 12 && final.length > 0) {
+    final.push(final[final.length - 1]);
+  }
+
+  images = final.map(f => f.img);
+  usedIDs = final.filter(f => f.id).map(f => f.id);
+
+  if (!bigImage && images.length > 0) {
+    bigImage = images[images.length - 1];
   }
 
   draw();
@@ -276,7 +256,7 @@ async function generate() {
 
 /* DRAW */
 function draw() {
-  if (assetsReady < 2) return;
+  if (ready < 2) return;
 
   const W = canvas.width;
   const H = canvas.height;
@@ -333,7 +313,7 @@ function draw() {
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
 }
 
-/* ✅ CLEAN LIST */
+/* LIST */
 function generateList() {
   const result = orderedIDs
     .filter(id => usedIDs.includes(id))
