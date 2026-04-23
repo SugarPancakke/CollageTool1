@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -14,6 +13,10 @@ body {
   justify-content: center;
   padding: 20px;
   color: white;
+}
+
+.wrapper {
+  position: relative;
 }
 
 .container {
@@ -72,31 +75,70 @@ canvas {
   transform-origin: center top;
   margin-top: 10px;
 }
-</style>
 
+#parserBox {
+  position: absolute;
+  left: calc(100% + 20px);
+  top: 0;
+  width: 240px;
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+#parserBox .button-group {
+  margin-bottom: 12px;
+}
+
+.list-item {
+  margin-bottom: 5px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+#copyStatus {
+  font-size: 12px;
+  margin-top: 6px;
+  opacity: 0.8;
+}
+</style>
 </head>
 
 <body>
+
+<div class="wrapper">
 
 <div class="container">
 
   <div class="tool">
     <button onclick="goBack()">← Back</button>
 
-<h2>10 Pieces Collage</h2>
+    <h2>10 Pieces Collage</h2>
 
-<div class="controls">
-  <input type="file" id="upload" multiple accept="image/*">
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
 
-  <div class="button-group">
-    <button onclick="generate()">Generate</button>
-    <button onclick="download()">Download PNG</button>
+      <div class="button-group">
+        <button onclick="generate()">Generate</button>
+        <button onclick="download()">Download PNG</button>
+      </div>
+    </div>
   </div>
+
+  <canvas id="canvas" width="1500" height="2100"></canvas>
+
 </div>
 
+<div id="parserBox">
+  <h3>Outfit List</h3>
+
+  <div class="button-group">
+    <button onclick="copyList()">Copy</button>
+    <span id="copyStatus"></span>
   </div>
 
-<canvas id="canvas" width="1500" height="2100"></canvas>
+  <div id="output"></div>
+</div>
 
 </div>
 
@@ -105,7 +147,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-
 const gap = 3 * mm;
 const whiteFrame = 4 * mm;
 
@@ -115,15 +156,24 @@ const outerBottom = 18.5 * mm;
 
 let images = [];
 let bigImage = null;
+let usedIDs = [];
 
-/* ORDER (same as parser) */
 const orderedIDs = [
   "H","D","C","T","PP","S","BB",
   "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
   "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
 ];
 
-/* PLACEHOLDER */
+const idMap = {
+  "H":"Hair","D":"Dress","C":"Outerwear","T":"Top",
+  "PP":"Bottom","S":"Socks","BB":"Shoes",
+  "AHE":"Hair Accessory","AHC":"Headwear","AEA":"Earrings",
+  "ANE":"Neckwear","AHA":"Bracelet","AXQ":"Choker",
+  "G":"Gloves","AGL":"Face Decoration","AFA":"Face Decoration",
+  "AXS":"Chest Accessory","ALE":"Pendant","ABS":"Backpiece",
+  "AJZ":"Rings","ARM":"Arm Decoration","ABA":"Handheld","ABK":"Body Paint"
+};
+
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -166,20 +216,22 @@ function drawCover(img, x, y, w, h) {
 }
 
 function safe(img) {
-  return img ? img : placeholder;
+  return img || placeholder;
 }
 
+/* ✅ CORRECT LOGIC (matches 8-piece) */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
   const loaded = await loadImages(files);
 
-  images = [];
-  bigImage = null;
-
   let mapped = [];
   let normalImages = [];
+
+  images = [];
+  bigImage = null;
+  usedIDs = [];
 
   for (const item of loaded) {
     const name = item.name.toUpperCase();
@@ -192,30 +244,35 @@ async function generate() {
     let match = name.match(/S\d+([A-Z]+)/);
 
     if (match) {
-      let id = match[1];
-
-      mapped.push({
-        id,
-        img: item.img
-      });
+      mapped.push({ id: match[1], img: item.img });
     } else {
       normalImages.push(item.img);
     }
   }
 
-  mapped.sort((a, b) => {
-    return orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id);
-  });
+  mapped.sort((a, b) =>
+    orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id)
+  );
 
-  images = mapped.map(m => m.img);
+  // 👇 EXACT same pattern as 8-piece
+  const usedMapped = mapped.slice(0, 10);
 
-  images.push(...normalImages);
+  images = usedMapped.map(m => m.img);
+  usedIDs = usedMapped.map(m => m.id);
 
-  if (!bigImage && images.length > 0) {
-    bigImage = images.pop();
+  // fill only if needed (same behavior style)
+  if (images.length < 10) {
+    const needed = 10 - images.length;
+    images.push(...normalImages.slice(0, needed));
+  }
+
+  // big image from leftovers only
+  if (!bigImage && normalImages.length > 0) {
+    bigImage = normalImages[normalImages.length - 1];
   }
 
   draw();
+  generateList();
 }
 
 function draw() {
@@ -245,65 +302,68 @@ function draw() {
 
   let i = 0;
 
-  for (let c = 0; c < 4; c++) {
+  for (let c = 0; c < 4; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), frameY, colW, rowH);
-  }
 
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
   const y4 = y3 + rowH + gap;
 
-  for (let c = 0; c < 2; c++) {
+  for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
-  }
 
-  for (let c = 0; c < 2; c++) {
+  for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
-  }
 
-  for (let c = 0; c < 2; c++) {
+  for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
-  }
 
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
-
   const bw = colW * 2 + gap;
   const bh = rowH * 3 + gap * 2;
 
-  if (slotBackground.complete) {
-    ctx.drawImage(slotBackground, bx, by, bw, bh);
-  }
-
+  ctx.drawImage(slotBackground, bx, by, bw, bh);
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  /* ROW WATERMARK */
   const overlayText = "@eidams_secrets @eidams_secrets";
 
   ctx.fillStyle = "rgba(255,255,255,0.20)";
   ctx.textAlign = "center";
   ctx.font = "bold 81px Comic Sans MS";
 
-  const offset = 82;
-
-  const positions = [
-    frameY + offset,
-    frameY + rowH + gap + offset,
-    frameY + (rowH + gap) * 2 + offset,
-    frameY + (rowH + gap) * 3 + offset
-  ];
-
-  positions.forEach(y => {
+  [
+    frameY + 82,
+    frameY + rowH + gap + 82,
+    frameY + (rowH + gap) * 2 + 82,
+    frameY + (rowH + gap) * 3 + 82
+  ].forEach(y => {
     ctx.fillText(overlayText, frameX + frameW / 2, y);
   });
 
-  /* BOTTOM WATERMARK */
-  const text = "@eidams_secrets  @eidams_secrets";
-
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
+  ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
+}
 
-  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
+function generateList() {
+  const result = orderedIDs
+    .filter(id => usedIDs.includes(id))
+    .map(id => idMap[id]);
+
+  document.getElementById("output").innerHTML =
+    result.map(i => `<div class="list-item">• ${i}</div>`).join("");
+}
+
+function copyList() {
+  const text = document.getElementById("output").innerText;
+  if (!text.trim()) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const status = document.getElementById("copyStatus");
+    status.innerText = "Copied!";
+    setTimeout(() => status.innerText = "", 1200);
+  });
 }
 
 function download() {
