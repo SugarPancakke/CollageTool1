@@ -35,6 +35,10 @@ body {
   box-sizing: border-box;
 }
 
+.tool > button:first-child {
+  margin-top: 10px;
+}
+
 h2 {
   margin-bottom: 30px; 
 }
@@ -57,6 +61,8 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
+  transition: 0.2s ease;
+  font-size: 14px;
 }
 
 button:hover {
@@ -70,7 +76,7 @@ canvas {
   margin-top: 10px;
 }
 
-/* LIST PANEL */
+/* ✅ MATCHES 10-PIECE EXACTLY */
 #parserBox {
   position: absolute;
   left: calc(100% + 20px);
@@ -81,6 +87,10 @@ canvas {
   border-radius: 12px;
 }
 
+#parserBox .button-group {
+  margin-bottom: 12px;
+}
+
 .list-item {
   margin-bottom: 5px;
   font-size: 13px;
@@ -89,7 +99,6 @@ canvas {
 
 #copyStatus {
   font-size: 12px;
-  margin-top: 6px;
   opacity: 0.8;
 }
 </style>
@@ -120,16 +129,16 @@ canvas {
 
 </div>
 
-<!-- LIST UI -->
+<!-- ✅ CORRECT LIST UI -->
 <div id="parserBox">
   <h3>Outfit List</h3>
 
   <div class="button-group">
     <button onclick="copyList()">Copy</button>
+    <span id="copyStatus"></span>
   </div>
 
   <div id="output"></div>
-  <div id="copyStatus"></div>
 </div>
 
 </div>
@@ -169,20 +178,16 @@ const idMap = {
 
 /* ASSETS */
 const placeholder = new Image();
-const slotBackground = new Image();
-
 placeholder.src = "../image/T_showpic_clothes_blank.png";
+
+let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw();
+};
+
+const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
-
-let assetsReady = 0;
-
-function checkReady() {
-  assetsReady++;
-  if (assetsReady === 2) draw();
-}
-
-placeholder.onload = checkReady;
-slotBackground.onload = checkReady;
 
 function goBack() {
   window.location.href = "/CollageTool/";
@@ -214,7 +219,7 @@ function drawCover(img, x, y, w, h) {
 }
 
 function safe(img) {
-  return img && img.complete ? img : placeholder;
+  return img || placeholder;
 }
 
 async function generate() {
@@ -223,12 +228,12 @@ async function generate() {
 
   const loaded = await loadImages(files);
 
+  let mapped = [];
+  let normalImages = [];
+
   images = [];
   bigImage = null;
   usedIDs = [];
-
-  let mapped = [];
-  let normal = [];
 
   for (const item of loaded) {
     const name = item.name.toUpperCase();
@@ -243,21 +248,26 @@ async function generate() {
     if (match) {
       mapped.push({ id: match[1], img: item.img });
     } else {
-      normal.push(item.img);
+      normalImages.push(item.img);
     }
   }
 
-  mapped.sort((a, b) => orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id));
+  mapped.sort((a, b) =>
+    orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id)
+  );
 
   const usedMapped = mapped.slice(0, 12);
 
   images = usedMapped.map(m => m.img);
   usedIDs = usedMapped.map(m => m.id);
 
-  images.push(...normal);
+  if (images.length < 12) {
+    const needed = 12 - images.length;
+    images.push(...normalImages.slice(0, needed));
+  }
 
-  if (!bigImage && images.length > 0) {
-    bigImage = images.pop();
+  if (!bigImage && normalImages.length > 0) {
+    bigImage = normalImages[normalImages.length - 1];
   }
 
   draw();
@@ -265,7 +275,7 @@ async function generate() {
 }
 
 function draw() {
-  if (assetsReady < 2) return;
+  if (!placeholderReady) return;
 
   const W = canvas.width;
   const H = canvas.height;
@@ -313,7 +323,7 @@ function draw() {
 
   ctx.drawImage(slotBackground, bx, by, bw, bh);
 
-  /* ✅ FIX: FULL COVER */
+  /* ✅ FULL COVER (FIXED) */
   drawCover(safe(bigImage), bx, by, bw, bh);
 
   const y4 = frameY + stepY * 3;
