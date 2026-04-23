@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>8 Piece Collage</title>
+<title>10 Pieces Collage</title>
 
 <style>
 body {
@@ -35,19 +35,23 @@ body {
   box-sizing: border-box;
 }
 
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .tool > button:first-child {
   margin-top: 10px;
 }
 
 h2 {
-  margin-bottom: 30px;
+  margin-bottom: 30px; 
 }
 
-.controls {
+.button-group {
   display: flex;
   gap: 10px;
-  flex-wrap: nowrap;
-  align-items: center;
 }
 
 button {
@@ -59,31 +63,24 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
-  white-space: nowrap;
 }
 
 button:hover {
   background: #c06f7f;
 }
 
-.button-group {
-  display: flex;
-  gap: 10px;
-}
-
 canvas {
   display: block;
-  transform: scale(0.43);
+  transform: scale(0.33);
   transform-origin: center top;
   margin-top: 10px;
 }
 
-/* PARSER */
+/* PARSER BOX */
 #parserBox {
   position: absolute;
   left: calc(100% + 20px);
   top: 0;
-
   width: 240px;
   background: #643545;
   padding: 15px;
@@ -94,14 +91,12 @@ canvas {
   margin-bottom: 12px;
 }
 
-/* LIST STYLING */
 .list-item {
-  margin-bottom: 5px;   /* adjust spacing here */
-  font-size: 13px;       /* adjust text size here */
+  margin-bottom: 5px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
-/* copy feedback */
 #copyStatus {
   font-size: 12px;
   margin-top: 6px;
@@ -114,36 +109,38 @@ canvas {
 
 <div class="wrapper">
 
-  <div class="container">
+<div class="container">
 
-    <div class="tool">
-      <button onclick="goBack()">← Back</button>
-      <h2>8 Pieces Collage</h2>
+  <div class="tool">
+    <button onclick="goBack()">← Back</button>
 
-      <div class="controls">
-        <input type="file" id="upload" multiple accept="image/*">
+    <h2>10 Pieces Collage</h2>
 
-        <div class="button-group">
-          <button onclick="generate()">Generate</button>
-          <button onclick="download()">Download PNG</button>
-        </div>
+    <div class="controls">
+      <input type="file" id="upload" multiple accept="image/*">
+
+      <div class="button-group">
+        <button onclick="generate()">Generate</button>
+        <button onclick="download()">Download PNG</button>
       </div>
     </div>
-
-    <canvas id="canvas" width="1450" height="1510"></canvas>
-
   </div>
 
-  <div id="parserBox">
-    <h3>Outfit List</h3>
+  <canvas id="canvas" width="1500" height="2100"></canvas>
 
-    <div class="button-group">
-      <button onclick="copyList()">Copy</button>
-    </div>
+</div>
 
-    <div id="output"></div>
-    <div id="copyStatus"></div>
+<!-- OUTFIT LIST -->
+<div id="parserBox">
+  <h3>Outfit List</h3>
+
+  <div class="button-group">
+    <button onclick="copyList()">Copy</button>
   </div>
+
+  <div id="output"></div>
+  <div id="copyStatus"></div>
+</div>
 
 </div>
 
@@ -152,23 +149,25 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-const gap = 2.5 * mm;
-const whiteFrame = 3.5 * mm;
+const gap = 3 * mm;
+const whiteFrame = 4 * mm;
 
-const outerTop = 6 * mm;
-const outerSide = 6 * mm;
-const outerBottom = 18 * mm;
+const outerTop = 6.5 * mm;
+const outerSide = 6.5 * mm;
+const outerBottom = 18.5 * mm;
 
 let images = [];
 let bigImage = null;
 let usedIDs = [];
 
+/* ORDER */
 const orderedIDs = [
   "H","D","C","T","PP","S","BB",
   "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
   "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
 ];
 
+/* NAME MAP */
 const idMap = {
   "H":"Hair","D":"Dress","C":"Outerwear","T":"Top",
   "PP":"Bottom","S":"Socks","BB":"Shoes",
@@ -179,16 +178,25 @@ const idMap = {
   "AJZ":"Rings","ARM":"Arm Decoration","ABA":"Handheld","ABK":"Body Paint"
 };
 
+/* IMAGES */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
+
+let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw();
+};
 
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
+/* NAV */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
+/* LOAD */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -203,6 +211,7 @@ function loadImages(files) {
   }));
 }
 
+/* DRAW HELPERS */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -215,21 +224,22 @@ function drawCover(img, x, y, w, h) {
 }
 
 function safe(img) {
-  return img || placeholder;
+  return img ? img : placeholder;
 }
 
+/* GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
 
   const loaded = await loadImages(files);
 
-  let mapped = [];
-  let normalImages = [];
-
   images = [];
   bigImage = null;
   usedIDs = [];
+
+  let mapped = [];
+  let normalImages = [];
 
   for (const item of loaded) {
     const name = item.name.toUpperCase();
@@ -248,12 +258,12 @@ async function generate() {
     }
   }
 
-  mapped.sort((a, b) => orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id));
+  mapped.sort((a, b) =>
+    orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id)
+  );
 
-  const usedMapped = mapped.slice(0, 8);
-
-  images = usedMapped.map(m => m.img);
-  usedIDs = usedMapped.map(m => m.id);
+  images = mapped.map(m => m.img);
+  usedIDs = mapped.map(m => m.id);
 
   images.push(...normalImages);
 
@@ -265,7 +275,10 @@ async function generate() {
   generateList();
 }
 
+/* DRAW */
 function draw() {
+  if (!placeholderReady) return;
+
   const W = canvas.width;
   const H = canvas.height;
 
@@ -286,7 +299,7 @@ function draw() {
   const frameH = innerH - whiteFrame * 2;
 
   const colW = (frameW - gap * 3) / 4;
-  const rowH = (frameH - gap * 2) / 3;
+  const rowH = (frameH - gap * 3) / 4;
 
   let i = 0;
 
@@ -295,6 +308,7 @@ function draw() {
 
   const y2 = frameY + rowH + gap;
   const y3 = y2 + rowH + gap;
+  const y4 = y3 + rowH + gap;
 
   for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y2, colW, rowH);
@@ -302,10 +316,13 @@ function draw() {
   for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * (colW + gap), y3, colW, rowH);
 
+  for (let c = 0; c < 2; c++)
+    drawCover(safe(images[i++]), frameX + c * (colW + gap), y4, colW, rowH);
+
   const bx = frameX + 2 * (colW + gap);
   const by = y2;
   const bw = colW * 2 + gap;
-  const bh = rowH * 2 + gap;
+  const bh = rowH * 3 + gap * 2;
 
   ctx.drawImage(slotBackground, bx, by, bw, bh);
   drawCover(safe(bigImage), bx, by, bw, bh);
@@ -314,12 +331,13 @@ function draw() {
 
   ctx.fillStyle = "rgba(255,255,255,0.20)";
   ctx.textAlign = "center";
-  ctx.font = "bold 79px Comic Sans MS";
+  ctx.font = "bold 81px Comic Sans MS";
 
   [
-    frameY + 78,
-    frameY + rowH + gap + 78,
-    frameY + (rowH + gap) * 2 + 78
+    frameY + 82,
+    frameY + rowH + gap + 82,
+    frameY + (rowH + gap) * 2 + 82,
+    frameY + (rowH + gap) * 3 + 82
   ].forEach(y => {
     ctx.fillText(overlayText, frameX + frameW / 2, y);
   });
@@ -329,6 +347,7 @@ function draw() {
   ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
 }
 
+/* LIST */
 function generateList() {
   const result = orderedIDs
     .filter(id => usedIDs.includes(id))
@@ -349,6 +368,7 @@ function copyList() {
   });
 }
 
+/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
