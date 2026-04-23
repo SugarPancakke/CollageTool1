@@ -35,6 +35,15 @@ body {
   box-sizing: border-box;
 }
 
+/* ✅ FIXED spacing */
+.tool > button:first-child {
+  margin-top: 10px;
+}
+
+h2 {
+  margin-bottom: 30px;
+}
+
 .controls {
   display: flex;
   gap: 10px;
@@ -200,7 +209,7 @@ function safe(img) {
   return img || placeholder;
 }
 
-/* FIXED GENERATE */
+/* ✅ FIXED GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -240,13 +249,11 @@ async function generate() {
   images = usedMapped.map(m => m.img);
   usedIDs = usedMapped.map(m => m.id);
 
+  /* fill remaining slots */
   if (images.length < 12) {
     const needed = 12 - images.length;
     images.push(...normal.slice(0, needed));
   }
-
-  // 🔥 REMOVE SKIPPED SLOTS (important fix)
-  usedIDs.splice(10, 2);
 
   if (!bigImage && normal.length > 0) {
     bigImage = normal[normal.length - 1];
@@ -256,7 +263,7 @@ async function generate() {
   generateList();
 }
 
-/* DRAW (unchanged) */
+/* DRAW */
 function draw() {
   if (!placeholder.complete) return;
 
@@ -315,10 +322,12 @@ function draw() {
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
 }
 
-/* LIST */
+/* ✅ FIXED LIST */
 function generateList() {
+  const visibleIDs = usedIDs.filter((_, i) => i !== 10 && i !== 11);
+
   const result = orderedIDs
-    .filter(id => usedIDs.includes(id))
+    .filter(id => visibleIDs.includes(id))
     .map(id => idMap[id]);
 
   document.getElementById("output").innerHTML =
@@ -327,9 +336,13 @@ function generateList() {
 
 function copyList() {
   const text = document.getElementById("output").innerText;
-  navigator.clipboard.writeText(text);
-  document.getElementById("copyStatus").innerText = "Copied!";
-  setTimeout(() => copyStatus.innerText = "", 1000);
+  if (!text.trim()) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const status = document.getElementById("copyStatus");
+    status.innerText = "Copied!";
+    setTimeout(() => status.innerText = "", 1200);
+  });
 }
 
 function download() {
