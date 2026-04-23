@@ -48,7 +48,6 @@ h2 {
 .controls {
   display: flex;
   gap: 10px;
-  flex-wrap: nowrap;
   align-items: center;
 }
 
@@ -61,7 +60,6 @@ button {
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 14px;
-  white-space: nowrap;
 }
 
 button:hover {
@@ -87,14 +85,12 @@ canvas {
   background: #643545;
   padding: 15px;
   border-radius: 12px;
-  box-sizing: border-box;
 }
 
 #parserBox h3 {
   margin: 0 0 10px 0;
 }
 
-/* spacing fix */
 #parserBox .button-group {
   margin-bottom: 12px;
 }
@@ -104,7 +100,6 @@ canvas {
   line-height: 1.5;
 }
 </style>
-
 </head>
 
 <body>
@@ -112,7 +107,6 @@ canvas {
 <div class="wrapper">
 
   <div class="container">
-
     <div class="tool">
       <button onclick="goBack()">← Back</button>
       <h2>8 Pieces Collage</h2>
@@ -128,10 +122,8 @@ canvas {
     </div>
 
     <canvas id="canvas" width="1450" height="1510"></canvas>
-
   </div>
 
-  <!-- PARSER PANEL -->
   <div id="parserBox">
     <h3>Outfit List</h3>
 
@@ -158,12 +150,39 @@ const outerBottom = 18 * mm;
 
 let images = [];
 let bigImage = null;
+let usedIDs = [];
 
 const orderedIDs = [
   "H","D","C","T","PP","S","BB",
   "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
   "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
 ];
+
+const idMap = {
+  "AHE": "Hair Accessory",
+  "AHC": "Headwear",
+  "AEA": "Earrings",
+  "ANE": "Neckwear",
+  "AHA": "Bracelet",
+  "AXQ": "Choker",
+  "AGL": "Face Decoration",
+  "AFA": "Face Decoration",
+  "AXS": "Chest Accessory",
+  "ALE": "Pendant",
+  "ABS": "Backpiece",
+  "AJZ": "Rings",
+  "ARM": "Arm Decoration",
+  "ABA": "Handheld",
+  "ABK": "Body Paint",
+  "PP": "Bottom",
+  "BB": "Shoes",
+  "H": "Hair",
+  "D": "Dress",
+  "C": "Outerwear",
+  "T": "Top",
+  "S": "Socks",
+  "G": "Gloves"
+};
 
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
@@ -218,6 +237,7 @@ async function generate() {
 
   images = [];
   bigImage = null;
+  usedIDs = [];
 
   let mapped = [];
   let normalImages = [];
@@ -244,7 +264,12 @@ async function generate() {
     return orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id);
   });
 
-  images = mapped.map(m => m.img);
+  /* ONLY TAKE WHAT ACTUALLY FITS IN COLLAGE (8 slots) */
+  const usedMapped = mapped.slice(0, 8);
+
+  images = usedMapped.map(m => m.img);
+  usedIDs = usedMapped.map(m => m.id);
+
   images.push(...normalImages);
 
   if (!bigImage && images.length > 0) {
@@ -252,8 +277,6 @@ async function generate() {
   }
 
   draw();
-
-  /* generate list AFTER collage */
   generateList();
 }
 
@@ -309,84 +332,11 @@ function draw() {
   }
 
   drawCover(safe(bigImage), bx, by, bw, bh);
-
-  const overlayText = "@eidams_secrets @eidams_secrets";
-
-  ctx.fillStyle = "rgba(255,255,255,0.20)";
-  ctx.textAlign = "center";
-  ctx.font = "bold 79px Comic Sans MS";
-
-  const positions = [
-    frameY + 78,
-    frameY + rowH + gap + 78,
-    frameY + (rowH + gap) * 2 + 78
-  ];
-
-  positions.forEach(y => {
-    ctx.fillText(overlayText, frameX + frameW / 2, y);
-  });
-
-  const text = "@eidams_secrets  @eidams_secrets";
-
-  ctx.fillStyle = "rgba(84,84,84,0.75)";
-  ctx.font = "bold 40px Comic Sans MS";
-
-  ctx.fillText(text, W / 2, H - (outerBottom / 2) + 15);
 }
-
-function download() {
-  const link = document.createElement("a");
-  link.download = "collage.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-}
-
-/* PARSER */
-
-const idMap = {
-  "AHE": "Hair Accessory",
-  "AHC": "Headwear",
-  "AEA": "Earrings",
-  "ANE": "Neckwear",
-  "AHA": "Bracelet",
-  "AXQ": "Choker",
-  "AGL": "Face Decoration",
-  "AFA": "Face Decoration",
-  "AXS": "Chest Accessory",
-  "ALE": "Pendant",
-  "ABS": "Backpiece",
-  "AJZ": "Rings",
-  "ARM": "Arm Decoration",
-  "ABA": "Handheld",
-  "ABK": "Body Paint",
-
-  "PP": "Bottom",
-  "BB": "Shoes",
-
-  "H": "Hair",
-  "D": "Dress",
-  "C": "Outerwear",
-  "T": "Top",
-  "S": "Socks",
-  "G": "Gloves"
-};
 
 function generateList() {
-  const files = document.getElementById("upload").files;
-  let found = new Set();
-
-  for (let file of files) {
-    let name = file.name.toUpperCase();
-    let match = name.match(/S\d+([A-Z]+)/);
-
-    if (match) {
-      let id = match[1];
-      if (idMap[id]) found.add(id);
-    }
-  }
-
   let result = orderedIDs
-    .filter(id => found.has(id))
+    .filter(id => usedIDs.includes(id))
     .map(id => idMap[id]);
 
   document.getElementById("output").innerHTML =
@@ -404,6 +354,13 @@ function copyList() {
   navigator.clipboard.writeText(output.innerText)
     .then(() => alert("Copied to clipboard!"))
     .catch(() => alert("Copy failed"));
+}
+
+function download() {
+  const link = document.createElement("a");
+  link.download = "collage.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 }
 </script>
 
