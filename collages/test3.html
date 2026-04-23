@@ -130,16 +130,16 @@ canvas {
 
 </div>
 
-<!-- OUTFIT LIST -->
 <div id="parserBox">
   <h3>Outfit List</h3>
 
   <div class="button-group">
-   <button onclick="copyList()">Copy</button>
-   <span id="copyStatus"></span>
- </div>
+    <button onclick="copyList()">Copy</button>
+    <span id="copyStatus"></span>
+  </div>
 
- <div id="output"></div>
+  <div id="output"></div>
+</div>
 
 </div>
 
@@ -159,14 +159,12 @@ let images = [];
 let bigImage = null;
 let usedIDs = [];
 
-/* ORDER */
 const orderedIDs = [
   "H","D","C","T","PP","S","BB",
   "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
   "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
 ];
 
-/* NAME MAP */
 const idMap = {
   "H":"Hair","D":"Dress","C":"Outerwear","T":"Top",
   "PP":"Bottom","S":"Socks","BB":"Shoes",
@@ -177,7 +175,6 @@ const idMap = {
   "AJZ":"Rings","ARM":"Arm Decoration","ABA":"Handheld","ABK":"Body Paint"
 };
 
-/* IMAGES */
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
 
@@ -190,12 +187,10 @@ placeholder.onload = () => {
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
 
-/* NAV */
 function goBack() {
   window.location.href = "/CollageTool/";
 }
 
-/* LOAD */
 function loadImages(files) {
   return Promise.all([...files].map(file => {
     return new Promise(res => {
@@ -210,7 +205,6 @@ function loadImages(files) {
   }));
 }
 
-/* DRAW HELPERS */
 function drawCover(img, x, y, w, h) {
   const scale = Math.max(w / img.width, h / img.height);
   const sw = w / scale;
@@ -226,7 +220,7 @@ function safe(img) {
   return img ? img : placeholder;
 }
 
-/* GENERATE */
+/* ✅ FIXED GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -261,20 +255,24 @@ async function generate() {
     orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id)
   );
 
-  images = mapped.map(m => m.img);
-  usedIDs = mapped.map(m => m.id);
+  // 🔥 ONLY USE 10 ITEMS (what actually fits)
+  const usedMapped = mapped.slice(0, 10);
+
+  images = usedMapped.map(m => m.img);
+  usedIDs = usedMapped.map(m => m.id);
 
   images.push(...normalImages);
 
+  // 🔥 KEEP LIST PERFECTLY IN SYNC
   if (!bigImage && images.length > 0) {
-    bigImage = images.pop();
+    images.pop();
+    usedIDs.pop();
   }
 
   draw();
   generateList();
 }
 
-/* DRAW */
 function draw() {
   if (!placeholderReady) return;
 
@@ -346,7 +344,6 @@ function draw() {
   ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
 }
 
-/* LIST */
 function generateList() {
   const result = orderedIDs
     .filter(id => usedIDs.includes(id))
@@ -367,7 +364,6 @@ function copyList() {
   });
 }
 
-/* DOWNLOAD */
 function download() {
   const link = document.createElement("a");
   link.download = "collage.png";
