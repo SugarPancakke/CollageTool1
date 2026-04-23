@@ -78,12 +78,10 @@ canvas {
   margin-top: 10px;
 }
 
-/* PARSER */
 #parserBox {
   position: absolute;
   left: calc(100% + 20px);
   top: 0;
-
   width: 240px;
   background: #643545;
   padding: 15px;
@@ -94,14 +92,12 @@ canvas {
   margin-bottom: 12px;
 }
 
-/* LIST STYLING */
 .list-item {
-  margin-bottom: 5px;   /* adjust spacing here */
-  font-size: 13px;       /* adjust text size here */
+  margin-bottom: 5px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
-/* copy feedback */
 #copyStatus {
   font-size: 12px;
   margin-top: 6px;
@@ -179,8 +175,16 @@ const idMap = {
   "AJZ":"Rings","ARM":"Arm Decoration","ABA":"Handheld","ABK":"Body Paint"
 };
 
+/* ✅ NEW: placeholder load handling */
+let placeholderReady = false;
+
 const placeholder = new Image();
 placeholder.src = "../image/T_showpic_clothes_blank.png";
+
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw(); // 👈 draw template immediately
+};
 
 const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
@@ -266,6 +270,8 @@ async function generate() {
 }
 
 function draw() {
+  if (!placeholderReady) return; // ✅ prevents early draw issues
+
   const W = canvas.width;
   const H = canvas.height;
 
