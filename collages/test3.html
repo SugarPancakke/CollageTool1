@@ -35,7 +35,6 @@ body {
   box-sizing: border-box;
 }
 
-/* ✅ FIXED spacing */
 .tool > button:first-child {
   margin-top: 10px;
 }
@@ -209,7 +208,7 @@ function safe(img) {
   return img || placeholder;
 }
 
-/* ✅ FIXED GENERATE */
+/* ✅ ADAPTED GENERATE */
 async function generate() {
   const files = document.getElementById("upload").files;
   if (!files.length) return alert("Upload images first");
@@ -247,9 +246,10 @@ async function generate() {
   const usedMapped = mapped.slice(0, 12);
 
   images = usedMapped.map(m => m.img);
-  usedIDs = usedMapped.map(m => m.id);
 
-  /* fill remaining slots */
+  // ✅ LIMIT what counts as outfit items (important!)
+  usedIDs = usedMapped.slice(0, 10).map(m => m.id);
+
   if (images.length < 12) {
     const needed = 12 - images.length;
     images.push(...normal.slice(0, needed));
@@ -322,12 +322,10 @@ function draw() {
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
 }
 
-/* ✅ FIXED LIST */
+/* ✅ CLEAN LIST */
 function generateList() {
-  const visibleIDs = usedIDs.filter((_, i) => i !== 10 && i !== 11);
-
   const result = orderedIDs
-    .filter(id => visibleIDs.includes(id))
+    .filter(id => usedIDs.includes(id))
     .map(id => idMap[id]);
 
   document.getElementById("output").innerHTML =
