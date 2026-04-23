@@ -15,6 +15,12 @@ body {
   color: white;
 }
 
+.wrapper {
+  display: flex;
+  gap: 20px; /* <-- exact spacing between boxes */
+  align-items: flex-start;
+}
+
 .container {
   width: 900px;
   display: flex;
@@ -75,10 +81,11 @@ canvas {
   margin-top: 10px;
 }
 
+/* =========================
+   PARSER PANEL (MATCH STYLE)
+   ========================= */
+
 #parserBox {
-  position: fixed;
-  right: 20px;
-  top: 20px;
   width: 240px;
   background: #643545;
   padding: 15px;
@@ -88,10 +95,6 @@ canvas {
 
 #parserBox h3 {
   margin: 0 0 10px 0;
-}
-
-#parserBox .button-group {
-  margin-bottom: 10px;
 }
 
 #output {
@@ -104,36 +107,40 @@ canvas {
 
 <body>
 
-<div class="container">
+<div class="wrapper">
 
-  <div class="tool">
-    <button onclick="goBack()">← Back</button>
-    <h2>8 Pieces Collage</h2>
+  <!-- MAIN TOOL -->
+  <div class="container">
 
-    <div class="controls">
-      <input type="file" id="upload" multiple accept="image/*">
+    <div class="tool">
+      <button onclick="goBack()">← Back</button>
+      <h2>8 Pieces Collage</h2>
 
-      <div class="button-group">
-        <button onclick="generate()">Generate</button>
-        <button onclick="download()">Download PNG</button>
+      <div class="controls">
+        <input type="file" id="upload" multiple accept="image/*">
+
+        <div class="button-group">
+          <button onclick="generate()">Generate</button>
+          <button onclick="download()">Download PNG</button>
+        </div>
       </div>
     </div>
 
+    <canvas id="canvas" width="1450" height="1510"></canvas>
+
   </div>
 
-  <canvas id="canvas" width="1450" height="1510"></canvas>
+  <!-- PARSER PANEL -->
+  <div id="parserBox">
+    <h3>Outfit List</h3>
 
-</div>
+    <div class="button-group">
+      <button onclick="copyList()">Copy</button>
+    </div>
 
-<div id="parserBox">
-  <h3>Outfit List</h3>
-
-  <div class="button-group">
-    <button onclick="generateList()">Generate</button>
-    <button onclick="copyList()">Copy</button>
+    <div id="output"></div>
   </div>
 
-  <div id="output"></div>
 </div>
 
 <script>
@@ -332,6 +339,8 @@ function download() {
   link.click();
 }
 
+/* PARSER */
+
 const idMap = {
   "AHE": "Hair Accessory",
   "AHC": "Headwear",
@@ -395,7 +404,7 @@ function copyList() {
     .catch(() => alert("Copy failed"));
 }
 
-/* AUTO UPDATE */
+/* AUTO */
 document.getElementById("upload").addEventListener("change", generateList);
 </script>
 
