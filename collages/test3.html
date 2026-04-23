@@ -115,7 +115,6 @@ canvas {
 
   <div class="container">
 
-```
 <div class="tool">
   <button onclick="goBack()">← Back</button>
   <h2>8 Pieces Collage</h2>
@@ -131,21 +130,18 @@ canvas {
 </div>
 
 <canvas id="canvas" width="1450" height="1510"></canvas>
-```
 
   </div>
 
   <div id="parserBox">
     <h3>Outfit List</h3>
 
-```
 <div class="button-group">
   <button onclick="copyList()">Copy</button>
   <span id="copyStatus"></span>
 </div>
 
 <div id="output"></div>
-```
 
   </div>
 
@@ -323,7 +319,7 @@ function draw() {
   ctx.drawImage(slotBackground, bx, by, bw, bh);
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  // === CORRECT WATERMARK ===
+  // TOP WATERMARK (gap between row 1 & 2)
   const overlayText = "@eidams_secrets   @eidams_secrets";
 
   ctx.save();
@@ -338,10 +334,14 @@ function draw() {
   ctx.fillText(overlayText, centerX, gapCenterY);
   ctx.restore();
 
-  // bottom watermark
+  // BOTTOM WATERMARK (properly centered to collage)
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
-  ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
+
+  const bottomX = frameX + frameW / 2;
+  const bottomY = H - (outerBottom / 2) + 15;
+
+  ctx.fillText("@eidams_secrets  @eidams_secrets", bottomX, bottomY);
 }
 
 function generateList() {
