@@ -106,19 +106,22 @@ const outerBottom = 18.5 * mm;
 let images = [];
 let bigImage = null;
 
-// placeholder (fallback)
+// ASSETS
 const placeholder = new Image();
-placeholder.src = "../image/T_showpic_clothes_blank.png";
-
-let placeholderReady = false;
-placeholder.onload = () => {
-  placeholderReady = true;
-  draw();
-};
-
-// background for big slot
 const slotBackground = new Image();
+
+placeholder.src = "../image/T_showpic_clothes_blank.png";
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
+
+let assetsReady = 0;
+
+function checkReady() {
+  assetsReady++;
+  if (assetsReady === 2) draw();
+}
+
+placeholder.onload = checkReady;
+slotBackground.onload = checkReady;
 
 function goBack() {
   window.location.href = "/CollageTool/";
@@ -172,19 +175,17 @@ async function generate() {
     }
   }
 
-  // fallback big image
   if (!bigImage && normal.length > 0) {
     bigImage = normal.shift();
   }
 
-  // exactly 12 small slots
   images = normal.slice(0, 12);
 
   draw();
 }
 
 function draw() {
-  if (!placeholderReady) return;
+  if (assetsReady < 2) return;
 
   const W = canvas.width;
   const H = canvas.height;
@@ -237,15 +238,19 @@ function draw() {
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // draw background first
-  if (slotBackground.complete) {
-    ctx.drawImage(slotBackground, bx, by, bw, bh);
-  } else {
-    slotBackground.onload = () => draw();
-  }
+  // background
+  ctx.drawImage(slotBackground, bx, by, bw, bh);
 
-  // draw big image
-  drawCover(safe(bigImage), bx, by, bw, bh);
+  // 🔥 slight inset so background is visible
+  const inset = whiteFrame * 0.6;
+
+  drawCover(
+    safe(bigImage),
+    bx + inset,
+    by + inset,
+    bw - inset * 2,
+    bh - inset * 2
+  );
 
   // Row 4 (2 small)
   const y4 = frameY + stepY * 3;
@@ -261,14 +266,12 @@ function draw() {
 
   const offset = 82;
 
-  const positions = [
+  [
     frameY + offset,
     frameY + rowH + gap + offset,
     frameY + (rowH + gap) * 2 + offset,
     frameY + (rowH + gap) * 3 + offset
-  ];
-
-  positions.forEach(y => {
+  ].forEach(y => {
     ctx.fillText("@eidams_secrets @eidams_secrets", frameX + frameW / 2, y);
   });
 
