@@ -17,7 +17,7 @@ body {
 
 .wrapper {
   display: flex;
-  gap: 20px; /* <-- exact spacing between boxes */
+  gap: 20px;
   align-items: flex-start;
 }
 
@@ -52,7 +52,6 @@ h2 {
   align-items: center;
 }
 
-/* BUTTONS */
 button {
   padding: 10px 14px;
   border: none;
@@ -81,9 +80,7 @@ canvas {
   margin-top: 10px;
 }
 
-/* =========================
-   PARSER PANEL (MATCH STYLE)
-   ========================= */
+/* PARSER PANEL */
 
 #parserBox {
   width: 240px;
@@ -95,6 +92,11 @@ canvas {
 
 #parserBox h3 {
   margin: 0 0 10px 0;
+}
+
+/* spacing fix */
+#parserBox .button-group {
+  margin-bottom: 12px;
 }
 
 #output {
@@ -109,7 +111,6 @@ canvas {
 
 <div class="wrapper">
 
-  <!-- MAIN TOOL -->
   <div class="container">
 
     <div class="tool">
@@ -148,7 +149,6 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const mm = 3.78;
-
 const gap = 2.5 * mm;
 const whiteFrame = 3.5 * mm;
 
@@ -159,7 +159,6 @@ const outerBottom = 18 * mm;
 let images = [];
 let bigImage = null;
 
-/* ORDER */
 const orderedIDs = [
   "H","D","C","T","PP","S","BB",
   "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
@@ -253,6 +252,9 @@ async function generate() {
   }
 
   draw();
+
+  /* generate list AFTER collage */
+  generateList();
 }
 
 function draw() {
@@ -403,9 +405,6 @@ function copyList() {
     .then(() => alert("Copied to clipboard!"))
     .catch(() => alert("Copy failed"));
 }
-
-/* AUTO */
-document.getElementById("upload").addEventListener("change", generateList);
 </script>
 
 </body>
