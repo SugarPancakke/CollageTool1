@@ -338,9 +338,10 @@ function draw() {
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
   ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
 
-  const bottomX = frameX + frameW / 2;
-  const bottomY = H - (outerBottom / 2) + 15;
+  const bottomX = Math.round(frameX + frameW / 2);
+  const bottomY = Math.round(H - (outerBottom / 2) + 15);
 
   ctx.fillText("@eidams_secrets   @eidams_secrets", bottomX, bottomY);
 }
