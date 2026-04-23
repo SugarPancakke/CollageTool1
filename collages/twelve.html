@@ -15,6 +15,10 @@ body {
   color: white;
 }
 
+.wrapper {
+  position: relative;
+}
+
 .container {
   width: 900px;
   display: flex;
@@ -29,6 +33,10 @@ body {
   margin-bottom: 15px;
   width: 100%;
   box-sizing: border-box;
+}
+
+.tool > button:first-child {
+  margin-top: 10px;
 }
 
 h2 {
@@ -53,6 +61,8 @@ button {
   background: #db8b9a;
   color: white;
   cursor: pointer;
+  transition: 0.2s ease;
+  font-size: 14px;
 }
 
 button:hover {
@@ -65,10 +75,40 @@ canvas {
   transform-origin: center top;
   margin-top: 10px;
 }
+
+/* parser UI */
+#parserBox {
+  position: absolute;
+  left: calc(100% + 20px);
+  top: 0;
+  width: 240px;
+  background: #643545;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+#parserBox .button-group {
+  margin-bottom: 12px;
+  align-items: center; /* ✅ vertical centering fix */
+}
+
+.list-item {
+  margin-bottom: 5px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+#copyStatus {
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1;
+}
 </style>
 </head>
 
 <body>
+
+<div class="wrapper">
 
 <div class="container">
 
@@ -91,6 +131,19 @@ canvas {
 
 </div>
 
+<div id="parserBox">
+  <h3>Outfit List</h3>
+
+  <div class="button-group">
+    <button onclick="copyList()">Copy</button>
+    <span id="copyStatus"></span>
+  </div>
+
+  <div id="output"></div>
+</div>
+
+</div>
+
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -105,23 +158,35 @@ const outerBottom = 18.5 * mm;
 
 let images = [];
 let bigImage = null;
+let usedIDs = [];
 
-// ASSETS
+const orderedIDs = [
+  "H","D","C","T","PP","S","BB",
+  "AHE","AHC","AEA","ANE","AHA","AXQ","G","AGL","AFA",
+  "AXS","ALE","ABS","AJZ","ARM","ABA","ABK"
+];
+
+const idMap = {
+  "H":"Hair","D":"Dress","C":"Outerwear","T":"Top",
+  "PP":"Bottom","S":"Socks","BB":"Shoes",
+  "AHE":"Hair Accessory","AHC":"Headwear","AEA":"Earrings",
+  "ANE":"Neckwear","AHA":"Bracelet","AXQ":"Choker",
+  "G":"Gloves","AGL":"Face Decoration","AFA":"Face Decoration",
+  "AXS":"Chest Accessory","ALE":"Pendant","ABS":"Backpiece",
+  "AJZ":"Rings","ARM":"Arm Decoration","ABA":"Handheld","ABK":"Body Paint"
+};
+
 const placeholder = new Image();
-const slotBackground = new Image();
-
 placeholder.src = "../image/T_showpic_clothes_blank.png";
+
+let placeholderReady = false;
+placeholder.onload = () => {
+  placeholderReady = true;
+  draw();
+};
+
+const slotBackground = new Image();
 slotBackground.src = "../image/T_showpic_clothes_blank.png";
-
-let assetsReady = 0;
-
-function checkReady() {
-  assetsReady++;
-  if (assetsReady === 2) draw();
-}
-
-placeholder.onload = checkReady;
-slotBackground.onload = checkReady;
 
 function goBack() {
   window.location.href = "/CollageTool/";
@@ -153,7 +218,7 @@ function drawCover(img, x, y, w, h) {
 }
 
 function safe(img) {
-  return img && img.complete ? img : placeholder;
+  return img || placeholder;
 }
 
 async function generate() {
@@ -162,30 +227,54 @@ async function generate() {
 
   const loaded = await loadImages(files);
 
+  let mapped = [];
+  let normalImages = [];
+
   images = [];
   bigImage = null;
-
-  let normal = [];
+  usedIDs = [];
 
   for (const item of loaded) {
-    if (item.name.startsWith("T_showpic_suit_")) {
+    const name = item.name.toUpperCase();
+
+    if (name.startsWith("T_SHOWPIC_SUIT_")) {
       bigImage = item.img;
+      continue;
+    }
+
+    let match = name.match(/S\d+([A-Z]+)/);
+
+    if (match) {
+      mapped.push({ id: match[1], img: item.img });
     } else {
-      normal.push(item.img);
+      normalImages.push(item.img);
     }
   }
 
-  if (!bigImage && normal.length > 0) {
-    bigImage = normal.shift();
+  mapped.sort((a, b) =>
+    orderedIDs.indexOf(a.id) - orderedIDs.indexOf(b.id)
+  );
+
+  const usedMapped = mapped.slice(0, 12);
+
+  images = usedMapped.map(m => m.img);
+  usedIDs = usedMapped.map(m => m.id);
+
+  if (images.length < 12) {
+    const needed = 12 - images.length;
+    images.push(...normalImages.slice(0, needed));
   }
 
-  images = normal.slice(0, 12);
+  if (!bigImage && normalImages.length > 0) {
+    bigImage = normalImages[normalImages.length - 1];
+  }
 
   draw();
+  generateList();
 }
 
 function draw() {
-  if (assetsReady < 2) return;
+  if (!placeholderReady) return;
 
   const W = canvas.width;
   const H = canvas.height;
@@ -215,52 +304,32 @@ function draw() {
 
   let i = 0;
 
-  // Row 1
-  for (let c = 0; c < 4; c++) {
+  for (let c = 0; c < 4; c++)
     drawCover(safe(images[i++]), frameX + c * stepX, frameY, colW, rowH);
-  }
 
-  // Row 2
-  for (let c = 0; c < 4; c++) {
+  for (let c = 0; c < 4; c++)
     drawCover(safe(images[i++]), frameX + c * stepX, frameY + stepY, colW, rowH);
-  }
 
-  // Row 3 (2 small)
   const y3 = frameY + stepY * 2;
 
-  for (let c = 0; c < 2; c++) {
+  for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * stepX, y3, colW, rowH);
-  }
 
-  // BIG IMAGE AREA
   const bx = frameX + 2 * stepX;
   const by = y3;
   const bw = colW * 2 + gap;
   const bh = rowH * 2 + gap;
 
-  // background
   ctx.drawImage(slotBackground, bx, by, bw, bh);
+  drawCover(safe(bigImage), bx, by, bw, bh);
 
-  // 🔥 slight inset so background is visible
-  const inset = whiteFrame * 0.6;
-
-  drawCover(
-    safe(bigImage),
-    bx + inset,
-    by + inset,
-    bw - inset * 2,
-    bh - inset * 2
-  );
-
-  // Row 4 (2 small)
   const y4 = frameY + stepY * 3;
 
-  for (let c = 0; c < 2; c++) {
+  for (let c = 0; c < 2; c++)
     drawCover(safe(images[i++]), frameX + c * stepX, y4, colW, rowH);
-  }
 
-  // Watermark rows
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  /* WATERMARKS */
+  ctx.fillStyle = "rgba(255,255,255,0.20)";
   ctx.textAlign = "center";
   ctx.font = "bold 81px Comic Sans MS";
 
@@ -275,10 +344,29 @@ function draw() {
     ctx.fillText("@eidams_secrets @eidams_secrets", frameX + frameW / 2, y);
   });
 
-  // Bottom watermark
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
   ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
+}
+
+function generateList() {
+  const result = orderedIDs
+    .filter(id => usedIDs.includes(id))
+    .map(id => idMap[id]);
+
+  document.getElementById("output").innerHTML =
+    result.map(i => `<div class="list-item">• ${i}</div>`).join("");
+}
+
+function copyList() {
+  const text = document.getElementById("output").innerText;
+  if (!text.trim()) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const status = document.getElementById("copyStatus");
+    status.innerText = "Copied!";
+    setTimeout(() => status.innerText = "", 1200);
+  });
 }
 
 function download() {
