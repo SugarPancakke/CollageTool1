@@ -319,7 +319,7 @@ function draw() {
   ctx.drawImage(slotBackground, bx, by, bw, bh);
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  // TOP WATERMARK (gap between row 1 & 2)
+  // TOP WATERMARK 
   const overlayText = "@eidams_secrets   @eidams_secrets";
 
   ctx.save();
@@ -334,9 +334,10 @@ function draw() {
   ctx.fillText(overlayText, centerX, gapCenterY);
   ctx.restore();
 
-  // BOTTOM WATERMARK (properly centered to collage)
+  // BOTTOM WATERMARK 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
+  ctx.textBaseline = "middle";
 
   const bottomX = frameX + frameW / 2;
   const bottomY = H - (outerBottom / 2) + 15;
