@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -106,7 +105,6 @@ canvas {
   line-height: 1;
 }
 </style>
-
 </head>
 
 <body>
@@ -115,34 +113,33 @@ canvas {
 
   <div class="container">
 
-<div class="tool">
-  <button onclick="goBack()">← Back</button>
-  <h2>8 Pieces Collage</h2>
+    <div class="tool">
+      <button onclick="goBack()">← Back</button>
+      <h2>8 Pieces Collage</h2>
 
-  <div class="controls">
-    <input type="file" id="upload" multiple accept="image/*">
+      <div class="controls">
+        <input type="file" id="upload" multiple accept="image/*">
 
-    <div class="button-group">
-      <button onclick="generate()">Generate</button>
-      <button onclick="download()">Download PNG</button>
+        <div class="button-group">
+          <button onclick="generate()">Generate</button>
+          <button onclick="download()">Download JPEG</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<canvas id="canvas" width="1450" height="1510"></canvas>
+    <canvas id="canvas" width="1450" height="1510"></canvas>
 
   </div>
 
   <div id="parserBox">
     <h3>Outfit List</h3>
 
-<div class="button-group">
-  <button onclick="copyList()">Copy</button>
-  <span id="copyStatus"></span>
-</div>
+    <div class="button-group">
+      <button onclick="copyList()">Copy</button>
+      <span id="copyStatus"></span>
+    </div>
 
-<div id="output"></div>
-
+    <div id="output"></div>
   </div>
 
 </div>
@@ -319,31 +316,23 @@ function draw() {
   ctx.drawImage(slotBackground, bx, by, bw, bh);
   drawCover(safe(bigImage), bx, by, bw, bh);
 
-  // TOP WATERMARK 
-  const overlayText = "@eidams_secrets";
+  const overlayText = "@eidams_secrets @eidams_secrets";
 
-  ctx.save();
-  ctx.fillStyle = "rgba(22,22,29,0.80)";
+  ctx.fillStyle = "rgba(255,255,255,0.20)";
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "bold 55px Comic Sans MS";
+  ctx.font = "bold 79px Comic Sans MS";
 
-  const centerX = frameX + frameW / 2;
-  const gapCenterY = frameY + rowH + (gap / 2);
+  [
+    frameY + 78,
+    frameY + rowH + gap + 78,
+    frameY + (rowH + gap) * 2 + 78
+  ].forEach(y => {
+    ctx.fillText(overlayText, frameX + frameW / 2, y);
+  });
 
-  ctx.fillText(overlayText, centerX, gapCenterY);
-  ctx.restore();
-
-  // BOTTOM WATERMARK 
   ctx.fillStyle = "rgba(84,84,84,0.75)";
   ctx.font = "bold 40px Comic Sans MS";
-  ctx.textBaseline = "middle";
-  ctx.textAlign = "center";
-
-  const bottomX = Math.round(frameX + frameW / 2);
-  const bottomY = Math.round(H - outerBottom / 2);
-
-  ctx.fillText("@eidams_secrets   @eidams_secrets", bottomX, bottomY);
+  ctx.fillText("@eidams_secrets  @eidams_secrets", W / 2, H - (outerBottom / 2) + 15);
 }
 
 function generateList() {
@@ -368,8 +357,8 @@ function copyList() {
 
 function download() {
   const link = document.createElement("a");
-  link.download = "collage.png";
-  link.href = canvas.toDataURL("image/png");
+  link.download = "collage.jpg";
+  link.href = canvas.toDataURL("image/jpeg", 0.95);
   link.click();
 }
 </script>
