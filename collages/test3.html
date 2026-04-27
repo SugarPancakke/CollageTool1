@@ -2,100 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple Text Diff Tool</title>
+  <title>List Diff Tool</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f5f5f5;
+      margin: 20px;
     }
     textarea {
-      width: 100%;
-      height: 120px;
-      margin-bottom: 10px;
-      padding: 10px;
-      font-family: monospace;
+      width: 45%;
+      height: 200px;
+      margin-right: 10px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
     }
     button {
+      margin-top: 20px;
       padding: 10px 20px;
       font-size: 16px;
-      cursor: pointer;
     }
-    .result {
+    .results {
       margin-top: 20px;
+      display: flex;
+      gap: 50px;
+    }
+    ul {
+      background: #f5f5f5;
       padding: 10px;
-      background: white;
-      border-radius: 5px;
-    }
-    .added {
-      background-color: #d4f8d4;
-    }
-    .removed {
-      background-color: #f8d4d4;
-      text-decoration: line-through;
+      min-width: 200px;
     }
   </style>
 </head>
 <body>
-  <h2>Text Difference Tool</h2>
 
-  <label>Original Text:</label>
-  <textarea id="text1"></textarea>
+<h2>List Comparison Tool</h2>
 
-  <label>Modified Text:</label>
-  <textarea id="text2"></textarea>
+<div class="container">
+  <div>
+    <h3>Original List</h3>
+    <textarea id="list1" placeholder="One item per line"></textarea>
+  </div>
+  <div>
+    <h3>New List</h3>
+    <textarea id="list2" placeholder="One item per line"></textarea>
+  </div>
+</div>
 
-  <button onclick="compareText()">Compare</button>
+<button onclick="compareLists()">Compare</button>
 
-  <div class="result" id="output"></div>
+<div class="results">
+  <div>
+    <h3>Added</h3>
+    <ul id="added"></ul>
+  </div>
+  <div>
+    <h3>Removed</h3>
+    <ul id="removed"></ul>
+  </div>
+</div>
 
-  <script>
-    function compareText() {
-      const text1 = document.getElementById('text1').value.split(/(\s+)/);
-      const text2 = document.getElementById('text2').value.split(/(\s+)/);
+<script>
+function compareLists() {
+  const list1 = document.getElementById("list1").value
+    .split("\n")
+    .map(x => x.trim())
+    .filter(x => x !== "");
 
-      const dp = Array(text1.length + 1).fill(null).map(() => Array(text2.length + 1).fill(0));
+  const list2 = document.getElementById("list2").value
+    .split("\n")
+    .map(x => x.trim())
+    .filter(x => x !== "");
 
-      for (let i = 1; i <= text1.length; i++) {
-        for (let j = 1; j <= text2.length; j++) {
-          if (text1[i - 1] === text2[j - 1]) {
-            dp[i][j] = dp[i - 1][j - 1] + 1;
-          } else {
-            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-          }
-        }
-      }
+  const set1 = new Set(list1);
+  const set2 = new Set(list2);
 
-      let i = text1.length;
-      let j = text2.length;
-      let result = [];
+  const added = list2.filter(item => !set1.has(item));
+  const removed = list1.filter(item => !set2.has(item));
 
-      while (i > 0 && j > 0) {
-        if (text1[i - 1] === text2[j - 1]) {
-          result.unshift(text1[i - 1]);
-          i--;
-          j--;
-        } else if (dp[i - 1][j] > dp[i][j - 1]) {
-          result.unshift(`<span class="removed">${text1[i - 1]}</span>`);
-          i--;
-        } else {
-          result.unshift(`<span class="added">${text2[j - 1]}</span>`);
-          j--;
-        }
-      }
+  const addedList = document.getElementById("added");
+  const removedList = document.getElementById("removed");
 
-      while (i > 0) {
-        result.unshift(`<span class="removed">${text1[i - 1]}</span>`);
-        i--;
-      }
+  addedList.innerHTML = "";
+  removedList.innerHTML = "";
 
-      while (j > 0) {
-        result.unshift(`<span class="added">${text2[j - 1]}</span>`);
-        j--;
-      }
+  added.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    addedList.appendChild(li);
+  });
 
-      document.getElementById('output').innerHTML = result.join('');
-    }
-  </script>
+  removed.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    removedList.appendChild(li);
+  });
+}
+</script>
+
 </body>
 </html>
