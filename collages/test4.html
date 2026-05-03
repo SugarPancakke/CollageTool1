@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>List Diff Tool</title>
+  <style>
+    body {
+      margin: 0;
+      background: #322d2d;
+      color: white;
+      display: flex;
+      justify-content: center;
+    }
+
+    .wrapper {
+      width: 95%;
+      max-width: 900px;
+      margin-top: 40px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+
+    .box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    textarea {
+      width: 100%;
+      height: 320px;
+      background: #3d3838;
+      color: white;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+      resize: none;
+    }
+
+    button {
+      background: #4d4747;
+      color: white;
+      display: block;
+      margin: 20px auto;
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+    }
+
+    button:hover {
+      background: #5a5454;
+    }
+
+    .results {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .result-box {
+      flex: 1;
+    }
+
+    ul {
+      background: #4d4747;
+      padding: 15px;
+      min-height: 200px;
+      font-family: monospace;
+      list-style-position: inside;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <div class="container">
+    <div class="box">
+      <h3>Original List</h3>
+      <textarea id="list1" placeholder="One item per line"></textarea>
+    </div>
+
+    <div class="box">
+      <h3>New List</h3>
+      <textarea id="list2" placeholder="One item per line"></textarea>
+    </div>
+  </div>
+
+  <button onclick="compareLists()">Compare</button>
+
+  <div class="results">
+    <div class="result-box">
+      <h3>Added</h3>
+      <ul id="added"></ul>
+    </div>
+
+    <div class="result-box">
+      <h3>Removed</h3>
+      <ul id="removed"></ul>
+    </div>
+
+    <div class="result-box">
+      <h3>Matches</h3>
+      <ul id="matches"></ul>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function compareLists() {
+  const list1 = document.getElementById("list1").value
+    .split("\n")
+    .map(x => x.trim())
+    .filter(Boolean);
+
+  const list2 = document.getElementById("list2").value
+    .split("\n")
+    .map(x => x.trim())
+    .filter(Boolean);
+
+  const set1 = new Set(list1);
+  const set2 = new Set(list2);
+
+  const added = list2.filter(x => !set1.has(x));
+  const removed = list1.filter(x => !set2.has(x));
+  const matches = list1.filter(x => set2.has(x));
+
+  renderList("added", added);
+  renderList("removed", removed);
+  renderList("matches", matches);
+}
+
+function renderList(id, arr) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  arr.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    el.appendChild(li);
+  });
+}
+</script>
+
+</body>
+</html>
