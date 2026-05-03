@@ -11,79 +11,98 @@ body {
   font-family: Arial;
   color: white;
   display: flex;
-  justify-content: center;
-  padding: 40px;
+  height: 100vh;
 }
 
-.container {
-  width: 900px;
-}
-
-h1 {
-  margin-bottom: 30px;
-}
-
-/* GRID SYSTEM (better than manual rows) */
-.tabs {
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  background: #2b1118;
+  padding: 20px;
+  box-sizing: border-box;
   display: flex;
-  flex-wrap: wrap;
-  gap: 18px 12px; /* vertical gap + horizontal gap */
+  flex-direction: column;
+  gap: 25px; /* space between groups */
+}
+
+/* GROUPS */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* BUTTONS */
 .tab {
   background: #643545;
-  padding: 15px 18px;
+  padding: 12px 14px;
   border-radius: 10px;
   cursor: pointer;
   transition: 0.2s ease;
-  color: white;
-  white-space: nowrap;
 }
 
 .tab:hover {
   background: #db8b9a;
 }
 
-/* optional: nicer alignment feel */
-.tab:active {
-  transform: scale(0.97);
+/* CONTENT */
+.content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+iframe {
+  width: 95%;
+  height: 95%;
+  border: none;
+  border-radius: 12px;
+  background: #391823;
 }
 </style>
-
 </head>
 
 <body>
 
-<div class="container">
-  <h1>Collage Tool</h1>
+<div class="sidebar">
 
-  <div class="tabs">
-
-    <!-- main sets -->
-    <div class="tab" onclick="go('eight.html')">8 Pieces</div>
-    <div class="tab" onclick="go('ten.html')">10 Pieces</div>
-    <div class="tab" onclick="go('twelve.html')">12 Pieces</div>
-
-    <!-- styles/tools -->
-    <div class="tab" onclick="go('makeup.html')">Make-Up</div>
-    <div class="tab" onclick="go('deep.html')">Deep Echoes</div>
-
-    <!-- utilities -->
-    <div class="tab" onclick="go('watermark.html')">Watermark</div>
-    <div class="tab" onclick="go('flex.html')">Flex</div>
-
-    <!-- tests -->
-    <div class="tab" onclick="go('test.html')">Test 1</div>
-    <div class="tab" onclick="go('test2.html')">Test 2</div>
-    <div class="tab" onclick="go('test3.html')">Test 3</div>
-
+  <!-- Collages -->
+  <div class="group">
+    <div class="tab" onclick="loadTool('eight.html')">8 Pieces</div>
+    <div class="tab" onclick="loadTool('ten.html')">10 Pieces</div>
+    <div class="tab" onclick="loadTool('twelve.html')">12 Pieces</div>
   </div>
+
+  <!-- Tools -->
+  <div class="group">
+    <div class="tab" onclick="loadTool('makeup.html')">Make-Up</div>
+    <div class="tab" onclick="loadTool('deep.html')">Deep Echoes</div>
+  </div>
+
+  <!-- Utilities -->
+  <div class="group">
+    <div class="tab" onclick="loadTool('watermark.html')">Watermark</div>
+    <div class="tab" onclick="loadTool('flex.html')">Flex</div>
+  </div>
+
+  <!-- Tests -->
+  <div class="group">
+    <div class="tab" onclick="loadTool('test.html')">Test 1</div>
+    <div class="tab" onclick="loadTool('test2.html')">Test 2</div>
+    <div class="tab" onclick="loadTool('test3.html')">Test 3</div>
+  </div>
+
+</div>
+
+<div class="content">
+  <iframe id="toolFrame" src="collages/eight.html"></iframe>
 </div>
 
 <script>
-function go(page) {
-  window.location.href = "collages/" + page;
+function loadTool(page) {
+  document.getElementById("toolFrame").src = "collages/" + page;
 }
 </script>
 
