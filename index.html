@@ -45,17 +45,19 @@ body {
   background: #db8b9a;
 }
 
-/* CONTENT */
+/* CONTENT (FIXED: moved left) */
 .content {
   flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  justify-content: flex-start;   /* <-- LEFT aligned */
+  align-items: flex-start;       /* <-- top aligned instead of center */
+  padding: 20px 10px 20px 10px;  /* reduced left padding */
+  box-sizing: border-box;
 }
 
+/* IFRAME */
 iframe {
-  width: 95%;
+  width: 90%;
   height: 95%;
   border: none;
   border-radius: 12px;
