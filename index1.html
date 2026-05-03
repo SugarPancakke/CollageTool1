@@ -12,7 +12,7 @@ body {
   color: white;
   display: flex;
   height: 100vh;
-  overflow: hidden; /* prevents outer page scroll */
+  overflow: hidden; /* IMPORTANT */
 }
 
 /* SIDEBAR */
@@ -24,7 +24,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 25px;
-  overflow: hidden; /* prevents sidebar scroll */
+  overflow: hidden;
 }
 
 /* GROUPS */
@@ -57,7 +57,7 @@ body {
   overflow: hidden; /* IMPORTANT */
 }
 
-/* IFRAME FIX */
+/* IFRAME */
 iframe {
   width: 95%;
   height: 95%;
@@ -66,11 +66,6 @@ iframe {
   background: #391823;
   overflow: hidden;
 }
-
-/* extra scrollbar killing */
-iframe::-webkit-scrollbar {
-  display: none;
-}
 </style>
 </head>
 
@@ -78,26 +73,22 @@ iframe::-webkit-scrollbar {
 
 <div class="sidebar">
 
-  <!-- Collages -->
   <div class="group">
     <div class="tab" onclick="loadTool('eight.html')">8 Pieces</div>
     <div class="tab" onclick="loadTool('ten.html')">10 Pieces</div>
     <div class="tab" onclick="loadTool('twelve.html')">12 Pieces</div>
   </div>
 
-  <!-- Tools -->
   <div class="group">
     <div class="tab" onclick="loadTool('makeup.html')">Make-Up</div>
     <div class="tab" onclick="loadTool('deep.html')">Deep Echoes</div>
   </div>
 
-  <!-- Utilities -->
   <div class="group">
     <div class="tab" onclick="loadTool('watermark.html')">Watermark</div>
     <div class="tab" onclick="loadTool('flex.html')">Flex</div>
   </div>
 
-  <!-- Tests -->
   <div class="group">
     <div class="tab" onclick="loadTool('test.html')">Test 1</div>
     <div class="tab" onclick="loadTool('test2.html')">Test 2</div>
