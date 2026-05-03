@@ -2,279 +2,86 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Video Watermark Tool</title>
+<title>ID Extractor</title>
 
 <style>
-body {
-  margin: 0;
-  background: #391823;
-  font-family: Arial;
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-  color: white;
-}
+  body {
+    margin: 0;
+    background: #322d2d;
+    color: white;
+    font-family: Arial;
+    display: flex;
+    justify-content: center;
+  }
 
-.container {
-  width: 900px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+  .wrapper {
+    width: 95%;
+    max-width: 900px;
+    margin-top: 40px;
+  }
 
-.tool {
-  background: #643545;
-  padding: 15px;
-  border-radius: 12px;
-  width: 100%;
-}
+  textarea {
+    width: 100%;
+    height: 350px;
+    background: #3d3838;
+    color: white;
+    border: none;
+    padding: 10px;
+    box-sizing: border-box;
+    font-family: monospace;
+    font-size: 14px;
+    resize: none;
+  }
 
-.controls {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
+  button {
+    background: #4d4747;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    margin: 20px 0;
+    cursor: pointer;
+    font-size: 16px;
+  }
 
-button {
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  background: #db8b9a;
-  color: white;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-button:hover {
-  background: #c06f7f;
-}
-
-.pill-group {
-  display: flex;
-  background: #b06a7a;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.pill {
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.pill.active {
-  background: #db8b9a;
-}
-
-/* progress + spacing */
-.progress-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 10px; /* ✅ now 10px */
-}
-
-progress {
-  width: 120px;
-  height: 6px;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-progress::-webkit-progress-bar {
-  background-color: #16161d;
-  border-radius: 10px;
-}
-
-progress::-webkit-progress-value {
-  background-color: #db8b9a;
-  border-radius: 10px;
-}
-
-progress::-moz-progress-bar {
-  background-color: #db8b9a;
-  border-radius: 10px;
-}
-
-#percent {
-  font-size: 13px;
-  min-width: 35px;
-}
-
-#preview video {
-  max-width: 100%;
-  border-radius: 8px;
-  margin-top: 15px;
-}
+  .output {
+    background: #3d3838;
+    padding: 10px;
+    min-height: 200px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    overflow-x: auto;
+  }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-<div class="tool">
+<div class="wrapper">
 
-<h2>Video Watermark Tool</h2>
+  <h2>ID Extractor</h2>
 
-<div class="controls">
+  <textarea id="input" placeholder="Paste filenames here..."></textarea>
 
-<input type="file" id="upload" accept="video/*">
+  <button onclick="extractIDs()">Extract IDs</button>
 
-<div class="pill-group">
-  <div class="pill active" data-value="white">White</div>
-  <div class="pill" data-value="dark">Dark</div>
-</div>
+  <div class="output" id="output"></div>
 
-<button onclick="generate()">Generate</button>
-<button id="downloadBtn" onclick="downloadVideo()" disabled>Download</button>
-
-<div class="progress-inline">
-  <progress id="bar" value="0" max="1"></progress>
-  <span id="percent">0%</span>
-</div>
-
-</div>
-
-</div>
-
-<div id="preview"></div>
 </div>
 
 <script>
-let color = "white";
-let finalBlob = null;
+function extractIDs() {
 
-document.querySelectorAll(".pill").forEach(pill => {
-  pill.onclick = () => {
-    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
-    pill.classList.add("active");
-    color = pill.dataset.value;
-  };
-});
+  const text = document.getElementById("input").value;
 
-async function generate(){
-  const file = document.getElementById("upload").files[0];
-  if (!file) return alert("Upload a video");
+  // Match S followed by 4 digits
+  const matches = text.match(/S\d{4}/g) || [];
 
-  document.getElementById("downloadBtn").disabled = true;
-  finalBlob = null;
+  // Remove duplicates
+  const unique = [...new Set(matches)];
 
-  const preview = document.getElementById("preview");
-  preview.innerHTML = "";
-
-  const bar = document.getElementById("bar");
-  const percent = document.getElementById("percent");
-
-  bar.value = 0;
-  percent.innerText = "0%";
-
-  const video = document.createElement("video");
-  video.src = URL.createObjectURL(file);
-  video.muted = true;
-
-  await video.play();
-
-  await new Promise(res => {
-    if (video.readyState >= 2) return res();
-    video.onloadeddata = res;
-  });
-
-  video.currentTime = 0;
-  await new Promise(res => video.onseeked = res);
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-
-  const stream = canvas.captureStream();
-
-  let recorder;
-  if (MediaRecorder.isTypeSupported("video/mp4")) {
-    recorder = new MediaRecorder(stream, { mimeType: "video/mp4" });
-  } else {
-    recorder = new MediaRecorder(stream);
-  }
-
-  let chunks = [];
-  recorder.ondataavailable = e => chunks.push(e.data);
-
-  recorder.onstop = () => {
-    finalBlob = new Blob(chunks, { type: recorder.mimeType });
-
-    const url = URL.createObjectURL(finalBlob);
-
-    const vid = document.createElement("video");
-    vid.src = url;
-    vid.controls = true;
-
-    preview.appendChild(vid);
-
-    document.getElementById("downloadBtn").disabled = false;
-    percent.innerText = "Done";
-  };
-
-  recorder.start();
-
-  function draw(){
-    ctx.drawImage(video,0,0);
-
-    const text = "@eidams_secrets";
-    const fontSize = canvas.height * 0.06;
-
-    ctx.font = `bold ${fontSize}px Comic Sans MS`;
-    ctx.textAlign = "center";
-
-    ctx.fillStyle = color === "white"
-      ? "rgba(255,255,255,0.2)"
-      : "rgba(40,40,40,0.1)";
-
-    const padding = canvas.height * 0.035;
-
-    const topY = padding + fontSize;
-    const midY = canvas.height * 0.52;
-    const bottomY = canvas.height - padding - fontSize * 0.3;
-
-    const cols = 3;
-
-    function drawRow(y){
-      for(let i=0;i<cols;i++){
-        const x = (canvas.width/cols)*(i+0.5);
-        ctx.fillText(text,x,y);
-      }
-    }
-
-    drawRow(topY);
-    drawRow(midY);
-    drawRow(bottomY);
-
-    if(video.duration){
-      const prog = video.currentTime / video.duration;
-      bar.value = prog;
-      percent.innerText = Math.floor(prog * 100) + "%";
-    }
-
-    if(!video.ended){
-      requestAnimationFrame(draw);
-    } else {
-      recorder.stop();
-    }
-  }
-
-  draw();
-}
-
-function downloadVideo(){
-  if (!finalBlob) return;
-
-  const url = URL.createObjectURL(finalBlob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "watermarked.mp4";
-  a.click();
+  // Show results
+  document.getElementById("output").textContent =
+    unique.join("\n");
 }
 </script>
 
