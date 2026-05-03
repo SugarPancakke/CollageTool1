@@ -12,7 +12,7 @@ body {
   color: white;
   display: flex;
   height: 100vh;
-  overflow: hidden; /* IMPORTANT */
+  overflow: hidden;
 }
 
 /* SIDEBAR */
@@ -41,32 +41,31 @@ body {
   border-radius: 10px;
   cursor: pointer;
   transition: 0.2s ease;
+  user-select: none;
 }
 
 .tab:hover {
   background: #db8b9a;
 }
 
-/* CONTENT */
+/* CONTENT AREA = FULL APP VIEWPORT */
 .content {
   flex: 1;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  overflow: hidden; /* IMPORTANT */
 }
 
-/* IFRAME */
+/* IFRAME = FULL SCREEN CANVAS */
 iframe {
-  width: 95%;
-  height: 95%;
+  width: 100%;
+  height: 100%;
   border: none;
-  border-radius: 12px;
-  background: #391823;
-  overflow: hidden;
+  display: block;
 }
 </style>
+
 </head>
 
 <body>
