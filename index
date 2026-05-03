@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Collage Tool</title>
+
+<style>
+body {
+  margin: 0;
+  background: #391823;
+  font-family: Arial;
+  color: white;
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px;
+  background: #2b1118;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tab {
+  background: #643545;
+  padding: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.tab:hover {
+  background: #db8b9a;
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 0;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #391823;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+  <div class="tab" onclick="loadTool('eight.html')">
+    8 Pieces
+  </div>
+
+  <div class="tab" onclick="loadTool('ten.html')">
+    10 Pieces
+  </div>
+
+  <div class="tab" onclick="loadTool('watermark.html')">
+    Watermark
+  </div>
+
+  <div class="tab" onclick="loadTool('flex.html')">
+    Flex
+  </div>
+
+</div>
+
+<div class="content">
+  <iframe id="toolFrame" src="collages/eight.html"></iframe>
+</div>
+
+<script>
+function loadTool(page) {
+  document.getElementById("toolFrame").src =
+    "collages/" + page;
+}
+</script>
+
+</body>
+</html>
